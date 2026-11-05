@@ -21,15 +21,25 @@ run(async () => {
   if (!url || !/^https:\/\//.test(url)) throw new Error("Pass --url https://.../webhooks/paypal (PayPal only delivers to public HTTPS URLs).");
   const client = clientFromEnv();
   const existing = (await client.request("GET", "/v1/notifications/webhooks", { schema: WebhookList })).webhooks.find((w) => w.url === url);
+  const wanted = [...new Set([...HOLD_EVENT_TYPES, ...DISPUTE_EVENT_TYPES, ...extra])];
   if (existing) {
-    console.log(`Already registered: ${existing.id} (${existing.event_types.map((e) => e.name).join(", ")})`);
+    const have = new Set(existing.event_types.map((e) => e.name));
+    const missing = wanted.filter((n) => !have.has(n));
+    if (missing.length) {
+      const all = [...have, ...missing].map((name) => ({ name }));
+      await client.request("PATCH", `/v1/notifications/webhooks/${encodeURIComponent(existing.id)}`, {
+        body: [{ op: "replace", path: "/event_types", value: all }],
+      });
+      console.log(`Added ${missing.join(", ")} to webhook ${existing.id}`);
+    }
+    console.log(`Registered: ${existing.id} (${[...have, ...missing].join(", ")})`);
     console.log(`Set PAYPAL_WEBHOOK_ID=${existing.id}`);
     return;
   }
   const created = await client.request("POST", "/v1/notifications/webhooks", {
     requestId: `spikeready-webhook-${url}`,
     schema: Webhook,
-    body: { url, event_types: [...new Set([...HOLD_EVENT_TYPES, ...DISPUTE_EVENT_TYPES, ...extra])].map((name) => ({ name })) },
+    body: { url, event_types: wanted.map((name) => ({ name })) },
   });
   console.log(`Registered webhook ${created.id} for ${created.event_types.map((e) => e.name).join(", ")}`);
   console.log(`Set PAYPAL_WEBHOOK_ID=${created.id} in the server's environment.`);
