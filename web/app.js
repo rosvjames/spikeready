@@ -44,8 +44,16 @@ function spikeChart(days, recentFrom) {
     svg += `<g class="bar" data-tip="${esc(label)}"><rect x="${padL + i * step}" y="${padT}" width="${step}" height="${H - padT - padB}" fill="transparent"/>`;
     if (path) svg += `<path d="${path}" fill="${recent ? "var(--series-1)" : "var(--baseline)"}"/>`;
     svg += `</g>`;
-    if (i === 0 || recent) svg += `<text x="${x + bw / 2}" y="${H - 6}" text-anchor="middle"${recent ? ' class="recent-label"' : ""}>${shortDate(d.date)}</text>`;
+    if (i === 0) svg += `<text x="${x}" y="${H - 6}" text-anchor="start">${shortDate(d.date)}</text>`;
   });
+  // One label for the recent window ("Nov 4–5"), right-aligned under its bars, so labels never overlap.
+  const recentDays = days.filter((d) => d.date >= recentFrom);
+  if (recentDays.length) {
+    const first = recentDays[0].date, last = recentDays[recentDays.length - 1].date;
+    const sameMonth = first.slice(0, 7) === last.slice(0, 7);
+    const text = first === last ? shortDate(first) : `${shortDate(first)}–${sameMonth ? String(Number(last.slice(8))) : shortDate(last)}`;
+    svg += `<text x="${W - 2}" y="${H - 6}" text-anchor="end" class="recent-label">${text}</text>`;
+  }
   return svg + "</svg>";
 }
 
@@ -103,10 +111,22 @@ function renderCalendar(d) {
     .join("");
   const u = c.unlocked;
   const unlocked = u && u.amountCents
-    ? `<div class="alert calm unlock" role="status"><span class="ico" aria-hidden="true">✓</span><div><strong>Verified tracking lets PayPal release ${usd(u.amountCents)} up to ${plural(u.maxDaysSooner, "day")} before the 21-day maximum.</strong>${plural(u.payments, "payment")}, on average ${u.avgDaysSooner} days sooner: about ${u.dollarDays.toLocaleString("en-US")} dollar-days of cash back in your hands earlier. Based on PayPal's published rules; PayPal decides.</div></div>`
+    ? `<div class="alert calm unlock" role="status"><span class="ico" aria-hidden="true">✓</span><div><strong>With verified tracking on PayPal, ${plural(u.payments, "payment")} (${usd(u.amountCents)}) can be released about 24 hours after delivery instead of waiting up to 21 days.</strong>That is up to ${plural(u.maxDaysSooner, "day")} sooner (about ${u.avgDaysSooner} on average). Based on PayPal's published rules; PayPal decides.</div></div>`
     : "";
+  // What the seller did in this session: each fixed label and how far its held payment moved.
+  const moves = Object.entries(d.fixes ?? {})
+    .filter(([, f]) => f.headline)
+    .map(([saleId, f]) => {
+      const how = f.simulated
+        ? "Simulated upload: this server has no PayPal credentials, so nothing was sent to PayPal."
+        : f.status === "ALREADY_ON_PAYPAL"
+          ? "PayPal already has this tracking from an earlier demo run, so nothing was uploaded twice."
+          : "Tracking uploaded to the PayPal sandbox order.";
+      return `<div class="alert calm move" role="status"><span class="ico" aria-hidden="true">✓</span><div><strong>You fixed ${esc(saleId)}'s label: ${esc(f.headline)}.</strong>${esc(how)}${f.paypalDebugId ? ` PayPal-Debug-Id <span class="mono">${esc(f.paypalDebugId)}</span>.` : ""}${d.perVisitor ? " Only your copy of the demo changed; Reset demo starts over." : ""}</div></div>`;
+    })
+    .join("");
   el.innerHTML = `
-    <div id="release-move" hidden></div>
+    <div id="release-move">${moves}</div>
     <p class="hero">${usd(c.totalHeldCents)}</p>
     <p class="hero-sub">on hold in ${plural(d.holds.length, "payment")}.</p>
     ${unlocked}
@@ -146,7 +166,7 @@ function renderTracking(d) {
         <td>${esc(s.shipTo.city)}, ${esc(s.shipTo.state)} <strong>${esc(s.shipTo.postalCode)}</strong></td>
         <td class="mono hide-sm">${esc(s.tracking.carrier ?? "")} ${esc(s.tracking.trackingNumber ?? "")}<br><span class="muted">label ZIP ${esc(s.tracking.labelPostalCode ?? "-")}</span></td>
         <td><span class="pill ${cls}">${label}</span><span class="show-sm muted">${esc(s.tracking.carrier ?? "")} · label ZIP ${esc(s.tracking.labelPostalCode ?? "-")}</span></td>
-      </tr>${rej && s.tracking.reason ? `<tr class="rejected reason-row"${more}><td colspan="6"><span class="reason">Why: ${esc(s.tracking.reason)}</span>${fixForm}</td></tr>` : ""}${fix ? `<tr class="fixed-row"${more}><td colspan="6"><span class="fine">Label fixed in this session${fix.simulated ? " (simulated upload: no PayPal credentials on this server)" : fix.paypalDebugId ? ` · PayPal-Debug-Id <span class="mono">${esc(fix.paypalDebugId)}</span>` : ""}.</span></td></tr>` : ""}`;
+      </tr>${rej && s.tracking.reason ? `<tr class="rejected reason-row"${more}><td colspan="6"><span class="reason">Why: ${esc(s.tracking.reason)}</span>${fixForm}</td></tr>` : ""}${fix ? `<tr class="fixed-row"${more}><td colspan="6"><span class="fine">Label fixed${d.perVisitor ? " in your copy of the demo" : ""}${fix.simulated ? " (simulated upload: no PayPal credentials on this server)" : fix.status === "ALREADY_ON_PAYPAL" ? ": PayPal already has this tracking from an earlier demo run, so nothing was uploaded twice" : ": tracking uploaded to the PayPal sandbox order"}${fix.paypalDebugId ? ` · PayPal-Debug-Id <span class="mono">${esc(fix.paypalDebugId)}</span>` : ""}.</span></td></tr>` : ""}`;
     })
     .join("");
   $("tracking-body").className = "";
@@ -185,12 +205,8 @@ async function onFixSubmit(e) {
       return;
     }
     await loadDashboard();
-    const move = $("release-move");
-    if (move && r.release) {
-      move.hidden = false;
-      move.innerHTML = `<div class="alert calm move" role="status"><span class="ico" aria-hidden="true">✓</span><div><strong>${esc(r.release.headline)}</strong>${esc(r.message)}${r.paypalDebugId ? ` PayPal-Debug-Id <span class="mono">${esc(r.paypalDebugId)}</span>.` : ""}${r.resetsOnRestart ? " This demo keeps the change in memory; it resets when the server restarts." : ""}</div></div>`;
-      $("step-calendar").scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    // The calendar now shows the move (from this visitor's fixes); take the seller there.
+    if (r.release) $("step-calendar").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (err) {
     out.innerHTML = `<p class="error" role="alert">${esc(err.message)}</p>`;
   } finally {
@@ -517,9 +533,20 @@ function renderAsk(r) {
   const claims = r.claims ?? [];
   const ok = claims.filter((c) => c.verified).length;
   const bad = claims.filter((c) => !c.verified);
-  const source = r.source === "recorded" ? `<span class="pill pill-next">Recorded answer · real run on Nov 5</span>` : `<span class="pill pill-ok">Live answer</span>`;
+  const rc = r.recheck ?? null;
+  // A recorded answer is re-checked against the visitor's data now; if facts changed, it says so.
+  const stale = Boolean(rc && (rc.changedFacts > 0 || (rc.unsupported ?? []).length > 0));
+  const source =
+    r.source !== "recorded"
+      ? `<span class="pill pill-ok">Live answer</span>`
+      : rc?.recordedForThisData && rc.stateLabel
+        ? `<span class="pill pill-next">Recorded answer · real run for this data (${esc(rc.stateLabel)})</span>`
+        : `<span class="pill pill-next">Recorded answer · real run on Nov 5</span>`;
   const { advice, draft } = r.mode === "reply" ? splitDraft(r.answer_markdown) : { advice: r.answer_markdown, draft: null };
-  const answerHtml = `<div class="md${r.verified ? "" : " md-unverified"}">${r.verified ? "" : `<p class="unverified-note"><strong>Not fully verified.</strong> Some facts below could not be checked against your data; don't rely on them.</p>`}${renderMarkdown(advice)}</div>`;
+  const note = stale
+    ? `<p class="unverified-note"><strong>Your data changed since this answer was recorded.</strong> Code re-checked it against your data now; the facts marked ✗ no longer hold.</p>`
+    : `<p class="unverified-note"><strong>Not fully verified.</strong> Some facts below could not be checked against your data; don't rely on them.</p>`;
+  const answerHtml = `<div class="md${r.verified ? "" : " md-unverified"}">${r.verified ? "" : note}${renderMarkdown(advice)}</div>`;
   const draftHtml = draft
     ? `<div class="draft"><div class="draft-head"><strong>Draft reply for PayPal's Resolution Center</strong><button type="button" class="btn btn-quiet" id="copy-draft">Copy</button></div>
         <textarea id="draft-text" readonly rows="12" aria-label="Draft reply">${esc(draft)}</textarea>
@@ -530,7 +557,10 @@ function renderAsk(r) {
         .map((a) => `<li><span class="mono-sm">${esc(a.sha256.slice(0, 12))}…</span> ${esc(a.filename)}${a.counted ? "" : ` <span class="pill pill-wait">not counted</span>`}</li>`)
         .join("")}</ul></div>`
     : "";
-  const check = `<div class="alert ${r.verified ? "calm" : "spike"} ask-check" role="status"><span class="ico" aria-hidden="true">${r.verified ? "✓" : "!"}</span><div><strong>Checked by code: ${ok}/${plural(claims.length, "fact")} verified</strong>${
+  const headline = stale
+    ? `${plural(rc.changedFacts + (rc.unsupported ?? []).length, "fact")} changed since this answer was recorded`
+    : `Checked by code: ${ok}/${plural(claims.length, "fact")} verified${rc ? " against your data now" : ""}`;
+  const check = `<div class="alert ${r.verified ? "calm" : "spike"} ask-check" role="status"><span class="ico" aria-hidden="true">${r.verified ? "✓" : "!"}</span><div><strong>${headline}</strong>${
     (r.unsupported ?? []).length ? ` · amounts or dates not found in your data: ${r.unsupported.map((u) => esc(u)).join(", ")}` : ""
   }${r.regenerated ? " · the assistant had to fix its first answer" : ""}</div></div>`;
   const claimList = `<details class="claims"><summary>See every checked fact (${claims.length})</summary><ul>${claims
@@ -601,6 +631,54 @@ $("ask-form").addEventListener("submit", (e) => {
   if (q && askLive) askQuestion({ question: q });
 });
 
+// ---------- Step 5: the real sandbox dispute, and the same evidence check on this visitor's data.
+const VERDICT = { strong: ["pill-ok", "Strong"], partial: ["pill-ok", "Partial"], weak: ["pill-bad", "Weak"], unsupported: ["pill-wait", "Not INR"], unlinked: ["pill-wait", "Unlinked"] };
+async function renderDispute() {
+  const el = $("dispute-body");
+  try {
+    const res = await fetch("/api/dispute-proof");
+    if (!res.ok) {
+      el.className = "";
+      el.innerHTML = `<p class="muted">No recorded dispute on this server.</p>`;
+      return;
+    }
+    const v = await res.json();
+    const r = v.recorded;
+    const p = v.preview;
+    const [pcls, plabel] = p ? (VERDICT[p.verdict] ?? ["pill-wait", p.verdict]) : ["", ""];
+    const preview = p
+      ? `<div class="dispute-preview"><h3 class="sub">If ${esc(p.saleId)}'s buyer says it never arrived</h3>
+          <p><span class="pill ${pcls}">${esc(plabel)}</span> ${esc(p.summary)}</p>
+          <ul class="fine">${p.nextSteps.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>
+          ${p.verdict === "weak" ? `<p class="fine">Fix the label in step 2 and this becomes proof.</p>` : ""}</div>`
+      : "";
+    el.className = "";
+    el.innerHTML = `
+      <div class="dispute-case">
+        <h3 class="sub">A real "item not received" case in the PayPal sandbox</h3>
+        <p class="muted">Case <span class="mono">${esc(r.caseId)}</span> on ${esc(r.saleId)} (${usd(r.amountCents)}), opened ${esc(proofTime(r.openedAt))}.</p>
+        <ol class="dispute-story">${r.story.map((t) => `<li>${esc(t)}</li>`).join("")}</ol>
+        <p class="fine">What the sandbox buyer was told: "${esc(r.buyerMessage.english)}" ${esc(r.buyerMessage.note)}.</p>
+        ${r.webhook ? `<p class="fine">Signed webhook: ${esc(r.webhook.eventType)} · <span class="mono">${esc(r.webhook.eventId)}</span> · verified ${esc(proofTime(r.webhook.verifiedAt))} · ${esc(r.webhook.result)}</p>` : ""}
+        ${r.submission ? `<p class="fine">Sent with the seller's approval: ${esc(r.submission.action)} → HTTP ${esc(r.submission.status ?? "-")}${r.submission.paypalDebugId ? ` · PayPal-Debug-Id <span class="mono">${esc(r.submission.paypalDebugId)}</span>` : ""}${r.submission.notes ? `<br><span class="muted">"${esc(r.submission.notes)}"</span>` : ""}</p>` : ""}
+        <ul class="fine caveats">${r.caveats.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
+      </div>
+      ${preview}`;
+  } catch (err) {
+    el.textContent = `Could not load the dispute (${err.message}).`;
+  }
+}
+
+$("demo-reset")?.addEventListener("click", async () => {
+  const b = $("demo-reset");
+  b.disabled = true;
+  try {
+    await fetch("/api/demo/reset", { method: "POST" });
+  } finally {
+    location.reload();
+  }
+});
+
 async function loadDashboard() {
   const res = await fetch("/api/dashboard", { headers: { Accept: "application/json" } });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -610,6 +688,7 @@ async function loadDashboard() {
   renderCalendar(d);
   renderTracking(d);
   initAsk(d);
+  renderDispute();
   if (d.live?.balance) renderBalance();
   // Keep a finished invoice check reflected in the step-1 checklist after a reload.
   if (lastInvoiceResult) updateInvoiceCheck(lastInvoiceResult);
@@ -623,7 +702,8 @@ async function main() {
     const d = await loadDashboard();
     $("seller").textContent = `${d.seller.name} · ${d.sales.length} sales`;
     $("demo-banner").hidden = !d.demo;
-    if (d.demo) $("demo-banner").textContent = d.banner ?? "Demo data. No real money or accounts.";
+    if (d.demo) $("demo-banner-text").textContent = `${d.banner ?? "Demo data. No real money or accounts."}${d.perVisitor ? " Your actions change only your copy of the demo." : ""}`;
+    $("demo-reset").hidden = !d.perVisitor;
   } catch (err) {
     for (const id of ["spike-body", "calendar-body", "tracking-body"]) $(id).textContent = `Could not load the dashboard (${err.message}).`;
   }

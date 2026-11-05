@@ -17,7 +17,7 @@
     </div>
   </header>
   <div class="wrap">
-    <p class="banner" id="demo-banner" hidden></p>
+    <div class="banner" id="demo-banner" hidden><span id="demo-banner-text"></span> <button type="button" class="btn btn-quiet btn-sm" id="demo-reset" hidden>Reset demo</button></div>
   </div>
   <main id="main" class="wrap grid" aria-live="polite">
     <section class="card wide" id="step-spike" aria-labelledby="h-spike">
@@ -78,6 +78,12 @@
       </div>
       <p class="fine">SpikeReady never creates or edits documents; it fingerprints originals (SHA-256).</p>
       <div id="invoices-body" aria-live="polite"></div>
+    </section>
+    <section class="card wide" id="step-dispute" aria-labelledby="h-dispute">
+      <p class="step">Step 5</p>
+      <h2 id="h-dispute">Verified tracking defends you</h2>
+      <p class="muted">If a buyer says the item never arrived, the same verified tracking is the seller's proof. SpikeReady prepares it; the seller decides whether to send it.</p>
+      <div id="dispute-body" class="loading">Loading…</div>
     </section>
     <section class="card wide" id="proof" aria-labelledby="h-proof">
       <details id="proof-details">

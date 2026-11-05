@@ -22,6 +22,8 @@ import { RecordedAssistant } from "../assistant/recorded.js";
 import type { Assistant } from "../assistant/agent.js";
 import { DEFAULT_INVOICES_DIR, type McpContext } from "../mcp/tools.js";
 import { AskRequestError, askUsageSummary, MAX_ASK_BODY_BYTES, planAsk, runAsk, serverMcpContext, suggestionsOf } from "./ask.js";
+import { DemoSessions, sessionFor, type FixRecord, type SessionOptions } from "./sessions.js";
+import { disputeView } from "./dispute-proof.js";
 
 export interface AppDeps {
   loadState: () => State;
@@ -56,6 +58,14 @@ export interface AppDeps {
   askRecorded?: RecordedAssistant | null;
   /** Builds the live assistant over the server's data; null/absent when paid AI is not allowed on this server. */
   askLive?: ((ctx: McpContext) => Assistant) | null;
+  /**
+   * Demo mode: a fresh copy of the recorded state for each visitor (keyed by a cookie), so one
+   * visitor's actions never change what others see. Null/absent = one shared state (loadState/saveState).
+   */
+  demoSessions?: (() => State) | null;
+  sessionOptions?: SessionOptions;
+  /** Recorded real dispute (data/recorded/dispute-proof-*.json); defaults next to the proof file. */
+  disputeProofPath?: string;
   /** Per-client limits: live AI requests and "fix label" actions (per minute). */
   rateLimits?: { aiPerMinute?: number; fixPerMinute?: number };
 }
@@ -99,8 +109,28 @@ async function readBody(req: IncomingMessage, limit = MAX_BODY_BYTES): Promise<s
   return Buffer.concat(chunks).toString("utf8");
 }
 
+/** The data one request works on: the visitor's own copy in demo mode, the server's state otherwise. */
+interface Scope {
+  loadState: () => State;
+  saveState: (s: State) => void;
+  fixes: Map<string, FixRecord>;
+}
+
 export function createApp(deps: AppDeps) {
   const webRoot = resolve(deps.webDir);
+  const sessions = deps.demoSessions ? new DemoSessions(deps.demoSessions, deps.sessionOptions) : null;
+  const sharedFixes = new Map<string, FixRecord>();
+  function scope(req: IncomingMessage, res: ServerResponse): Scope {
+    if (!sessions) return { loadState: deps.loadState, saveState: deps.saveState, fixes: sharedFixes };
+    const s = sessionFor(sessions, req, res);
+    return {
+      loadState: () => s.state,
+      saveState: (st) => {
+        s.state = st;
+      },
+      fixes: s.fixes,
+    };
+  }
   // State updates are read-modify-write: run them one at a time.
   let queue: Promise<unknown> = Promise.resolve();
   const serialized = <T>(fn: () => T | Promise<T>): Promise<T> => {
@@ -189,7 +219,7 @@ export function createApp(deps: AppDeps) {
     }
     const extractor = deps.invoiceExtractor ? deps.invoiceExtractor() : null;
     const started = Date.now();
-    const state = deps.loadState();
+    const state = scope(req, res).loadState();
     try {
       const { response, dossier } = await runInvoiceCheck(body, {
         sales: state.sales,
@@ -227,7 +257,7 @@ export function createApp(deps: AppDeps) {
     }
     const extractor = deps.noticeExtractor ? deps.noticeExtractor() : null;
     const started = Date.now();
-    const state = deps.loadState();
+    const state = scope(req, res).loadState();
     try {
       const response = await runLimitationPlan(body, {
         sales: state.sales,
@@ -251,15 +281,18 @@ export function createApp(deps: AppDeps) {
 
   // "Ask SpikeReady": suggested questions replay recorded answers; free text needs the live assistant.
   const askRecorded = deps.askRecorded !== undefined ? deps.askRecorded : RecordedAssistant.fromFile();
-  const askCtx = serverMcpContext({
-    loadState: deps.loadState,
-    now: deps.now,
-    demo: deps.demo,
-    banner: deps.banner ?? null,
-    invoicesDir: DEFAULT_INVOICES_DIR,
-    ...(deps.samplesDir ? { samplesDir: deps.samplesDir } : {}),
-  });
-  const askDeps = { recorded: askRecorded, live: deps.askLive ? () => deps.askLive!(askCtx) : null };
+  /** Read-only assistant context over the requesting visitor's data. */
+  const askDepsFor = (sc: Scope) => {
+    const ctx = serverMcpContext({
+      loadState: sc.loadState,
+      now: deps.now,
+      demo: deps.demo,
+      banner: deps.banner ?? null,
+      invoicesDir: DEFAULT_INVOICES_DIR,
+      ...(deps.samplesDir ? { samplesDir: deps.samplesDir } : {}),
+    });
+    return { recorded: askRecorded, live: deps.askLive ? () => deps.askLive!(ctx) : null, ctx };
+  };
 
   async function ask(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const raw = await readBody(req, MAX_ASK_BODY_BYTES);
@@ -269,6 +302,7 @@ export function createApp(deps: AppDeps) {
     } catch {
       return send(res, 400, { error: "invalid JSON" });
     }
+    const askDeps = askDepsFor(scope(req, res));
     try {
       const plan = planAsk(body, askDeps);
       if (plan.live) {
@@ -278,7 +312,7 @@ export function createApp(deps: AppDeps) {
       const out = await runAsk(plan, askDeps);
       const ai = askUsageSummary(out.result);
       if (out.live) aiBudget.add(ai);
-      return send(res, 200, { ...out.result, ai });
+      return send(res, 200, { ...out.result, ai, recheck: out.recheck });
     } catch (err) {
       if (err instanceof AskRequestError) return send(res, err.status, { error: err.message, ...err.extra });
       if (err instanceof HttpError) throw err;
@@ -287,9 +321,7 @@ export function createApp(deps: AppDeps) {
     }
   }
 
-  // Labels fixed through the panel (in memory; in demo mode they reset when the server restarts).
-  const fixes = new Map<string, { simulated: boolean; paypalDebugId: string | null; status: string }>();
-
+  // Labels fixed through the panel live in the visitor's scope (in memory in demo mode).
   async function trackingFix(req: IncomingMessage, res: ServerResponse): Promise<void> {
     if (!fixLimiter.take(clientKey(req))) return send(res, 429, { error: "Too many attempts. Wait a minute and try again." });
     const raw = await readBody(req, 4 * 1024);
@@ -299,20 +331,29 @@ export function createApp(deps: AppDeps) {
     } catch {
       return send(res, 400, { error: "invalid JSON" });
     }
+    const sc = scope(req, res);
     try {
       const response = await serialized(async () => {
-        const out = await fixLabel(deps.loadState(), body, {
+        const out = await fixLabel(sc.loadState(), body, {
           paypal: deps.paypal,
           now: deps.now(),
           ...(deps.lastPayPalReceipt ? { lastReceipt: deps.lastPayPalReceipt } : {}),
         });
         if (out.response.status !== "REFUSED") {
-          deps.saveState(out.state);
-          fixes.set(out.response.saleId, { simulated: out.response.simulated, paypalDebugId: out.response.paypalDebugId, status: out.response.status });
+          sc.saveState(out.state);
+          const r = out.response;
+          sc.fixes.set(r.saleId, {
+            simulated: r.simulated,
+            paypalDebugId: r.paypalDebugId,
+            status: r.status,
+            headline: r.release?.headline ?? null,
+            amountCents: r.release?.amountCents ?? null,
+            daysSooner: r.release?.daysSooner ?? null,
+          });
         }
         return out.response;
       });
-      return send(res, 200, { ...response, resetsOnRestart: deps.demo });
+      return send(res, 200, { ...response, resetsOnRestart: deps.demo, perVisitor: Boolean(sessions) });
     } catch (err) {
       if (err instanceof FixRequestError) return send(res, err.status, { error: err.message });
       throw err;
@@ -365,6 +406,13 @@ export function createApp(deps: AppDeps) {
         if (method !== "POST") return send(res, 405, { error: "method not allowed" });
         return await limitationPlan(req, res);
       }
+      if (url.pathname === "/api/demo/reset") {
+        if (method !== "POST") return send(res, 405, { error: "method not allowed" });
+        if (!sessions) return send(res, 404, { error: "Reset exists only on the public demo." });
+        const s = sessionFor(sessions, req, res);
+        sessions.reset(s);
+        return send(res, 200, { reset: true });
+      }
       if (method !== "GET" && method !== "HEAD") return send(res, 405, { error: "method not allowed" });
       if (url.pathname === "/api/dossier.md") {
         if (lastDossier === null) return send(res, 404, { error: "no evidence pack yet: check your invoices first" });
@@ -387,6 +435,12 @@ export function createApp(deps: AppDeps) {
         if (!proof) return send(res, 404, { error: "no recorded proof on this server" });
         return send(res, 200, { ...proof, simulated: SIMULATED, recordedWebhook: await loadWebhookProof(webhookProofPath) });
       }
+      if (url.pathname === "/api/dispute-proof") {
+        const sc = scope(req, res);
+        const view = await disputeView(deps.disputeProofPath ?? join(dirname(proofPath), "dispute-proof-2026-11-05.json"), sc.loadState(), deps.now());
+        if (!view) return send(res, 404, { error: "no recorded dispute on this server" });
+        return send(res, 200, view);
+      }
       if (url.pathname === "/api/balance") {
         if (!balance) return send(res, 503, { error: "PayPal is not configured on this server" });
         try {
@@ -398,10 +452,12 @@ export function createApp(deps: AppDeps) {
       }
       if (url.pathname === "/api/dashboard") {
         // `live` tells the panel which live PayPal reads this server can do, so it never calls a disabled endpoint.
+        const sc = scope(req, res);
         return send(res, 200, {
-          ...buildDashboard(deps.loadState(), deps.now(), deps.demo, deps.banner ?? null),
+          ...buildDashboard(sc.loadState(), deps.now(), deps.demo, deps.banner ?? null),
           live: { balance: Boolean(balance), paypal: Boolean(deps.paypal), ai: Boolean(deps.invoiceExtractor || deps.noticeExtractor) },
-          fixes: Object.fromEntries(fixes),
+          fixes: Object.fromEntries(sc.fixes),
+          perVisitor: Boolean(sessions),
           ask: { live: Boolean(deps.askLive), suggestions: suggestionsOf(askRecorded) },
         });
       }

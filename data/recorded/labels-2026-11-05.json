@@ -1,0 +1,58 @@
+{
+  "recordedAt": "2026-11-05T07:11:47.971Z",
+  "note": "Real model readings of the two fictional sample labels in data/sample-labels, replayed in the demo without an API key.",
+  "labels": [
+    {
+      "filename": "maria-0007-reprinted-label.png",
+      "sha256": "8289cdc6712a41f9f6db2e5b375b086930dc49ef7b1d7d40bfff6db6a350232d",
+      "reading": {
+        "carrier": "UPS",
+        "tracking_number": "1ZA1B2C30043000072",
+        "service": "UPS Ground",
+        "ship_to": {
+          "name": "LEAH LONG",
+          "line1": "7095 ELM ST",
+          "city": "CHICAGO",
+          "state": "IL",
+          "postal_code": "60614",
+          "country": null
+        },
+        "ship_date": "2026-11-05"
+      },
+      "usage": [
+        {
+          "model": "claude-sonnet-5",
+          "input_tokens": 1591,
+          "output_tokens": 133,
+          "latency_ms": 2840
+        }
+      ]
+    },
+    {
+      "filename": "maria-0007-old-label.png",
+      "sha256": "8fafae9acf8f1d806c31a93977504e38f6f968ebaaff3963e5bf6200eeece85e",
+      "reading": {
+        "carrier": "UPS",
+        "tracking_number": "1ZA1B2C3004200222",
+        "service": "UPS Ground",
+        "ship_to": {
+          "name": "LEAH LONG",
+          "line1": "7095 ELM ST",
+          "city": "CHICAGO",
+          "state": "IL",
+          "postal_code": "60641",
+          "country": null
+        },
+        "ship_date": "2026-11-05"
+      },
+      "usage": [
+        {
+          "model": "claude-sonnet-5",
+          "input_tokens": 1591,
+          "output_tokens": 127,
+          "latency_ms": 2787
+        }
+      ]
+    }
+  ]
+}

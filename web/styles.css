@@ -235,3 +235,13 @@ ul.deliveries li { padding: 6px 0; border-top: 1px solid var(--border); overflow
 .claims li { display: flex; gap: 8px; padding: 3px 0; }
 .claims li.claim-bad { color: var(--warn); background: var(--warn-bg); border-radius: 6px; padding: 3px 6px; }
 @media (max-width: 640px) { .ask-form { flex-direction: column; } }
+
+/* Demo reset, step 5 */
+.banner { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; justify-content: space-between; }
+.btn-sm { padding: 4px 10px; font-size: .82rem; }
+.dispute-case, .dispute-preview { margin-top: 8px; overflow-wrap: anywhere; }
+.dispute-preview { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 16px; }
+.dispute-story { padding-left: 1.2em; margin: 8px 0; }
+.dispute-story li { margin: 4px 0; }
+.caveats { padding-left: 1.2em; }
+.chart .recent-label { font-weight: 600; }

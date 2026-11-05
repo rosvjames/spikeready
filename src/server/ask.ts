@@ -4,7 +4,7 @@
 // tool that writes to PayPal, and code checks every fact it cites (src/assistant/claims.ts).
 import { z } from "zod";
 import type { AskResult, Assistant } from "../assistant/agent.js";
-import type { RecordedAssistant } from "../assistant/recorded.js";
+import { stateFingerprint, type RecordedAssistant, type Recheck } from "../assistant/recorded.js";
 import type { McpContext } from "../mcp/tools.js";
 import type { State } from "../store.js";
 import type { AiCallSummary } from "./ai-rails.js";
@@ -46,12 +46,16 @@ export interface AskDeps {
   recorded: RecordedAssistant | null;
   /** Builds the live assistant over the server's current data; null when paid AI is not allowed here. */
   live: (() => Assistant) | null;
+  /** Read-only context over the requesting visitor's data (used to re-check recorded answers). */
+  ctx?: McpContext;
 }
 
 export interface AskOutcome {
   result: AskResult;
   /** True when the live (paid) assistant answered; used for the rails and the daily budget. */
   live: boolean;
+  /** For recorded answers: whether every fact still holds for the visitor's current data. */
+  recheck: Recheck | null;
 }
 
 /** Parses the request and tells the route whether it would use the live (paid) assistant. */
@@ -83,10 +87,16 @@ export async function runAsk(plan: ReturnType<typeof planAsk>, deps: AskDeps): P
   const req = { question: body.question ?? "", mode: body.mode, pastedText: body.pastedText?.trim() || undefined, id: body.id };
   if (!live) {
     if (!deps.recorded) throw new AskRequestError(503, LIVE_OFF_MESSAGE, { suggestions: [] });
-    return { result: await deps.recorded.ask(req), live: false };
+    if (deps.ctx) {
+      // Pick the recording made for this visitor's data and re-check every fact against it now.
+      const fingerprint = stateFingerprint(deps.ctx.load().state);
+      const { result, recheck } = await deps.recorded.askFor(req, deps.ctx, fingerprint);
+      return { result, live: false, recheck };
+    }
+    return { result: await deps.recorded.ask(req), live: false, recheck: null };
   }
   const assistant = deps.live!();
-  return { result: await assistant.ask(req), live: true };
+  return { result: await assistant.ask(req), live: true, recheck: null };
 }
 
 /** The usage line the panel shows, and what the daily budget counts. */

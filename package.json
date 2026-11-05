@@ -30,7 +30,8 @@
     "dispute": "tsx scripts/simulate-dispute.ts",
     "ask": "tsx scripts/ask.ts",
     "open-dispute": "tsx scripts/open-sandbox-dispute.ts",
-    "dispute-real": "tsx scripts/dispute-real.ts"
+    "dispute-real": "tsx scripts/dispute-real.ts",
+    "record-labels": "tsx scripts/record-sample-labels.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.5.0",

@@ -108,14 +108,25 @@ try {
   if (shots) {
     // Collapse the long lists again for compact images.
     await page.locator("#more-proof").click();
-    for (const [id, file] of [["#step-spike", "step1-spike.png"], ["#step-tracking", "step2-tracking.png"], ["#step-calendar", "step3-calendar.png"], ["#notice-box", "step4-limitation.png"], ["#invoices-body", "step4-invoices.png"], ["#proof", "proof.png"]] as const) {
+    for (const [id, file] of [["#step-spike", "step1-spike.png"], ["#step-tracking", "step2-tracking.png"], ["#step-calendar", "step3-calendar.png"], ["#notice-box", "step4-limitation.png"], ["#invoices-body", "step4-invoices.png"], ["#step-dispute", "step5-dispute.png"], ["#proof", "proof.png"]] as const) {
       await page.locator(id).screenshot({ path: join(imgDir, file) });
     }
   }
   // The live action: fix the refused label. A wrong ZIP is refused again; the buyer's ZIP is uploaded
   // (simulated here: no PayPal credentials) and the release date moves 17 days sooner.
-  check("spike chart labels both recent days", (await page.locator("#spike-body .recent-label").count()) === 2);
-  check("calendar shows cash unlocked by verified tracking", /Verified tracking lets PayPal release \$665\.00/.test(await text("#step-calendar")));
+  const recentLabels = await page.locator("#spike-body .recent-label").allTextContents();
+  check("spike chart: one non-overlapping label for the recent window", recentLabels.length === 1 && /^Nov \d+–\d+$/.test(recentLabels[0] ?? ""), recentLabels.join(" | "));
+  const cal = await text("#step-calendar");
+  check(
+    "calendar: plain-words cash line (no 'dollar-days')",
+    /With verified tracking on PayPal, 5 payments \(\$665\.00\) can be released about 24 hours after delivery instead of waiting up to 21 days/.test(cal) && !/dollar-days/.test(cal),
+    cal.slice(0, 300),
+  );
+  await page.locator("#dispute-body .dispute-case").waitFor({ timeout: 10_000 });
+  const dispute = await text("#step-dispute");
+  check("step 5: the real sandbox case PP-R-QLW-10196536 and 'PayPal showed the buyer'", /PP-R-QLW-10196536/.test(dispute) && /PayPal showed the buyer/.test(dispute) && /translated from the sandbox buyer page in Spanish/.test(dispute));
+  check("step 5: maria-0007's evidence is weak before the fix", /If maria-0007's buyer says it never arrived Weak/.test(dispute), dispute.slice(-400));
+  check("demo banner offers Reset demo", await page.locator("#demo-reset").isVisible());
   check("proof shows the recorded signed webhook", /Recorded signed delivery/.test(await text("#proof")) && /PAYMENT\.CAPTURE\.COMPLETED/.test(await text("#proof")));
   const zip = page.locator("#fix-maria-0007");
   await zip.fill("60641");
@@ -126,10 +137,32 @@ try {
   await page.locator('.fix-form[data-sale="maria-0007"] button').click();
   await page.locator("#release-move").getByText("17 days sooner").waitFor({ timeout: 10_000 });
   const moved = await text("#release-move");
-  check("fix label: '$110.00 moves … 17 days sooner'", /\$110\.00 moves from Thursday, Nov 26 to Monday, Nov 9: 17 days sooner/.test(moved), moved);
+  check("fix label: 'You fixed maria-0007's label: $110.00 moves … 17 days sooner'", /You fixed maria-0007's label: \$110\.00 moves from Thursday, Nov 26 to Monday, Nov 9: 17 days sooner/.test(moved), moved);
+  check("fix label: says only this visitor's copy changed", /Only your copy of the demo changed/.test(moved));
   check("fix label: row now shows the (simulated) upload", /maria-0007[\s\S]*Simulated upload/.test(await text("#step-tracking")) && !(await page.locator("#tracking-body tr.rejected").count()));
   check("fix label: nothing left to unlock", !/could be released sooner/.test(await text("#step-calendar")));
   if (shots) await page.locator("#step-calendar").screenshot({ path: join(imgDir, "step3-release-move.png") });
+  await page.locator("#dispute-body").getByText("Partial").waitFor({ timeout: 10_000 });
+  check("step 5: maria-0007's evidence is partial after the fix", /If maria-0007's buyer says it never arrived Partial/.test(await text("#step-dispute")));
+  // Ask after the fix: the answer recorded for this data, still fully verified (never a stale answer).
+  await page.locator('[data-ask-id="release"]').click();
+  await page.locator("#ask-body .ask-check").waitFor({ timeout: 15_000 });
+  const askAfter = await text("#ask-body");
+  check("ask after the fix: answer recorded for this data, every fact verified", /real run for this data/.test(askAfter) && /Checked by code: (\d+)\/\1 facts verified/.test(askAfter) && /maria-0007 \$110\.00 Mon, Nov 9/.test(askAfter), askAfter.slice(0, 300));
+
+  // Another visitor (new cookies) still sees the recording: one judge's fix never leaks to the next.
+  const other = await browser.newContext({ viewport: { width: 1200, height: 900 } });
+  const op = await other.newPage();
+  await op.goto(base, { waitUntil: "load" });
+  await op.locator("#tracking-body table").waitFor({ timeout: 15_000 });
+  check("another visitor still sees maria-0007 refused", (await op.locator("#tracking-body tr.rejected").count()) > 0);
+  await other.close();
+
+  // Reset demo restores the recording for this visitor.
+  await page.locator("#demo-reset").click();
+  await page.waitForLoadState("load");
+  await page.locator("#tracking-body tr.rejected").first().waitFor({ timeout: 15_000 });
+  check("Reset demo brings back the refused label", (await page.locator("#tracking-body tr.rejected").count()) > 0 && !(await page.locator("#release-move .move").count()));
   check("no console errors (desktop)", consoleErrors.length === 0, consoleErrors.join(" | "));
 
   // Mobile

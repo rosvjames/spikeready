@@ -50,7 +50,12 @@ if (demo) {
   }
 }
 
+// Demo mode: every visitor gets their own copy of the demo data (cookie), so actions don't leak between visitors.
+const template = memory ? JSON.stringify(memory) : null;
+const demoSessions = demo && template ? () => JSON.parse(template) as State : null;
+
 const app = createApp({
+  demoSessions,
   loadState: () => memory ?? loadState(),
   saveState: (s) => (memory ? (memory = s) : saveState(s)),
   paypal,

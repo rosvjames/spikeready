@@ -134,7 +134,7 @@ export async function fixLabel(state: State, raw: unknown, ctx: FixContext): Pro
   const message = simulated
     ? "Label verified. Simulated upload: this server has no PayPal credentials, so nothing was sent to PayPal."
     : upload.result === "ALREADY_ON_PAYPAL"
-      ? "Label verified. PayPal already had this tracking number on the order, so nothing was added twice."
+      ? "Label verified. PayPal already has this tracking on the order (for example from an earlier demo run), so nothing was uploaded twice."
       : "Label verified and tracking uploaded to the PayPal sandbox order.";
   return {
     state: next,
