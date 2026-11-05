@@ -23,10 +23,13 @@
     "serve": "tsx scripts/serve.ts",
     "register-webhook": "tsx scripts/register-webhook.ts",
     "record-demo": "tsx scripts/record-demo.ts",
-    "eval": "tsx eval/run.ts"
+    "eval": "tsx eval/run.ts",
+    "mcp": "tsx scripts/mcp.ts",
+    "proof": "tsx scripts/proof.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.5.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "zod": "^4.6.7"
   },
   "devDependencies": {

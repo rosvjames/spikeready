@@ -1,0 +1,457 @@
+{
+  "generatedAt": "2026-11-05T05:57:34.096Z",
+  "environment": "sandbox",
+  "note": "Each row was read live from the PayPal sandbox (GET /v2/checkout/orders/{id}); paypalDebugId is the PayPal-Debug-Id header PayPal returned for that call.",
+  "totals": {
+    "sales": 39,
+    "completedCaptures": 39,
+    "ordersWithTracking": 38
+  },
+  "balances": {
+    "currency": "USD",
+    "available_balance": {
+      "currency_code": "USD",
+      "value": "5037.54"
+    },
+    "withheld_balance": {
+      "currency_code": "USD",
+      "value": "0.00"
+    },
+    "total_balance": {
+      "currency_code": "USD",
+      "value": "5037.54"
+    },
+    "paypalDebugId": "f239611c1171d"
+  },
+  "orders": [
+    {
+      "saleId": "maria-0001",
+      "orderId": "6XU96820VV0472430",
+      "orderStatus": "COMPLETED",
+      "captureId": "4KE20426LS998315U",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "30309",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:14.528Z",
+      "paypalDebugId": "f12751908d893"
+    },
+    {
+      "saleId": "maria-0002",
+      "orderId": "9PD45171048927737",
+      "orderStatus": "COMPLETED",
+      "captureId": "7WC03727WG681492A",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "80205",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:15.109Z",
+      "paypalDebugId": "f352086b4e746"
+    },
+    {
+      "saleId": "maria-0003",
+      "orderId": "0JT046172X410174S",
+      "orderStatus": "COMPLETED",
+      "captureId": "9FK02329UM218661Y",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "85004",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:15.785Z",
+      "paypalDebugId": "f352086508641"
+    },
+    {
+      "saleId": "maria-0004",
+      "orderId": "6FY755717K123851U",
+      "orderStatus": "COMPLETED",
+      "captureId": "5K7172038H626632P",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "11215",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:16.453Z",
+      "paypalDebugId": "f76726993a3e1"
+    },
+    {
+      "saleId": "maria-0005",
+      "orderId": "8K934701XG373752B",
+      "orderStatus": "COMPLETED",
+      "captureId": "3BW64165WB875893B",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "85004",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:16.943Z",
+      "paypalDebugId": "f889413f6d142"
+    },
+    {
+      "saleId": "maria-0006",
+      "orderId": "13N18173M1016654J",
+      "orderStatus": "COMPLETED",
+      "captureId": "7BJ68419Y5392364V",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "30309",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:17.474Z",
+      "paypalDebugId": "f889413071682"
+    },
+    {
+      "saleId": "maria-0007",
+      "orderId": "2PF47471EF114104V",
+      "orderStatus": "COMPLETED",
+      "captureId": "102425077C151171L",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "60614",
+      "trackersOnPayPal": 0,
+      "verifiedAt": "2026-11-05T05:57:18.146Z",
+      "paypalDebugId": "f923000467fc6"
+    },
+    {
+      "saleId": "maria-0008",
+      "orderId": "3UR67329TW8443719",
+      "orderStatus": "COMPLETED",
+      "captureId": "7VH22210624844138",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "80205",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:18.591Z",
+      "paypalDebugId": "f9230002f0320"
+    },
+    {
+      "saleId": "maria-0009",
+      "orderId": "6W94972001888680G",
+      "orderStatus": "COMPLETED",
+      "captureId": "2VT20633MA217920E",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "02139",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:19.261Z",
+      "paypalDebugId": "f802535c5dbfa"
+    },
+    {
+      "saleId": "maria-0010",
+      "orderId": "5LL03288DC642062L",
+      "orderStatus": "COMPLETED",
+      "captureId": "1V559773778503257",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "11215",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:19.922Z",
+      "paypalDebugId": "f802535182568"
+    },
+    {
+      "saleId": "maria-0011",
+      "orderId": "47J80555FC719002F",
+      "orderStatus": "COMPLETED",
+      "captureId": "47023957AC800441B",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "97214",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:20.389Z",
+      "paypalDebugId": "f6852748c8c08"
+    },
+    {
+      "saleId": "maria-0012",
+      "orderId": "6LH29154AC386760M",
+      "orderStatus": "COMPLETED",
+      "captureId": "7GD09155T14261841",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "30309",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:20.840Z",
+      "paypalDebugId": "f685274376a4a"
+    },
+    {
+      "saleId": "maria-0013",
+      "orderId": "3C131165FB693340M",
+      "orderStatus": "COMPLETED",
+      "captureId": "3KD20385CM805840E",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "37203",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:21.391Z",
+      "paypalDebugId": "f4012009a6906"
+    },
+    {
+      "saleId": "maria-0014",
+      "orderId": "7L113306RM111972R",
+      "orderStatus": "COMPLETED",
+      "captureId": "8FU72672VY5450220",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "92101",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:21.856Z",
+      "paypalDebugId": "f4012001b8ed0"
+    },
+    {
+      "saleId": "maria-0015",
+      "orderId": "11L7094847651330K",
+      "orderStatus": "COMPLETED",
+      "captureId": "57F9543262431830H",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "19103",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:22.324Z",
+      "paypalDebugId": "f18459998dd28"
+    },
+    {
+      "saleId": "maria-0016",
+      "orderId": "0FC6174176845240N",
+      "orderStatus": "COMPLETED",
+      "captureId": "2EN68720KE0166318",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "85004",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:22.992Z",
+      "paypalDebugId": "f184599eb6794"
+    },
+    {
+      "saleId": "maria-0017",
+      "orderId": "2FM85746YF295135T",
+      "orderStatus": "COMPLETED",
+      "captureId": "2BN43374SD3354512",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "78704",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:23.406Z",
+      "paypalDebugId": "f125835608517"
+    },
+    {
+      "saleId": "maria-0018",
+      "orderId": "97L49858KX373170D",
+      "orderStatus": "COMPLETED",
+      "captureId": "82998041F56166048",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "33130",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:23.851Z",
+      "paypalDebugId": "f125835aa2375"
+    },
+    {
+      "saleId": "maria-0019",
+      "orderId": "8S805165CR2976609",
+      "orderStatus": "COMPLETED",
+      "captureId": "0TU96137X2470731A",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "55408",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:24.292Z",
+      "paypalDebugId": "f836840708a80"
+    },
+    {
+      "saleId": "maria-0020",
+      "orderId": "99859662FB722222X",
+      "orderStatus": "COMPLETED",
+      "captureId": "74R54504GC5900421",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "33130",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:24.796Z",
+      "paypalDebugId": "f8368409dbd30"
+    },
+    {
+      "saleId": "maria-0021",
+      "orderId": "4KL69955GR794521C",
+      "orderStatus": "COMPLETED",
+      "captureId": "1YE380281F003352H",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "85004",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:25.374Z",
+      "paypalDebugId": "f1825096f723f"
+    },
+    {
+      "saleId": "maria-0022",
+      "orderId": "3X208426V2981132S",
+      "orderStatus": "COMPLETED",
+      "captureId": "82C25773HP989901N",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "85004",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:25.795Z",
+      "paypalDebugId": "f182509d7f9e6"
+    },
+    {
+      "saleId": "maria-0023",
+      "orderId": "5GV89583E1783460H",
+      "orderStatus": "COMPLETED",
+      "captureId": "4VL6054559880642S",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "98103",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:26.251Z",
+      "paypalDebugId": "f3920299645d9"
+    },
+    {
+      "saleId": "maria-0024",
+      "orderId": "6WG41777P66695825",
+      "orderStatus": "COMPLETED",
+      "captureId": "1RB00612BV0963413",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "92101",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:26.694Z",
+      "paypalDebugId": "f3920295e1792"
+    },
+    {
+      "saleId": "maria-0025",
+      "orderId": "9Y468724MF243132L",
+      "orderStatus": "COMPLETED",
+      "captureId": "57621454VS6869435",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "92101",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:27.145Z",
+      "paypalDebugId": "f488369f0f066"
+    },
+    {
+      "saleId": "maria-0026",
+      "orderId": "06N94717DM488722S",
+      "orderStatus": "COMPLETED",
+      "captureId": "95D31587RB3712609",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "30309",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:27.592Z",
+      "paypalDebugId": "f48836948150c"
+    },
+    {
+      "saleId": "maria-0027",
+      "orderId": "9T187952TN0166224",
+      "orderStatus": "COMPLETED",
+      "captureId": "5WJ0068802981405Y",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "80205",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:28.060Z",
+      "paypalDebugId": "f867213824671"
+    },
+    {
+      "saleId": "maria-0028",
+      "orderId": "22D80288SJ5605145",
+      "orderStatus": "COMPLETED",
+      "captureId": "5SV62073J37359455",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "11215",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:28.529Z",
+      "paypalDebugId": "f86721390ef59"
+    },
+    {
+      "saleId": "maria-0029",
+      "orderId": "7EY353510V039732G",
+      "orderStatus": "COMPLETED",
+      "captureId": "51C44920S6376623W",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "97214",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:29.024Z",
+      "paypalDebugId": "f855472fad2d1"
+    },
+    {
+      "saleId": "maria-0030",
+      "orderId": "26V756427C704961B",
+      "orderStatus": "COMPLETED",
+      "captureId": "93L984146G646742X",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "30309",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:29.469Z",
+      "paypalDebugId": "f8554722cbbe1"
+    },
+    {
+      "saleId": "maria-0031",
+      "orderId": "4DW07788WL753635B",
+      "orderStatus": "COMPLETED",
+      "captureId": "53U78294DT259714K",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "19103",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:29.913Z",
+      "paypalDebugId": "f322929f0bee5"
+    },
+    {
+      "saleId": "maria-0032",
+      "orderId": "5NR177173C034515H",
+      "orderStatus": "COMPLETED",
+      "captureId": "55480689CS311414L",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "92101",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:30.356Z",
+      "paypalDebugId": "f322929a425a0"
+    },
+    {
+      "saleId": "maria-0033",
+      "orderId": "95112829N9786793U",
+      "orderStatus": "COMPLETED",
+      "captureId": "5BY05742GT723620R",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "80205",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:30.793Z",
+      "paypalDebugId": "f322929064059"
+    },
+    {
+      "saleId": "maria-0034",
+      "orderId": "4SW81854VS788760U",
+      "orderStatus": "COMPLETED",
+      "captureId": "2FF904536H845284V",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "98103",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:31.297Z",
+      "paypalDebugId": "f532906b828b2"
+    },
+    {
+      "saleId": "maria-0035",
+      "orderId": "0KK88821K0803144B",
+      "orderStatus": "COMPLETED",
+      "captureId": "2KP6707414012254M",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "55408",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:31.838Z",
+      "paypalDebugId": "f532906acaea7"
+    },
+    {
+      "saleId": "maria-0036",
+      "orderId": "5F092918VT691232Y",
+      "orderStatus": "COMPLETED",
+      "captureId": "4BY26934P82250139",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "30309",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:32.386Z",
+      "paypalDebugId": "f770454df177b"
+    },
+    {
+      "saleId": "maria-0037",
+      "orderId": "9W421960GL743962E",
+      "orderStatus": "COMPLETED",
+      "captureId": "2DM887766H807035K",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "92101",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:32.831Z",
+      "paypalDebugId": "f7704548c7934"
+    },
+    {
+      "saleId": "maria-0038",
+      "orderId": "0GR61363AT929133N",
+      "orderStatus": "COMPLETED",
+      "captureId": "5DG45453L7838892U",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "19103",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:33.300Z",
+      "paypalDebugId": "f8514652bad7c"
+    },
+    {
+      "saleId": "maria-0039",
+      "orderId": "6D271083E95037904",
+      "orderStatus": "COMPLETED",
+      "captureId": "4EW407779K288453X",
+      "captureStatus": "COMPLETED",
+      "shipToPostalCode": "98103",
+      "trackersOnPayPal": 1,
+      "verifiedAt": "2026-11-05T05:57:33.740Z",
+      "paypalDebugId": "f8514650b5d46"
+    }
+  ]
+}

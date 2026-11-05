@@ -35,8 +35,19 @@ export interface RequestOptions<T> {
   headers?: Record<string, string>;
 }
 
+/** One PayPal API call as a receipt: what was called, when, and PayPal's own debug id for it. */
+export interface CallReceipt {
+  method: string;
+  path: string;
+  status: number;
+  debugId: string | null;
+  at: string;
+}
+
 export interface PayPalClientOptions {
   fetch?: FetchLike;
+  /** Called after every API response (not OAuth), e.g. to keep receipts. Never receives secrets. */
+  onResponse?: (receipt: CallReceipt) => void;
   /** Retries for 429 and 5xx (same PayPal-Request-Id, so retries are safe). */
   maxRetries?: number;
   sleep?: (ms: number) => Promise<void>;
@@ -47,11 +58,13 @@ export class PayPalClient {
   private readonly fetch: FetchLike;
   private readonly maxRetries: number;
   private readonly sleep: (ms: number) => Promise<void>;
+  private readonly onResponse: ((r: CallReceipt) => void) | undefined;
 
   constructor(private readonly config: PayPalConfig, opts: PayPalClientOptions = {}) {
     this.fetch = opts.fetch ?? ((input, init) => globalThis.fetch(input, init));
     this.maxRetries = opts.maxRetries ?? 3;
     this.sleep = opts.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
+    this.onResponse = opts.onResponse;
   }
 
   get env(): PayPalConfig["env"] {
@@ -90,6 +103,7 @@ export class PayPalClient {
         },
         body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
       });
+      this.onResponse?.({ method, path, status: res.status, debugId: res.headers.get("paypal-debug-id"), at: new Date().toISOString() });
       const text = await res.text();
       let data: unknown = null;
       if (text) {
