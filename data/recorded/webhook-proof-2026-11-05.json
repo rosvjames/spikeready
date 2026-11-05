@@ -1,0 +1,12 @@
+{
+  "eventId": "WH-7E007012PT521941A-8YX72805MC8814906",
+  "eventType": "PAYMENT.CAPTURE.COMPLETED",
+  "verifiedAt": "2026-11-05T06:16:05.755Z",
+  "result": "IGNORED",
+  "resultNote": "Verified and acknowledged; a completed capture is not a hold event, so SpikeReady records nothing.",
+  "webhookId": "5KV70512HL481170V",
+  "endpoint": "https://spikeready.onrender.com/webhooks/paypal",
+  "trigger": "$1 sandbox sale: order 28A05264T0220870D, capture 68R73730HN121011A, captured 2026-11-05T06:15:23.709Z",
+  "verification": "PayPal POST /v1/notifications/verify-webhook-signature returned SUCCESS",
+  "deliverySeconds": 42
+}

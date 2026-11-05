@@ -42,6 +42,31 @@ export const SIMULATED = [
   "Release dates follow PayPal's published production policy; the sandbox never releases holds.",
 ];
 
+/** A real PayPal webhook delivery that this server verified with PayPal (kept, since the live list resets). */
+export const WebhookProof = z.object({
+  eventId: z.string(),
+  eventType: z.string(),
+  verifiedAt: z.string(),
+  result: z.string(),
+  resultNote: z.string().optional(),
+  webhookId: z.string(),
+  endpoint: z.string().optional(),
+  trigger: z.string(),
+  verification: z.string(),
+  deliverySeconds: z.number().optional(),
+});
+export type WebhookProof = z.infer<typeof WebhookProof>;
+
+export const WEBHOOK_PROOF_FILE_NAME = "webhook-proof-2026-11-05.json";
+
+export async function loadWebhookProof(path: string): Promise<WebhookProof | null> {
+  try {
+    return WebhookProof.parse(JSON.parse(await readFile(path, "utf8")));
+  } catch {
+    return null;
+  }
+}
+
 export async function loadProof(path: string): Promise<ProofFile | null> {
   try {
     return ProofFile.parse(JSON.parse(await readFile(path, "utf8")));

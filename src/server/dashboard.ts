@@ -6,6 +6,7 @@ import { dailyTotals, detectSpike, readinessChecklist, SPIKE_RULE, type Checklis
 import type { State } from "../store.js";
 import { normalizeTracking } from "../tracking/numbers.js";
 import { verifyShipment } from "../tracking/verify.js";
+import { cashUnlocked, type CashUnlocked } from "./cash.js";
 
 export type TrackingStatus = "UPLOADED" | "ALREADY_ON_PAYPAL" | "READY" | "REJECTED" | "NO_LABEL";
 
@@ -31,6 +32,8 @@ export interface Dashboard {
     totalHeldCents: number;
     actionableCents: number;
     days: { date: string; label: string; amountCents: number; forecasts: Forecast[] }[];
+    /** How much held money verified tracking lets PayPal release before the 21-day maximum. */
+    unlocked: CashUnlocked;
   };
   sales: SaleRow[];
   holds: Hold[];
@@ -75,6 +78,7 @@ export function buildDashboard(state: State, now: Date, demo: boolean, banner: s
       totalHeldCents: cal.totalHeldCents,
       actionableCents: cal.actionableCents,
       days: cal.days.map((d) => ({ ...d, label: weekdayLabel(d.date) })),
+      unlocked: cashUnlocked(cal.days.flatMap((d) => d.forecasts), tz),
     },
     sales: state.sales.map((s) => ({
       saleId: s.saleId,

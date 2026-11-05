@@ -99,6 +99,24 @@ try {
       await page.locator(id).screenshot({ path: join(imgDir, file) });
     }
   }
+  // The live action: fix the refused label. A wrong ZIP is refused again; the buyer's ZIP is uploaded
+  // (simulated here: no PayPal credentials) and the release date moves 17 days sooner.
+  check("spike chart labels both recent days", (await page.locator("#spike-body .recent-label").count()) === 2);
+  check("calendar shows cash unlocked by verified tracking", /Verified tracking lets PayPal release \$665\.00/.test(await text("#step-calendar")));
+  check("proof shows the recorded signed webhook", /Recorded signed delivery/.test(await text("#proof")) && /PAYMENT\.CAPTURE\.COMPLETED/.test(await text("#proof")));
+  const zip = page.locator("#fix-maria-0007");
+  await zip.fill("60641");
+  await page.locator('.fix-form[data-sale="maria-0007"] button').click();
+  await page.locator("#fix-result-maria-0007").getByText("Still refused").waitFor({ timeout: 10_000 });
+  check("fix label: wrong ZIP refused again", /Still refused/.test(await text("#fix-result-maria-0007")));
+  await zip.fill("60614");
+  await page.locator('.fix-form[data-sale="maria-0007"] button').click();
+  await page.locator("#release-move").getByText("17 days sooner").waitFor({ timeout: 10_000 });
+  const moved = await text("#release-move");
+  check("fix label: '$110.00 moves … 17 days sooner'", /\$110\.00 moves from Thursday, Nov 26 to Monday, Nov 9: 17 days sooner/.test(moved), moved);
+  check("fix label: row now shows the (simulated) upload", /maria-0007[\s\S]*Simulated upload/.test(await text("#step-tracking")) && !(await page.locator("#tracking-body tr.rejected").count()));
+  check("fix label: nothing left to unlock", !/could be released sooner/.test(await text("#step-calendar")));
+  if (shots) await page.locator("#step-calendar").screenshot({ path: join(imgDir, "step3-release-move.png") });
   check("no console errors (desktop)", consoleErrors.length === 0, consoleErrors.join(" | "));
 
   // Mobile

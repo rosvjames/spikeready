@@ -6,6 +6,12 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "
 const instantDate = (iso) => new Date(iso).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "America/New_York" });
 const POLICY_URL = "https://www.paypal.com/us/cshelp/article/how-can-i-release-my-payments-on-hold-help129";
 const shortDate = (d) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+const fmtCost = (usdValue) => (usdValue == null ? "price unknown" : usdValue < 0.01 ? `$${usdValue.toFixed(4)}` : `$${usdValue.toFixed(3)}`);
+/** "Read by claude-sonnet-5 in 3.8 s, $0.005" for a live AI result. */
+const aiLine = (ai) =>
+  ai ? `<p class="fine ai-line">Read live by ${esc(ai.model)} in ${(ai.latencyMs / 1000).toFixed(1)} s (${plural(ai.calls, "call")}), ${esc(fmtCost(ai.costUsd))}. The AI only read; code made every decision.</p>` : "";
+let dashboard = null;
 
 const tip = $("tooltip");
 function showTip(text, x, y) {
@@ -38,7 +44,7 @@ function spikeChart(days, recentFrom) {
     svg += `<g class="bar" data-tip="${esc(label)}"><rect x="${padL + i * step}" y="${padT}" width="${step}" height="${H - padT - padB}" fill="transparent"/>`;
     if (path) svg += `<path d="${path}" fill="${recent ? "var(--series-1)" : "var(--baseline)"}"/>`;
     svg += `</g>`;
-    if (i === 0 || d.date === recentFrom) svg += `<text x="${x + bw / 2}" y="${H - 6}" text-anchor="middle">${shortDate(d.date)}</text>`;
+    if (i === 0 || recent) svg += `<text x="${x + bw / 2}" y="${H - 6}" text-anchor="middle"${recent ? ' class="recent-label"' : ""}>${shortDate(d.date)}</text>`;
   });
   return svg + "</svg>";
 }
@@ -95,11 +101,17 @@ function renderCalendar(d) {
       return `<li><div class="cal-head"><span class="cal-amt">${usd(day.amountCents)}</span><span class="cal-date">releases ${esc(day.label)}</span></div><ul class="cal-why">${why}</ul></li>`;
     })
     .join("");
+  const u = c.unlocked;
+  const unlocked = u && u.amountCents
+    ? `<div class="alert calm unlock" role="status"><span class="ico" aria-hidden="true">✓</span><div><strong>Verified tracking lets PayPal release ${usd(u.amountCents)} up to ${plural(u.maxDaysSooner, "day")} before the 21-day maximum.</strong>${plural(u.payments, "payment")}, on average ${u.avgDaysSooner} days sooner: about ${u.dollarDays.toLocaleString("en-US")} dollar-days of cash back in your hands earlier. Based on PayPal's published rules; PayPal decides.</div></div>`
+    : "";
   el.innerHTML = `
+    <div id="release-move" hidden></div>
     <p class="hero">${usd(c.totalHeldCents)}</p>
-    <p class="hero-sub">on hold in ${d.holds.length} payment${d.holds.length === 1 ? "" : "s"}.</p>
+    <p class="hero-sub">on hold in ${plural(d.holds.length, "payment")}.</p>
+    ${unlocked}
     <p class="fine">Expected dates follow PayPal's published rules; after a sales spike PayPal may keep a hold up to 21 days. <a href="${POLICY_URL}" target="_blank" rel="noopener">Source: PayPal Help Center</a></p>
-    ${c.actionableCents ? `<div class="alert spike" role="status"><span class="ico" aria-hidden="true">!</span><div><strong>${usd(c.actionableCents)} could be released sooner.</strong>Upload tracking for these payments.</div></div>` : ""}
+    ${c.actionableCents ? `<div class="alert spike" role="status"><span class="ico" aria-hidden="true">!</span><div><strong>${usd(c.actionableCents)} could be released sooner.</strong>Upload tracking for these payments (step 2).</div></div>` : ""}
     <ul class="cal">${items}</ul>`;
 }
 
@@ -119,8 +131,13 @@ function renderTracking(d) {
   const rows = [...d.sales]
     .sort((a, b) => (a.tracking.status === "REJECTED" ? -1 : b.tracking.status === "REJECTED" ? 1 : 0))
     .map((s, i) => {
-      const [cls, label] = STATUS[s.tracking.status] ?? ["pill-wait", s.tracking.status];
+      const fix = d.fixes?.[s.saleId];
+      const [cls, label] = fix?.simulated ? ["pill-wait", "Simulated upload"] : (STATUS[s.tracking.status] ?? ["pill-wait", s.tracking.status]);
       const rej = s.tracking.status === "REJECTED";
+      const fixable = rej && s.tracking.code === "POSTAL_CODE_MISMATCH";
+      const fixForm = fixable
+        ? `<form class="fix-form" data-sale="${esc(s.saleId)}"><label for="fix-${esc(s.saleId)}">Fix the label's ZIP</label><input id="fix-${esc(s.saleId)}" name="zip" inputmode="numeric" autocomplete="off" maxlength="10" value="${esc(s.tracking.labelPostalCode ?? "")}"><button type="submit" class="btn">Re-check and upload</button><span class="fine">Code re-checks the label against the buyer's PayPal address; only a match is uploaded to PayPal.</span></form><div class="fix-result" id="fix-result-${esc(s.saleId)}" aria-live="polite"></div>`
+        : "";
       const more = i >= VISIBLE ? " data-more hidden" : "";
       return `<tr class="${rej ? "rejected" : ""}"${more}>
         <td>${esc(s.saleId)}</td>
@@ -129,7 +146,7 @@ function renderTracking(d) {
         <td>${esc(s.shipTo.city)}, ${esc(s.shipTo.state)} <strong>${esc(s.shipTo.postalCode)}</strong></td>
         <td class="mono hide-sm">${esc(s.tracking.carrier ?? "")} ${esc(s.tracking.trackingNumber ?? "")}<br><span class="muted">label ZIP ${esc(s.tracking.labelPostalCode ?? "-")}</span></td>
         <td><span class="pill ${cls}">${label}</span><span class="show-sm muted">${esc(s.tracking.carrier ?? "")} · label ZIP ${esc(s.tracking.labelPostalCode ?? "-")}</span></td>
-      </tr>${rej && s.tracking.reason ? `<tr class="rejected reason-row"${more}><td colspan="6"><span class="reason">Why: ${esc(s.tracking.reason)}</span></td></tr>` : ""}`;
+      </tr>${rej && s.tracking.reason ? `<tr class="rejected reason-row"${more}><td colspan="6"><span class="reason">Why: ${esc(s.tracking.reason)}</span>${fixForm}</td></tr>` : ""}${fix ? `<tr class="fixed-row"${more}><td colspan="6"><span class="fine">Label fixed in this session${fix.simulated ? " (simulated upload: no PayPal credentials on this server)" : fix.paypalDebugId ? ` · PayPal-Debug-Id <span class="mono">${esc(fix.paypalDebugId)}</span>` : ""}.</span></td></tr>` : ""}`;
     })
     .join("");
   $("tracking-body").className = "";
@@ -139,6 +156,7 @@ function renderTracking(d) {
       <thead><tr><th>Sale</th><th class="hide-sm">Items</th><th class="num">Amount</th><th>Buyer address (PayPal)</th><th class="hide-sm">Label</th><th>Status</th></tr></thead>
       <tbody>${rows}</tbody></table></div>
     ${d.sales.length > VISIBLE ? `<button type="button" class="more" id="more-sales" aria-expanded="false">Show all ${d.sales.length} sales</button>` : ""}`;
+  for (const form of document.querySelectorAll(".fix-form")) form.addEventListener("submit", onFixSubmit);
   const more = $("more-sales");
   more?.addEventListener("click", () => {
     const open = more.getAttribute("aria-expanded") === "true";
@@ -146,6 +164,38 @@ function renderTracking(d) {
     more.setAttribute("aria-expanded", String(!open));
     more.textContent = open ? `Show all ${d.sales.length} sales` : "Show fewer";
   });
+}
+
+// The one action on PayPal the demo allows: correct a label refused for its ZIP. The server's code
+// re-verifies it and uploads only if it now matches the buyer's PayPal address.
+async function onFixSubmit(e) {
+  e.preventDefault();
+  const form = e.currentTarget;
+  const saleId = form.dataset.sale;
+  const out = $(`fix-result-${saleId}`);
+  const button = form.querySelector("button");
+  button.disabled = true;
+  out.innerHTML = `<p class="loading">Re-checking the label…</p>`;
+  try {
+    const res = await fetch("/api/tracking/fix", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ saleId, labelPostalCode: form.zip.value.trim() }) });
+    const r = await res.json();
+    if (!res.ok) throw new Error(r.error ?? `HTTP ${res.status}`);
+    if (r.status === "REFUSED") {
+      out.innerHTML = `<p class="error" role="alert">Still refused: ${esc(r.reason)}</p>`;
+      return;
+    }
+    await loadDashboard();
+    const move = $("release-move");
+    if (move && r.release) {
+      move.hidden = false;
+      move.innerHTML = `<div class="alert calm move" role="status"><span class="ico" aria-hidden="true">✓</span><div><strong>${esc(r.release.headline)}</strong>${esc(r.message)}${r.paypalDebugId ? ` PayPal-Debug-Id <span class="mono">${esc(r.paypalDebugId)}</span>.` : ""}${r.resetsOnRestart ? " This demo keeps the change in memory; it resets when the server restarts." : ""}</div></div>`;
+      $("step-calendar").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  } catch (err) {
+    out.innerHTML = `<p class="error" role="alert">${esc(err.message)}</p>`;
+  } finally {
+    button.disabled = false;
+  }
 }
 
 // ---- Step 4: invoices. The server reads (AI) and reconciles (code); the panel only shows the result.
@@ -157,11 +207,12 @@ function updateInvoiceCheck(r) {
   const short = r.coverage.filter((c) => c.covered < c.sold).length;
   const blockers = r.gaps.filter((g) => g.severity === "blocker").length;
   const [cls, sym, label] = r.ready ? ["ok", "✓", "Done"] : ["no", "✗", "Missing"];
-  const msg = r.ready ? "Supplier invoices cover the units you sold." : `Supplier invoices: ${blockers} issue(s) to fix${short ? `, ${short} product(s) not fully covered` : ""} (see step 4).`;
+  const msg = r.ready ? "Supplier invoices cover the units you sold." : `Supplier invoices: ${plural(blockers, "issue")} to fix${short ? `, ${plural(short, "product")} not fully covered` : ""} (see step 4).`;
   li.innerHTML = `<span class="ico ${cls}" aria-label="${label}">${sym}</span><span>${esc(msg)}</span>`;
 }
 
 function renderInvoices(r) {
+  lastInvoiceResult = r;
   updateInvoiceCheck(r);
   lastInvoiceCheck = {
     ready: r.ready,
@@ -188,7 +239,8 @@ function renderInvoices(r) {
     .join("");
   $("invoices-body").innerHTML = `
     <div class="alert ${r.ready ? "calm" : "spike"}" role="status"><span class="ico" aria-hidden="true">${r.ready ? "✓" : "!"}</span>
-      <div><strong>${r.ready ? "Ready to send" : `${r.gaps.filter((g) => g.severity === "blocker").length} issue(s) to fix before you send`}</strong>${r.source === "samples" ? "Sample invoices, read earlier by the AI (recorded) and checked now by code against your PayPal sales." : "Your invoices, read by the AI and checked by code against your PayPal sales."}</div></div>
+      <div><strong>${r.ready ? "Ready to send" : `${plural(r.gaps.filter((g) => g.severity === "blocker").length, "issue")} to fix before you send`}</strong>${r.source === "samples" ? "Sample invoices, read earlier by the AI (recorded) and checked now by code against your PayPal sales." : "Your invoices, read by the AI and checked by code against your PayPal sales."}</div></div>
+    ${aiLine(r.ai)}
     ${gaps ? `<ul class="gaps">${gaps}</ul>` : ""}
     <h3 class="sub">Units sold on PayPal vs. units on your invoices</h3>
     <div class="table-wrap"><table><thead><tr><th>Product</th><th class="num">Sold</th><th class="num">On invoices</th><th>Status</th></tr></thead><tbody>${cov}</tbody></table></div>
@@ -228,7 +280,7 @@ function renderPlan(r) {
   const p = r.plan;
   if (r.noticeText !== null && r.noticeText !== undefined) $("notice-text").value = r.noticeText;
   const dl = p.deadline
-    ? `<span><strong>Respond by ${esc(longDate(p.deadline.date))}</strong> · ${p.deadline.overdue ? `<span class="pill pill-bad">${Math.abs(p.deadline.daysLeft)} day(s) overdue</span>` : `${p.deadline.daysLeft} day(s) left`}</span>`
+    ? `<span><strong>Respond by ${esc(longDate(p.deadline.date))}</strong> · ${p.deadline.overdue ? `<span class="pill pill-bad">${plural(Math.abs(p.deadline.daysLeft), "day")} overdue</span>` : `${plural(p.deadline.daysLeft, "day")} left`}</span>`
     : `<span>No deadline stated in the message.</span>`;
   const meta = `<p class="plan-meta"><span><strong>${esc(KIND_LABEL[p.kind] ?? p.kind)}</strong></span>${p.caseId ? `<span>Case ${esc(p.caseId)}</span>` : ""}${dl}</p>`;
   const warnings = p.warnings.map((w) => `<div class="alert spike" role="alert"><span class="ico" aria-hidden="true">!</span><div><strong>Careful with this message</strong>${esc(w)}</div></div>`).join("");
@@ -247,6 +299,7 @@ function renderPlan(r) {
     ${meta}
     ${warnings}
     <p class="fine">${esc(summary)}${r.source === "sample" ? " · Sample notice, read earlier by the AI (recorded); quotes checked now by code." : ""}</p>
+    ${aiLine(r.ai)}
     ${items ? `<ul class="plan">${items}</ul>` : `<p class="muted">The message does not ask for any documents.</p>`}
     ${unverified}
     <p class="plan-note">${esc(p.guidance)}</p>`;
@@ -342,6 +395,11 @@ async function renderProof() {
           <tbody>${rows}</tbody></table></div>
         ${p.orders.length > VISIBLE ? `<button type="button" class="more" id="more-proof" aria-expanded="false">Show all ${p.orders.length} orders</button>` : ""}`
       : `<p class="muted">No recorded receipts on this server.</p>`;
+    const rec = p?.recordedWebhook;
+    const recorded = rec
+      ? `<div class="recorded-webhook"><p><strong>Recorded signed delivery</strong> · ${esc(rec.eventType)} · <span class="mono">${esc(rec.eventId)}</span></p>
+          <p class="fine">Trigger: ${esc(rec.trigger)}. Delivered to ${esc(rec.endpoint ?? "this server")}${rec.deliverySeconds ? ` ${esc(rec.deliverySeconds)} s later` : ""} and verified ${esc(proofTime(rec.verifiedAt))}: ${esc(rec.verification)}. ${esc(rec.resultNote ?? rec.result)}</p></div>`
+      : "";
     const deliveries = w.verified.length
       ? `<ul class="deliveries">${w.verified.map((v) => `<li><strong>${esc(v.eventType)}</strong> · <span class="mono">${esc(v.eventId)}</span> · verified ${esc(proofTime(v.verifiedAt))} · ${esc(v.result)}</li>`).join("")}</ul>`
       : `<p class="fine">${w.configured ? "No signed deliveries since this server started." : "Webhooks are not configured on this server."}</p>`;
@@ -350,7 +408,9 @@ async function renderProof() {
       <div class="proof-grid">
         <div><h3 class="sub">Sandbox receipts</h3>${receipts}</div>
         <div><h3 class="sub">Live PayPal webhooks, signature verified</h3>
-          <p class="muted">PayPal signs every webhook; this server asks PayPal to verify the signature before acting. Deliveries verified since the server started:</p>
+          <p class="muted">PayPal signs every webhook; this server asks PayPal to verify the signature before acting.</p>
+          ${recorded}
+          <p class="fine">Live list (resets when the free server restarts):</p>
           ${deliveries}</div>
         <div><h3 class="sub">What the demo simulates</h3>
           <ul class="simulated">${(p?.simulated ?? []).map((t) => `<li>${esc(t)}</li>`).join("")}</ul></div>
@@ -385,18 +445,28 @@ async function renderBalance() {
   }
 }
 
+async function loadDashboard() {
+  const res = await fetch("/api/dashboard", { headers: { Accept: "application/json" } });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const d = await res.json();
+  dashboard = d;
+  renderSpike(d);
+  renderCalendar(d);
+  renderTracking(d);
+  if (d.live?.balance) renderBalance();
+  // Keep a finished invoice check reflected in the step-1 checklist after a reload.
+  if (lastInvoiceResult) updateInvoiceCheck(lastInvoiceResult);
+  return d;
+}
+
+let lastInvoiceResult = null;
+
 async function main() {
   try {
-    const res = await fetch("/api/dashboard", { headers: { Accept: "application/json" } });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const d = await res.json();
+    const d = await loadDashboard();
     $("seller").textContent = `${d.seller.name} · ${d.sales.length} sales`;
     $("demo-banner").hidden = !d.demo;
     if (d.demo) $("demo-banner").textContent = d.banner ?? "Demo data. No real money or accounts.";
-    renderSpike(d);
-    renderCalendar(d);
-    renderTracking(d);
-    if (d.live?.balance) renderBalance();
   } catch (err) {
     for (const id of ["spike-body", "calendar-body", "tracking-body"]) $(id).textContent = `Could not load the dashboard (${err.message}).`;
   }

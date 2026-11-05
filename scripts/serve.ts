@@ -10,6 +10,7 @@ import { AnthropicExtractor } from "../src/invoices/extract.js";
 import { AnthropicNoticeExtractor } from "../src/limitation/extract.js";
 import { PayPalClient, type CallReceipt } from "../src/paypal/client.js";
 import { readBalance } from "../src/server/proof.js";
+import { dailyCapFromEnv } from "../src/server/ai-rails.js";
 import { createApp, defaultWebDir } from "../src/server/app.js";
 import { buildDemoState } from "../src/server/demo-state.js";
 import { loadRecordedDemo, SYNTHETIC_BANNER } from "../src/server/recorded.js";
@@ -63,6 +64,10 @@ const app = createApp({
   // Same rule for reading pasted PayPal notices with the AI.
   balanceReader: paypal ? () => readBalance(paypal!, () => lastReceipt) : null,
   noticeExtractor: aiUploadsEnabled(process.env) ? () => new AnthropicNoticeExtractor() : null,
+  // The "fix label" action shows the PayPal-Debug-Id of the call it made.
+  lastPayPalReceipt: () => lastReceipt,
+  // Live AI on a public server: per-visitor rate limit plus a daily dollar cap (default $1.00).
+  aiDailyUsd: dailyCapFromEnv(process.env),
 });
 
 const port = Number(process.env.PORT ?? 3000);

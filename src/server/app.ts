@@ -12,7 +12,12 @@ import { InvoiceRequestError, MAX_INVOICE_BODY_BYTES, runInvoiceCheck } from "./
 import { LimitationRequestError, MAX_LIMITATION_BODY_BYTES, runLimitationPlan } from "./limitation.js";
 import type { NoticeExtractor } from "../limitation/extract.js";
 import { verifyWebhookSignature } from "./verify-webhook.js";
-import { cachedBalance, defaultProofPath, loadProof, readBalance, SIMULATED, type BalanceReading } from "./proof.js";
+import { cachedBalance, defaultProofPath, loadProof, loadWebhookProof, readBalance, SIMULATED, WEBHOOK_PROOF_FILE_NAME, type BalanceReading } from "./proof.js";
+import { dirname } from "node:path";
+import type { CallReceipt } from "../paypal/client.js";
+import { DailyAiBudget, summarizeUsage, type AiUsage } from "./ai-rails.js";
+import { FixRequestError, fixLabel } from "./fix-label.js";
+import { clientKey, createRateLimiter } from "./rate-limit.js";
 
 export interface AppDeps {
   loadState: () => State;
@@ -39,6 +44,12 @@ export interface AppDeps {
   proofPath?: string;
   /** Live balance reader (with PayPal-Debug-Id); defaults to reading through `paypal` without the debug id. */
   balanceReader?: (() => Promise<BalanceReading>) | null;
+  /** Last PayPal call receipt (method, path, PayPal-Debug-Id), to show the debug id of a live action. */
+  lastPayPalReceipt?: () => CallReceipt | null;
+  /** Daily dollar cap for live AI on this server (SPIKEREADY_AI_DAILY_USD, default 1.00). */
+  aiDailyUsd?: number;
+  /** Per-client limits: live AI requests and "fix label" actions (per minute). */
+  rateLimits?: { aiPerMinute?: number; fixPerMinute?: number };
 }
 
 export const MAX_BODY_BYTES = 1024 * 1024;
@@ -95,6 +106,17 @@ export function createApp(deps: AppDeps) {
   const verifiedDeliveries: { eventId: string; eventType: string; verifiedAt: string; result: string }[] = [];
 
   const proofPath = deps.proofPath ?? defaultProofPath(deps.webDir);
+  const webhookProofPath = join(dirname(proofPath), WEBHOOK_PROOF_FILE_NAME);
+  const aiBudget = new DailyAiBudget(deps.aiDailyUsd ?? 1);
+  const aiLimiter = createRateLimiter(deps.rateLimits?.aiPerMinute ?? 5, 60_000);
+  const fixLimiter = createRateLimiter(deps.rateLimits?.fixPerMinute ?? 10, 60_000);
+  /** Gate for a request that would call the paid AI: per-client limit, then the daily cap. */
+  function aiGate(req: IncomingMessage): { status: number; error: string } | null {
+    if (!aiLimiter.take(clientKey(req))) return { status: 429, error: "Too many AI requests from you right now. Wait a minute, or use the samples." };
+    if (aiBudget.exhausted()) return { status: 429, error: "Today's AI budget for this public demo is used up. The samples still work; try your own files tomorrow." };
+    return null;
+  }
+  const usageOf = (x: unknown): AiUsage[] => ((x as { usage?: AiUsage[] } | null)?.usage ?? []);
   const paypalForBalance = deps.paypal;
   const balance =
     deps.balanceReader !== undefined
@@ -152,6 +174,13 @@ export function createApp(deps: AppDeps) {
     } catch {
       return send(res, 400, { error: "invalid JSON" });
     }
+    const live = !(body as { useSamples?: unknown } | null)?.useSamples && Boolean(deps.invoiceExtractor);
+    if (live) {
+      const blocked = aiGate(req);
+      if (blocked) return send(res, blocked.status, { error: blocked.error });
+    }
+    const extractor = deps.invoiceExtractor ? deps.invoiceExtractor() : null;
+    const started = Date.now();
     const state = deps.loadState();
     try {
       const { response, dossier } = await runInvoiceCheck(body, {
@@ -160,11 +189,13 @@ export function createApp(deps: AppDeps) {
         timeZone: state.seller.timeZone,
         sellerName: state.seller.name,
         now: deps.now(),
-        extractor: deps.invoiceExtractor ? deps.invoiceExtractor() : null,
+        extractor,
         ...(deps.samplesDir ? { samplesDir: deps.samplesDir } : {}),
       });
       if (response.source === "samples") lastDossier = dossier.markdown;
-      return send(res, 200, response);
+      const ai = response.source === "upload" ? summarizeUsage(usageOf(extractor), Date.now() - started) : null;
+      aiBudget.add(ai);
+      return send(res, 200, { ...response, ai });
     } catch (err) {
       if (err instanceof InvoiceRequestError) return send(res, err.status, { error: err.message });
       if (err instanceof HttpError) throw err;
@@ -181,6 +212,13 @@ export function createApp(deps: AppDeps) {
     } catch {
       return send(res, 400, { error: "invalid JSON" });
     }
+    const live = typeof (body as { text?: unknown } | null)?.text === "string" && Boolean(deps.noticeExtractor);
+    if (live) {
+      const blocked = aiGate(req);
+      if (blocked) return send(res, blocked.status, { error: blocked.error });
+    }
+    const extractor = deps.noticeExtractor ? deps.noticeExtractor() : null;
+    const started = Date.now();
     const state = deps.loadState();
     try {
       const response = await runLimitationPlan(body, {
@@ -189,15 +227,49 @@ export function createApp(deps: AppDeps) {
         uploads: state.uploads,
         timeZone: state.seller.timeZone,
         now: deps.now(),
-        extractor: deps.noticeExtractor ? deps.noticeExtractor() : null,
+        extractor,
         ...(deps.noticesDir ? { samplesDir: deps.noticesDir } : {}),
       });
-      return send(res, 200, response);
+      const ai = response.source === "text" ? summarizeUsage(usageOf(extractor), Date.now() - started) : null;
+      aiBudget.add(ai);
+      return send(res, 200, { ...response, ai });
     } catch (err) {
       if (err instanceof LimitationRequestError) return send(res, err.status, { error: err.message });
       if (err instanceof HttpError) throw err;
       console.error(err instanceof Error ? err.message : err);
       return send(res, 502, { error: "Could not read the message. Try again." });
+    }
+  }
+
+  // Labels fixed through the panel (in memory; in demo mode they reset when the server restarts).
+  const fixes = new Map<string, { simulated: boolean; paypalDebugId: string | null; status: string }>();
+
+  async function trackingFix(req: IncomingMessage, res: ServerResponse): Promise<void> {
+    if (!fixLimiter.take(clientKey(req))) return send(res, 429, { error: "Too many attempts. Wait a minute and try again." });
+    const raw = await readBody(req, 4 * 1024);
+    let body: unknown;
+    try {
+      body = JSON.parse(raw);
+    } catch {
+      return send(res, 400, { error: "invalid JSON" });
+    }
+    try {
+      const response = await serialized(async () => {
+        const out = await fixLabel(deps.loadState(), body, {
+          paypal: deps.paypal,
+          now: deps.now(),
+          ...(deps.lastPayPalReceipt ? { lastReceipt: deps.lastPayPalReceipt } : {}),
+        });
+        if (out.response.status !== "REFUSED") {
+          deps.saveState(out.state);
+          fixes.set(out.response.saleId, { simulated: out.response.simulated, paypalDebugId: out.response.paypalDebugId, status: out.response.status });
+        }
+        return out.response;
+      });
+      return send(res, 200, { ...response, resetsOnRestart: deps.demo });
+    } catch (err) {
+      if (err instanceof FixRequestError) return send(res, err.status, { error: err.message });
+      throw err;
     }
   }
 
@@ -235,6 +307,10 @@ export function createApp(deps: AppDeps) {
         if (method !== "POST") return send(res, 405, { error: "method not allowed" });
         return await invoicesCheck(req, res);
       }
+      if (url.pathname === "/api/tracking/fix") {
+        if (method !== "POST") return send(res, 405, { error: "method not allowed" });
+        return await trackingFix(req, res);
+      }
       if (url.pathname === "/api/limitation/plan") {
         if (method !== "POST") return send(res, 405, { error: "method not allowed" });
         return await limitationPlan(req, res);
@@ -259,7 +335,7 @@ export function createApp(deps: AppDeps) {
       if (url.pathname === "/api/proof") {
         const proof = await loadProof(proofPath);
         if (!proof) return send(res, 404, { error: "no recorded proof on this server" });
-        return send(res, 200, { ...proof, simulated: SIMULATED });
+        return send(res, 200, { ...proof, simulated: SIMULATED, recordedWebhook: await loadWebhookProof(webhookProofPath) });
       }
       if (url.pathname === "/api/balance") {
         if (!balance) return send(res, 503, { error: "PayPal is not configured on this server" });
@@ -272,7 +348,11 @@ export function createApp(deps: AppDeps) {
       }
       if (url.pathname === "/api/dashboard") {
         // `live` tells the panel which live PayPal reads this server can do, so it never calls a disabled endpoint.
-        return send(res, 200, { ...buildDashboard(deps.loadState(), deps.now(), deps.demo, deps.banner ?? null), live: { balance: Boolean(balance) } });
+        return send(res, 200, {
+          ...buildDashboard(deps.loadState(), deps.now(), deps.demo, deps.banner ?? null),
+          live: { balance: Boolean(balance), paypal: Boolean(deps.paypal), ai: Boolean(deps.invoiceExtractor || deps.noticeExtractor) },
+          fixes: Object.fromEntries(fixes),
+        });
       }
       if (url.pathname.startsWith("/api/")) return send(res, 404, { error: "not found" });
       return await staticFile(url.pathname, res, method === "HEAD");
