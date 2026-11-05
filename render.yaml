@@ -21,5 +21,7 @@ services:
         sync: false
       - key: PAYPAL_WEBHOOK_ID
         sync: false
+      # Optional. On this public demo, reading uploaded invoices with the (paid) AI also needs
+      # SPIKEREADY_ALLOW_UPLOADS=1; without it, only the sample invoices work.
       - key: ANTHROPIC_API_KEY
         sync: false

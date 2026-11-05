@@ -2,6 +2,7 @@
 //   npm run serve                       # uses .spikeready/state.json from the scripts
 //   SPIKEREADY_DEMO=1 npm run serve     # with no state file: the run recorded in the PayPal sandbox, no keys needed
 //   SPIKEREADY_DEMO=force npm run serve # demo data even when a local state file exists
+import { aiUploadsEnabled } from "../src/server/invoices.js";
 import { existsSync } from "node:fs";
 import { createServer } from "node:http";
 import { loadDotEnv, loadPayPalConfig, MissingConfigError, ROOT } from "../src/config.js";
@@ -52,12 +53,14 @@ const app = createApp({
   webDir: defaultWebDir(ROOT),
   demo,
   banner,
-  invoiceExtractor: process.env.ANTHROPIC_API_KEY ? () => new AnthropicExtractor() : null,
+  // Paid AI reading of uploaded files: on when a key is set, except on a public demo (SPIKEREADY_DEMO),
+  // where anyone could spend the key; there it needs SPIKEREADY_ALLOW_UPLOADS=1 explicitly.
+  invoiceExtractor: aiUploadsEnabled(process.env) ? () => new AnthropicExtractor() : null,
 });
 
 const port = Number(process.env.PORT ?? 3000);
 createServer((req, res) => void app(req, res)).listen(port, () => {
   console.log(
-    `SpikeReady on http://localhost:${port}  (${demoSource}; PayPal ${paypal ? paypal.env : "not configured"}; webhooks ${webhookId && paypal ? "on" : "off"}; AI invoice reading ${process.env.ANTHROPIC_API_KEY ? "on" : "off"})`,
+    `SpikeReady on http://localhost:${port}  (${demoSource}; PayPal ${paypal ? paypal.env : "not configured"}; webhooks ${webhookId && paypal ? "on" : "off"}; AI invoice reading ${aiUploadsEnabled(process.env) ? "on" : "off"})`,
   );
 });

@@ -111,7 +111,9 @@ export function createApp(deps: AppDeps) {
     }
   }
 
-  // Last evidence pack, in memory only (never written to disk by the server).
+  // Last evidence pack built from the bundled SAMPLE invoices, in memory only. A pack built from a
+  // seller's own uploads is returned only in that seller's response: on a shared deployment, a global
+  // "last pack" would let any visitor download another seller's invoices summary.
   let lastDossier: string | null = null;
 
   async function invoicesCheck(req: IncomingMessage, res: ServerResponse): Promise<void> {
@@ -133,7 +135,7 @@ export function createApp(deps: AppDeps) {
         extractor: deps.invoiceExtractor ? deps.invoiceExtractor() : null,
         ...(deps.samplesDir ? { samplesDir: deps.samplesDir } : {}),
       });
-      lastDossier = dossier.markdown;
+      if (response.source === "samples") lastDossier = dossier.markdown;
       return send(res, 200, response);
     } catch (err) {
       if (err instanceof InvoiceRequestError) return send(res, err.status, { error: err.message });

@@ -7,6 +7,8 @@ import { holdFromEvent } from "./event.js";
 
 export type HandleResult =
   | { status: "DUPLICATE"; eventId: string }
+  /** Another event about a payment we already hold (e.g. PAYMENT-ON-HOLD then CAPTURE.PENDING). */
+  | { status: "HOLD_ALREADY_KNOWN"; hold: Hold }
   | { status: "IGNORED"; eventId: string; eventType: string }
   | { status: "HOLD_RECORDED"; hold: Hold };
 
@@ -21,5 +23,10 @@ export function handleWebhookEvent(state: State, raw: unknown, source: Hold["sou
     return { state: processed, result: { status: "IGNORED", eventId: event.id, eventType: event.event_type } };
   }
   const hold = holdFromEvent(event, state.sales, source);
+  // Several events can describe the same held payment; counting each would inflate the money on hold.
+  const known = processed.holds.find(
+    (h) => (hold.captureId !== null && h.captureId === hold.captureId) || (hold.captureId === null && hold.orderId !== null && h.orderId === hold.orderId),
+  );
+  if (known) return { state: processed, result: { status: "HOLD_ALREADY_KNOWN", hold: known } };
   return { state: { ...processed, holds: [...processed.holds, hold] }, result: { status: "HOLD_RECORDED", hold } };
 }

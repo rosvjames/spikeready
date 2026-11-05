@@ -16,6 +16,7 @@ import { PayPalApiError } from "../src/paypal/client.js";
 import { clientFromEnv } from "../src/paypal/index.js";
 import { authorizeOrder, buildOrderBody, captureAuthorization, captureOrder, createOrder, firstAuthorization, firstCapture, getOrder, type Capture, type Order, type PaymentSource } from "../src/paypal/orders.js";
 import { loadState, saveRaw, saveState, type State } from "../src/store.js";
+import { captureApproved, toSale } from "../src/demo/seed.js";
 import { run } from "./_cli.js";
 
 const { values: opt } = parseArgs({
@@ -39,49 +40,6 @@ const card: PaymentSource = {
 };
 const wallet: PaymentSource = { kind: "paypal", returnUrl: "https://example.com/spikeready/return", cancelUrl: "https://example.com/spikeready/cancel" };
 
-function toSale(draft: SaleDraft, order: Order, captureOverride?: Capture): Sale {
-  const cap = captureOverride ?? firstCapture(order);
-  if (!cap) throw new Error(`Order ${order.id} (${draft.saleId}) has no capture; status ${order.status}`);
-  return {
-    saleId: draft.saleId,
-    orderId: order.id,
-    captureId: cap.id,
-    captureStatus: cap.status,
-    capturedAt: cap.create_time ?? new Date().toISOString(),
-    amountCents: cap.amount ? toCents(cap.amount.value) : draft.items.reduce((t, i) => t + i.unitAmountCents * i.quantity, 0),
-    currency: cap.amount?.currency_code ?? "USD",
-    items: draft.items,
-    shipTo: draft.shipTo,
-  };
-}
-
-async function captureApproved(client: PayPalClient, state: State, drafts: SaleDraft[]): Promise<State> {
-  let s = state;
-  for (const p of s.pendingOrders) {
-    const order = await getOrder(client, p.orderId);
-    if (order.status !== "APPROVED") {
-      console.log(`${p.saleId}: ${order.status} (approve it here: ${p.approveUrl})`);
-      continue;
-    }
-    const draft = drafts.find((d) => d.saleId === p.saleId)!;
-    let sale: Sale;
-    if ((order as { intent?: string }).intent === "AUTHORIZE") {
-      const authorized = await authorizeOrder(client, p.orderId, `spikeready-${s.seedRunId}-${p.saleId}-authorize`);
-      const auth = firstAuthorization(authorized);
-      if (!auth) throw new Error(`${p.saleId}: no authorization returned (${authorized.status})`);
-      const cap = await captureAuthorization(client, auth.id, `spikeready-${s.seedRunId}-${p.saleId}-capture-auth`);
-      sale = toSale(draft, authorized, cap);
-    } else {
-      const captured = await captureOrder(client, p.orderId, `spikeready-${s.seedRunId}-${p.saleId}-capture`);
-      sale = toSale(draft, captured);
-    }
-    s = { ...s, sales: [...s.sales, sale], pendingOrders: s.pendingOrders.filter((x) => x.saleId !== p.saleId) };
-    saveState(s);
-    console.log(`${p.saleId}: captured ${formatUsd(sale.amountCents)} (${sale.captureStatus})`);
-  }
-  return s;
-}
-
 run(async () => {
   const drafts = mariaSpikeOrders(Number(opt.count));
   let state = loadState();
@@ -99,7 +57,7 @@ run(async () => {
 
   const client = clientFromEnv();
   if (opt["capture-approved"]) {
-    state = await captureApproved(client, state, drafts);
+    state = await captureApproved(client, state, drafts, saveState);
     console.log(`\n${state.sales.length} sales captured.`);
     return;
   }

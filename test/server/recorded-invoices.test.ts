@@ -156,6 +156,18 @@ describe("POST /api/invoices/check", () => {
     expect(seen).toEqual(["kicks.txt"]);
     expect(r.source).toBe("upload");
     expect(r.coverage.find((c: { sku: string }) => c.sku === "AF1-WHT-10")).toMatchObject({ sold: 14, covered: 2 });
+    expect(r.dossierMarkdown).toContain("kicks.txt");
+  });
+
+  it("never serves a pack built from uploaded files to other visitors via /api/dossier.md", async () => {
+    const extractor: Extractor = {
+      async extract() {
+        return { invoice_number: "PRIVATE-9", supplier_name: "Secret Supplier", supplier_has_contact: true, supplier_contact: { address: "1 A St", phone: null, email: null }, billed_to: "Maria Lopez", date: "2026-10-01", lines: [] } as unknown as Extracted;
+      },
+    };
+    const { base, post } = await start({ invoiceExtractor: () => extractor });
+    expect((await post({ files: [{ name: "private.txt", mediaType: "text/plain", base64: b64("x") }] })).status).toBe(200);
+    expect((await fetch(`${base}/api/dossier.md`)).status).toBe(404);
   });
 
   it("rejects unsupported media types and mismatched extensions", async () => {

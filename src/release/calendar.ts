@@ -74,10 +74,16 @@ export function forecastRelease({ hold, shipment, upload, now }: ForecastInput):
   const estimated = shipment.estimatedDeliveryAt
     ? Date.parse(shipment.estimatedDeliveryAt)
     : Date.parse(shipment.shippedAt) + POLICY.fallbackTransitDays * DAY;
+  // Not delivered yet: PayPal releases only after the carrier confirms delivery, so a carrier estimate
+  // that has already passed means "delivery could happen any moment", never "the money is due".
+  const late = estimated <= now.getTime();
+  const expectedDelivery = late ? now.getTime() : estimated;
   return done(
-    estimated + POLICY.releaseHoursAfterDelivery * HOUR,
+    expectedDelivery + POLICY.releaseHoursAfterDelivery * HOUR,
     "IN_TRANSIT",
-    shipment.estimatedDeliveryAt
+    late
+      ? `In transit with ${shipment.carrier} and past the expected delivery date; PayPal releases about ${POLICY.releaseHoursAfterDelivery} hours after the carrier confirms delivery.`
+      : shipment.estimatedDeliveryAt
       ? `In transit with ${shipment.carrier}; expected delivery plus about ${POLICY.releaseHoursAfterDelivery} hours.`
       : `In transit with ${shipment.carrier}; no carrier estimate, so we assume ${POLICY.fallbackTransitDays} days of transit plus about ${POLICY.releaseHoursAfterDelivery} hours.`,
     null,

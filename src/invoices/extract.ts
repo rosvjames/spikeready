@@ -43,7 +43,8 @@ export function documentBlock(doc: InvoiceDoc, content: Buffer): Anthropic.Conte
     case "application/pdf":
       return { type: "document", source: { type: "base64", media_type: "application/pdf", data } };
     case "text/plain":
-      return { type: "text", text: `<document filename="${doc.filename}">\n${doc.text ?? content.toString("utf8")}\n</document>` };
+      // The filename comes from the uploader: keep it from closing the attribute or the tag.
+      return { type: "text", text: `<document filename="${doc.filename.replace(/[<>"&]/g, "_")}">\n${doc.text ?? content.toString("utf8")}\n</document>` };
     default:
       return { type: "image", source: { type: "base64", media_type: doc.mediaType, data } };
   }

@@ -140,3 +140,10 @@ export async function runInvoiceCheck(raw: unknown, ctx: CheckContext): Promise<
     },
   };
 }
+
+/** Whether uploaded invoices may be read by the (paid) AI on this server. */
+export function aiUploadsEnabled(env: NodeJS.ProcessEnv): boolean {
+  if (!env.ANTHROPIC_API_KEY) return false;
+  if (env.SPIKEREADY_DEMO && env.SPIKEREADY_ALLOW_UPLOADS !== "1") return false;
+  return true;
+}

@@ -186,7 +186,9 @@ function renderInvoices(r) {
     <div class="table-wrap"><table><thead><tr><th>Product</th><th class="num">Sold</th><th class="num">On invoices</th><th>Status</th></tr></thead><tbody>${cov}</tbody></table></div>
     <h3 class="sub">Documents (originals, unchanged)</h3>
     <ul class="docs">${docs}</ul>
-    <p><a class="btn" href="/api/dossier.md" download>Download evidence pack</a></p>`;
+    <p><a class="btn" id="dossier-link" download="spikeready-evidence-pack.md">Download evidence pack</a></p>`;
+  // The pack comes from this response (never from a shared server-side copy of someone else's check).
+  $("dossier-link").href = URL.createObjectURL(new Blob([r.dossierMarkdown], { type: "text/markdown" }));
 }
 
 async function checkInvoices(payload) {
