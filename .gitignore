@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+# Local state written by the scripts (sandbox order ids, fake buyer data, raw API responses).
+.spikeready/
+*.log
