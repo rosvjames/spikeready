@@ -17,7 +17,10 @@
     "tracking": "tsx scripts/upload-tracking.ts",
     "hold": "tsx scripts/simulate-hold.ts",
     "report": "tsx scripts/report.ts",
-    "transactions": "tsx scripts/check-transactions.ts"
+    "transactions": "tsx scripts/check-transactions.ts",
+    "approve": "tsx scripts/approve-sandbox.ts",
+    "invoices": "tsx scripts/invoices-check.ts",
+    "serve": "tsx scripts/serve.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.5.0",

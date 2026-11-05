@@ -1,0 +1,25 @@
+# Render Blueprint: the SpikeReady panel + PayPal webhook endpoint.
+services:
+  - type: web
+    name: spikeready
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npx tsx scripts/serve.ts
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: SPIKEREADY_DEMO
+        value: "1"
+      - key: PAYPAL_ENV
+        value: sandbox
+      # Secrets: set in the Render dashboard, never in this file.
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false

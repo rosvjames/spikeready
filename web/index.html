@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SpikeReady · Seller panel</title>
+  <meta name="description" content="Get ready for a sales spike on PayPal: verified tracking, a release calendar for held funds, and invoice checks.">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="top">
+    <div class="wrap top-inner">
+      <div class="brand"><span class="logo" aria-hidden="true">▲</span> SpikeReady</div>
+      <div class="seller" id="seller">Loading…</div>
+    </div>
+  </header>
+  <div class="wrap">
+    <p class="banner" id="demo-banner" hidden>Demo data: recorded sales and simulated PayPal hold notices. No real money or accounts.</p>
+  </div>
+  <main id="main" class="wrap grid" aria-live="polite">
+    <section class="card wide" id="step-spike" aria-labelledby="h-spike">
+      <p class="step">Step 1</p>
+      <h2 id="h-spike">Sales spike</h2>
+      <div id="spike-body" class="loading">Loading…</div>
+    </section>
+
+    <section class="card wide" id="step-tracking" aria-labelledby="h-tracking">
+      <p class="step">Step 2</p>
+      <h2 id="h-tracking">Tracking on PayPal</h2>
+      <p class="muted">Tracking is uploaded only when the label goes to the buyer's shipping address on the PayPal order.</p>
+      <div id="tracking-body" class="loading">Loading…</div>
+    </section>
+
+    <section class="card wide" id="step-calendar" aria-labelledby="h-calendar">
+      <p class="step">Step 3</p>
+      <h2 id="h-calendar">When your held money is released</h2>
+      <div id="calendar-body" class="loading">Loading…</div>
+    </section>
+
+    <section class="card wide next" id="step-invoices" aria-labelledby="h-invoices">
+      <p class="step">Step 4</p>
+      <h2 id="h-invoices">Account limitation: check your supplier invoices</h2>
+      <p>If PayPal limits your account, it asks for supplier invoices that cover what you sold. SpikeReady reads your invoices, matches them to your PayPal sales and shows what a reviewer would flag <strong>before</strong> you send them.</p>
+      <p class="pill pill-next">Coming next</p>
+    </section>
+  </main>
+  <footer class="wrap foot">
+    <p>SpikeReady never moves money and never edits documents. The AI reads and explains; code decides and is the only part that calls PayPal. Not affiliated with PayPal.</p>
+  </footer>
+  <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
+</body>
+</html>

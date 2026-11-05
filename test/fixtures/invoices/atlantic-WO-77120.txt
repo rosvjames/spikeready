@@ -1,0 +1,10 @@
+Wholesale order summary · WO-77120
+Placed 20 Oct 2026 · Retailer: Maria's Sneakers
+Brand/vendor: Atlantic Wholesale Supply LLC (sales@atlanticws.com, (973) 555-0142, 410 Harbor Rd, Newark, NJ 07105)
+
+SAMBA OG CBLACK/FTWWHT 8 (B75807) — qty 12 — $71.00 each
+SAMBA OG CBLACK/FTWWHT 9 (B75807) — qty 3 — $71.00 each
+
+Subtotal $1,065.00
+Freight $30.00
+Total $1,095.00

@@ -1,0 +1,38 @@
+{
+  "kicksdirect-INV-2026-48213.txt": {
+    "invoice_number": "INV-2026-48213",
+    "supplier_name": "KicksDirect Wholesale",
+    "supplier_has_contact": true,
+    "supplier_contact": { "address": "88 Commerce Pkwy, Memphis, TN 38118", "phone": "(901) 555-0177", "email": "orders@kicksdirect-wholesale.com" },
+    "billed_to": "Maria Lopez",
+    "date": "2026-10-12",
+    "lines": [
+      { "description": "AF1 '07 WHT/WHT M 10", "quantity": 12, "sku_guess": "CW2288-111", "listing_id": "AF1-WHT-10" },
+      { "description": "AF1 '07 WHT/WHT M 9", "quantity": 12, "sku_guess": "CW2288-111", "listing_id": "AF1-WHT-9" },
+      { "description": "AF1 '07 WHT/WHT M 11", "quantity": 2, "sku_guess": "CW2288-111", "listing_id": "AF1-WHT-11" }
+    ]
+  },
+  "atlantic-WO-77120.txt": {
+    "invoice_number": "WO-77120",
+    "supplier_name": "Atlantic Wholesale Supply LLC",
+    "supplier_has_contact": true,
+    "supplier_contact": { "address": "410 Harbor Rd, Newark, NJ 07105", "phone": "(973) 555-0142", "email": "sales@atlanticws.com" },
+    "billed_to": "Maria's Sneakers",
+    "date": "2026-10-20",
+    "lines": [
+      { "description": "SAMBA OG CBLACK/FTWWHT 8", "quantity": 12, "sku_guess": "B75807", "listing_id": "SAMBA-BLK-8" },
+      { "description": "SAMBA OG CBLACK/FTWWHT 9", "quantity": 3, "sku_guess": "B75807", "listing_id": "SAMBA-BLK-9" }
+    ]
+  },
+  "brightline-forwarded-email.txt": {
+    "invoice_number": "R58830",
+    "supplier_name": "Brightline Liquidators",
+    "supplier_has_contact": false,
+    "supplier_contact": { "address": null, "phone": null, "email": null },
+    "billed_to": "Maria Lopez",
+    "date": "2026-10-25",
+    "lines": [
+      { "description": "NB 550 WHITE/GREEN BB550WT1 US10", "quantity": 6, "sku_guess": "BB550WT1", "listing_id": "NB550-WG-10" }
+    ]
+  }
+}

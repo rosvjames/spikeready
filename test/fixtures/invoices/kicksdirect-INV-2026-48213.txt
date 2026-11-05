@@ -1,0 +1,18 @@
+KICKSDIRECT WHOLESALE
+88 Commerce Pkwy, Memphis, TN 38118
+orders@kicksdirect-wholesale.com · (901) 555-0177
+
+INVOICE INV-2026-48213
+Invoice date: 10/12/2026
+Bill to: Maria Lopez
+         Maria's Sneakers, 2210 Calle Ocho, Miami FL 33135
+
+QTY  STYLE        DESCRIPTION                          UNIT      TOTAL
+12   CW2288-111   AF1 '07 WHT/WHT M 10                 82.00     984.00
+12   CW2288-111   AF1 '07 WHT/WHT M 9                  82.00     984.00
+ 2   CW2288-111   AF1 '07 WHT/WHT M 11                 82.00     164.00
+
+SUBTOTAL                                                        2,132.00
+SHIPPING                                                           45.00
+TOTAL DUE                                                       2,177.00
+Terms: Paid by ACH 10/12/2026
