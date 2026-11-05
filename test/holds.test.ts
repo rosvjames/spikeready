@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { extractHoldIds, holdFromEvent } from "../src/holds/event.js";
 import { handleWebhookEvent } from "../src/holds/handler.js";
 import { retargetSimulatedEvent } from "../src/holds/simulator.js";
@@ -97,7 +99,7 @@ describe("retargetSimulatedEvent", () => {
     expect(r.purchase_units[0].payments.captures[0].id).toBe("CAP1");
     expect(r.supplementary_data.related_ids).toEqual({ order_id: "ORDER1", capture_id: "CAP1" });
     expect(r.amount).toEqual({ currency_code: "USD", value: "120.00" });
-    expect((out as any).spikeready_demo).toEqual({ simulated: true, originalIds: { orderId: "SAMPLEORDER", captureId: "SAMPLECAP" } });
+    expect((out as any).spikeready_demo).toMatchObject({ simulated: true, originalIds: { orderId: "SAMPLEORDER", captureId: "SAMPLECAP" } });
     expect(out.summary).toContain("re-pointed to sale maria-0001");
     expect(holdFromEvent(out, [sale()], "paypal-simulator").saleId).toBe("maria-0001");
     // the original is not mutated
@@ -106,5 +108,38 @@ describe("retargetSimulatedEvent", () => {
   it("links even when the sample has no ids at all", () => {
     const out = retargetSimulatedEvent(ev({ hold_reason: "PENDING_REVIEW" }), sale());
     expect(holdFromEvent(out, [sale()], "paypal-simulator")).toMatchObject({ saleId: "maria-0001", reason: "PENDING_REVIEW" });
+  });
+});
+
+describe("real simulator output (CHECKOUT.PAYMENT-RESOURCE.PAYMENT-ON-HOLD, recorded 2026-11-05)", () => {
+  const raw = JSON.parse(readFileSync(join(import.meta.dirname, "fixtures/paypal/payment-on-hold.simulator.json"), "utf8"));
+  it("parses: transaction_id is the capture, gross_amount the amount, hold_reason the reason", () => {
+    const event = WebhookEvent.parse(raw);
+    expect(extractHoldIds(event)).toEqual({ orderId: null, captureId: "88872366T2016045G" });
+    const hold = holdFromEvent(event, [], "paypal-simulator");
+    expect(hold).toMatchObject({ reason: "PENDING_REVIEW", amountCents: 10_000, currency: "USD", saleId: null });
+  });
+  it("re-points the sample to a sale: ids, amount, items, address, time and a per-sale event id", () => {
+    const now = new Date("2026-11-05T15:00:00Z");
+    const s = sale({ amountCents: 11_000 });
+    const out = retargetSimulatedEvent(WebhookEvent.parse(raw), s, now);
+    const r = out.resource as any;
+    expect(out.id).toBe(`${raw.id}-maria-0001`);
+    expect(out.create_time).toBe(now.toISOString());
+    expect(r.transaction_id).toBe("CAP1");
+    expect(r.gross_amount).toEqual({ currency_code: "USD", value: "110.00" });
+    expect(r.items[0].name).toBe(s.items[0]!.name);
+    expect(r.shipping.address.postal_code).toBe("11215");
+    expect(r.transaction_time).toBe(now.toISOString());
+    expect(JSON.stringify(r)).not.toContain("Wireless Mouse");
+    const hold = holdFromEvent(out, [s], "paypal-simulator");
+    expect(hold).toMatchObject({ saleId: "maria-0001", amountCents: 11_000, heldAt: now.toISOString(), reason: "PENDING_REVIEW" });
+  });
+  it("two sales get two distinct holds even though the simulator reuses its event id", () => {
+    let state = emptyState();
+    const a = sale(), b = sale({ saleId: "maria-0002", orderId: "ORDER2", captureId: "CAP2" });
+    state = { ...state, sales: [a, b] };
+    for (const s of [a, b]) state = handleWebhookEvent(state, retargetSimulatedEvent(WebhookEvent.parse(raw), s), "paypal-simulator").state;
+    expect(state.holds.map((h) => h.saleId)).toEqual(["maria-0001", "maria-0002"]);
   });
 });

@@ -1,0 +1,72 @@
+{
+  "id": "WH-7FG21906BR6922340-5KR399879V107821K",
+  "event_type": "CHECKOUT.PAYMENT-RESOURCE.PAYMENT-ON-HOLD",
+  "create_time": "2026-03-06T13:00:00Z",
+  "resource_type": "payment-resource",
+  "summary": "A payment was placed on hold",
+  "resource": {
+    "transaction_id": "88872366T2016045G",
+    "payee": {
+      "merchant_id": "H492HNTCL3K6W"
+    },
+    "amount_breakdown": {
+      "item_total": {
+        "currency_code": "USD",
+        "value": "100.00"
+      },
+      "tax_total": {
+        "currency_code": "USD",
+        "value": "0.00"
+      },
+      "shipping": {
+        "currency_code": "USD",
+        "value": "0.00"
+      },
+      "discount": {
+        "currency_code": "USD",
+        "value": "0.00"
+      }
+    },
+    "transaction_status": "ON_HOLD",
+    "shipping": {
+      "name": {
+        "full_name": "John Doe"
+      },
+      "address": {
+        "address_line_1": "1 Main St",
+        "admin_area_2": "San Jose",
+        "admin_area_1": "CA",
+        "postal_code": "95131",
+        "country_code": "US"
+      }
+    },
+    "payment_resource_id": "PLB-XUE425BZHFKP",
+    "transaction_time": "2026-03-06T13:00:00Z",
+    "gross_amount": {
+      "currency_code": "USD",
+      "value": "100.00"
+    },
+    "items": [
+      {
+        "name": "Wireless Mouse",
+        "unit_amount": {
+          "currency_code": "USD",
+          "value": "100.00"
+        },
+        "quantity": "1"
+      }
+    ],
+    "payer": {
+      "payer_id": "QYR5Z8XDVJNXI",
+      "email_address": "sb-buyer@personal.example.com",
+      "name": {
+        "given_name": "John",
+        "surname": "Doe"
+      },
+      "country_code": "US"
+    },
+    "hold_reason": "PENDING_REVIEW"
+  },
+  "links": [],
+  "event_version": "1.0"
+}
