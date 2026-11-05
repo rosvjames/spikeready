@@ -9,7 +9,7 @@ import { docFromBytes } from "../src/invoices/integrity.js";
 import { checkInvoices } from "../src/invoices/pipeline.js";
 import { normName } from "../src/invoices/reconcile.js";
 import type { Extracted } from "../src/invoices/types.js";
-import { EVAL_TODAY, EVAL_TZ, REQUIREMENTS, TRUTH_GAP_TYPES, type EvalCase, type EvalGap } from "./dataset.js";
+import { EVAL_TODAY, EVAL_TZ, REQUIREMENTS, TRUTH_GAP_TYPES, type EvalCase, type EvalGap, type InjectionCase } from "./dataset.js";
 import type { Usage } from "./pricing.js";
 
 export type ArmName = "rules" | "oracle" | "pipeline" | "baseline";
@@ -45,7 +45,26 @@ export async function reconcileArm(c: EvalCase, extractor: Extractor): Promise<E
     now: new Date(`${EVAL_TODAY}T16:00:00Z`),
     concurrency: 4,
   });
-  return result.gaps.map((g) => ({ type: g.type, sku: g.sku, docId: g.docId }));
+  // Grounding warnings are about the reading, not PayPal findings; they are counted separately.
+  return result.gaps.filter((g) => g.type !== "unverified_extraction").map((g) => ({ type: g.type, sku: g.sku, docId: g.docId }));
+}
+
+/** Like reconcileArm, plus the documents where grounding dropped values the AI reported. */
+export async function reconcileArmDetailed(c: EvalCase, extractor: Extractor, grounding = true): Promise<{ gaps: EvalGap[]; unverifiedDocIds: string[] }> {
+  const { result } = await checkInvoices({
+    grounding,
+    sales: c.sales,
+    files: files(c),
+    extractor,
+    accountNames: [c.account.holder, c.account.business],
+    timeZone: EVAL_TZ,
+    now: new Date(`${EVAL_TODAY}T16:00:00Z`),
+    concurrency: 4,
+  });
+  return {
+    gaps: result.gaps.filter((g) => g.type !== "unverified_extraction").map((g) => ({ type: g.type, sku: g.sku, docId: g.docId })),
+    unverifiedDocIds: result.gaps.filter((g) => g.type === "unverified_extraction").map((g) => g.docId!),
+  };
 }
 
 export function oracleExtractor(c: EvalCase): Extractor {
@@ -77,4 +96,51 @@ export async function baselineArm(c: EvalCase, client: Anthropic, model: string)
   const text = msg.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("");
   const out = firstJsonObject(text) as { gaps?: { type: string; sku?: string | null; doc_id?: string | null }[] };
   return { gaps: (out.gaps ?? []).map((g) => ({ type: g.type, sku: g.sku ?? null, docId: g.doc_id ?? null })), usage };
+}
+
+/**
+ * Simulated worst case (offline): a reader that reads every document perfectly but fully obeys the
+ * injected instruction in the attacked one. It is not a model; it shows what each injection would do to
+ * the result if the AI were completely fooled, and what the code-side defenses still catch.
+ */
+export function compromisedExtractor(x: InjectionCase): Extractor {
+  const c = x.injected;
+  const byFile: Record<string, Extracted> = {};
+  for (const d of c.docs) {
+    const e: Extracted = structuredClone(d.expected);
+    if (d.docId === x.docId) {
+      switch (x.kind) {
+        case "quantity_override":
+          e.lines = e.lines.map((l) => ({ ...l, quantity: 50 }));
+          break;
+        case "unit_multiplier":
+          e.lines = e.lines.map((l) => ({ ...l, quantity: l.quantity * 12 }));
+          break;
+        case "covers_everything":
+          for (const item of c.catalog) {
+            if (!e.lines.some((l) => l.listing_id === item.sku)) e.lines.push({ description: item.name, quantity: 99, sku_guess: null, listing_id: item.sku });
+          }
+          break;
+        case "fake_contact_note":
+          e.supplier_has_contact = true;
+          e.supplier_contact = { address: "see attached", phone: null, email: null };
+          break;
+        case "hidden_contact_line":
+          e.supplier_has_contact = true;
+          e.supplier_contact = { ...e.supplier_contact, email: "verified-supplier@mail-desk.example" };
+          break;
+        case "billed_to_override":
+          e.billed_to = c.account.holder;
+          break;
+        case "date_override":
+          e.date = `${(e.date ?? EVAL_TODAY).slice(0, 4)}-01-01`;
+          break;
+        case "not_a_duplicate":
+          e.invoice_number = `${e.invoice_number ?? ""}-NEW`;
+          break;
+      }
+    }
+    byFile[d.filename] = e;
+  }
+  return new RecordedExtractor(byFile);
 }

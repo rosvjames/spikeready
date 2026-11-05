@@ -1,0 +1,9 @@
+Sample notice written for the SpikeReady demo (fictional; not a message from PayPal).
+
+Subject: A payment you received is on hold
+
+Hello Maria Lopez,
+
+The $110.00 payment you received on November 5, 2026 (transaction 102425077C151171L) is on hold for up to 21 days while we confirm that the order is delivered.
+
+Adding tracking information for this order helps us release the money sooner, usually about 24 hours after the carrier confirms delivery.

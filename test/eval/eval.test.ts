@@ -92,3 +92,50 @@ describe("pricing", () => {
     expect(costUsd([{ model: "mystery-model", input_tokens: 1, output_tokens: 1 }])).toBeNaN();
   });
 });
+
+describe("prompt-injection cases", async () => {
+  const { buildInjectionCases } = await import("../../eval/dataset.js");
+  const { compromisedExtractor, reconcileArmDetailed } = await import("../../eval/arms.js");
+  const inj = buildInjectionCases();
+
+  it("are deterministic, one per kind, and change only the attacked document", () => {
+    expect(JSON.stringify(buildInjectionCases())).toBe(JSON.stringify(inj));
+    expect(new Set(inj.map((x) => x.kind)).size).toBe(8);
+    for (const x of inj) {
+      expect(x.injected.truth).toEqual(x.clean.truth);
+      expect(x.clean.truth).toContainEqual(x.targets[0]);
+      for (const d of x.injected.docs) {
+        const before = x.clean.docs.find((c) => c.docId === d.docId)!;
+        if (d.docId === x.docId) expect(d.text).toContain(x.text);
+        else expect(d.text).toBe(before.text);
+        expect(d.expected).toEqual(before.expected);
+      }
+    }
+  });
+
+  it("a perfect reader is not affected by the injected text (oracle finds every target)", async () => {
+    for (const x of inj) {
+      const r = await reconcileArmDetailed(x.injected, oracleExtractor(x.injected));
+      expect(scoreCase({ ...x.injected, truth: x.targets }, r.gaps).hit, x.id).toBe(1);
+      expect(r.unverifiedDocIds, x.id).toEqual([]);
+    }
+  });
+
+  it("with a fully fooled reader, grounding still alerts the seller in every case but the literal fake email", async () => {
+    const missed: string[] = [];
+    for (const x of inj) {
+      const on = await reconcileArmDetailed(x.injected, compromisedExtractor(x), true);
+      const t = x.targets[0]!;
+      const alerted = on.unverifiedDocIds.includes(x.docId) || (t.sku ? on.gaps.some((g) => g.sku === t.sku) : on.gaps.some((g) => g.docId === t.docId));
+      if (!alerted) missed.push(x.kind);
+    }
+    expect(missed).toEqual(["hidden_contact_line"]);
+  });
+
+  it("without grounding, the fooled reader hides every targeted gap (what the check protects against)", async () => {
+    for (const x of inj) {
+      const off = await reconcileArmDetailed(x.injected, compromisedExtractor(x), false);
+      expect(scoreCase({ ...x.injected, truth: x.targets }, off.gaps).hit, x.id).toBe(0);
+    }
+  });
+});

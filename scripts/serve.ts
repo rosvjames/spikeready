@@ -7,6 +7,7 @@ import { existsSync } from "node:fs";
 import { createServer } from "node:http";
 import { loadDotEnv, loadPayPalConfig, MissingConfigError, ROOT } from "../src/config.js";
 import { AnthropicExtractor } from "../src/invoices/extract.js";
+import { AnthropicNoticeExtractor } from "../src/limitation/extract.js";
 import { PayPalClient } from "../src/paypal/client.js";
 import { createApp, defaultWebDir } from "../src/server/app.js";
 import { buildDemoState } from "../src/server/demo-state.js";
@@ -56,6 +57,8 @@ const app = createApp({
   // Paid AI reading of uploaded files: on when a key is set, except on a public demo (SPIKEREADY_DEMO),
   // where anyone could spend the key; there it needs SPIKEREADY_ALLOW_UPLOADS=1 explicitly.
   invoiceExtractor: aiUploadsEnabled(process.env) ? () => new AnthropicExtractor() : null,
+  // Same rule for reading pasted PayPal notices with the AI.
+  noticeExtractor: aiUploadsEnabled(process.env) ? () => new AnthropicNoticeExtractor() : null,
 });
 
 const port = Number(process.env.PORT ?? 3000);

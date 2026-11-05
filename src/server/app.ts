@@ -9,6 +9,8 @@ import type { State } from "../store.js";
 import type { Extractor } from "../invoices/extract.js";
 import { buildDashboard } from "./dashboard.js";
 import { InvoiceRequestError, MAX_INVOICE_BODY_BYTES, runInvoiceCheck } from "./invoices.js";
+import { LimitationRequestError, MAX_LIMITATION_BODY_BYTES, runLimitationPlan } from "./limitation.js";
+import type { NoticeExtractor } from "../limitation/extract.js";
 import { verifyWebhookSignature } from "./verify-webhook.js";
 
 export interface AppDeps {
@@ -28,6 +30,10 @@ export interface AppDeps {
   invoiceExtractor?: (() => Extractor) | null;
   /** Override for the sample invoices folder (tests). */
   samplesDir?: string;
+  /** Builds the AI reader for pasted PayPal notices; null when the AI is not enabled. */
+  noticeExtractor?: (() => NoticeExtractor) | null;
+  /** Override for the sample notices folder (tests). */
+  noticesDir?: string;
 }
 
 export const MAX_BODY_BYTES = 1024 * 1024;
@@ -79,6 +85,10 @@ export function createApp(deps: AppDeps) {
     return next;
   };
 
+  // Public, in-memory list of the last deliveries PayPal signed and we verified (ids and types only),
+  // so anyone can check that signature verification works on the live deployment.
+  const verifiedDeliveries: { eventId: string; eventType: string; verifiedAt: string; result: string }[] = [];
+
   async function webhook(req: IncomingMessage, res: ServerResponse): Promise<void> {
     if (!deps.webhookId || !deps.paypal) return send(res, 503, { error: "webhook not configured" });
     const raw = await readBody(req);
@@ -104,6 +114,10 @@ export function createApp(deps: AppDeps) {
         if (result.status !== "DUPLICATE") deps.saveState(state);
         return result;
       });
+      const e = event as { id?: unknown; event_type?: unknown };
+      verifiedDeliveries.unshift({ eventId: String(e.id), eventType: String(e.event_type), verifiedAt: new Date().toISOString(), result: result.status });
+      verifiedDeliveries.length = Math.min(verifiedDeliveries.length, 20);
+      console.log(`webhook verified: ${String(e.event_type)} ${String(e.id)} -> ${result.status}`);
       return send(res, 200, { status: result.status });
     } catch (err) {
       if (err instanceof ZodError) return send(res, 400, { error: "not a PayPal webhook event" });
@@ -145,6 +159,34 @@ export function createApp(deps: AppDeps) {
     }
   }
 
+  async function limitationPlan(req: IncomingMessage, res: ServerResponse): Promise<void> {
+    const raw = await readBody(req, MAX_LIMITATION_BODY_BYTES);
+    let body: unknown;
+    try {
+      body = JSON.parse(raw);
+    } catch {
+      return send(res, 400, { error: "invalid JSON" });
+    }
+    const state = deps.loadState();
+    try {
+      const response = await runLimitationPlan(body, {
+        sales: state.sales,
+        shipments: state.shipments,
+        uploads: state.uploads,
+        timeZone: state.seller.timeZone,
+        now: deps.now(),
+        extractor: deps.noticeExtractor ? deps.noticeExtractor() : null,
+        ...(deps.noticesDir ? { samplesDir: deps.noticesDir } : {}),
+      });
+      return send(res, 200, response);
+    } catch (err) {
+      if (err instanceof LimitationRequestError) return send(res, err.status, { error: err.message });
+      if (err instanceof HttpError) throw err;
+      console.error(err instanceof Error ? err.message : err);
+      return send(res, 502, { error: "Could not read the message. Try again." });
+    }
+  }
+
   async function staticFile(pathname: string, res: ServerResponse, head: boolean): Promise<void> {
     let rel: string;
     try {
@@ -179,6 +221,10 @@ export function createApp(deps: AppDeps) {
         if (method !== "POST") return send(res, 405, { error: "method not allowed" });
         return await invoicesCheck(req, res);
       }
+      if (url.pathname === "/api/limitation/plan") {
+        if (method !== "POST") return send(res, 405, { error: "method not allowed" });
+        return await limitationPlan(req, res);
+      }
       if (method !== "GET" && method !== "HEAD") return send(res, 405, { error: "method not allowed" });
       if (url.pathname === "/api/dossier.md") {
         if (lastDossier === null) return send(res, 404, { error: "no evidence pack yet: check your invoices first" });
@@ -193,6 +239,9 @@ export function createApp(deps: AppDeps) {
         return void res.end(method === "HEAD" ? undefined : data);
       }
       if (url.pathname === "/healthz") return send(res, 200, { ok: true, demo: deps.demo });
+      if (url.pathname === "/api/webhooks/recent") {
+        return send(res, 200, { configured: Boolean(deps.webhookId && deps.paypal), verified: verifiedDeliveries });
+      }
       if (url.pathname === "/api/dashboard") return send(res, 200, buildDashboard(deps.loadState(), deps.now(), deps.demo, deps.banner ?? null));
       if (url.pathname.startsWith("/api/")) return send(res, 404, { error: "not found" });
       return await staticFile(url.pathname, res, method === "HEAD");

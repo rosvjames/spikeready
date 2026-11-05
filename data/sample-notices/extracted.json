@@ -1,0 +1,26 @@
+{
+  "notice-1-limitation.txt": {
+    "kind": "limitation",
+    "case_id": "LIM-2026-11-0412",
+    "deadline": "2026-11-15",
+    "deadline_quote": "Please send us the following by November 15, 2026",
+    "requested": [
+      { "type": "supplier_invoices", "detail": "items sold between November 3 and November 5, 2026", "quote": "Invoices from your suppliers for the items you sold between November 3 and November 5, 2026" },
+      { "type": "proof_of_delivery_tracking", "detail": null, "quote": "Proof of delivery for your recent orders, such as tracking numbers from your shipping carrier" },
+      { "type": "bank_or_card_confirmation", "detail": null, "quote": "Confirmation of the bank account linked to your account" }
+    ],
+    "mentioned_transactions": [],
+    "mentioned_dates": ["November 15, 2026", "November 3", "November 5, 2026"]
+  },
+  "notice-2-hold.txt": {
+    "kind": "hold",
+    "case_id": null,
+    "deadline": null,
+    "deadline_quote": null,
+    "requested": [
+      { "type": "proof_of_delivery_tracking", "detail": null, "quote": "Adding tracking information for this order helps us release the money sooner" }
+    ],
+    "mentioned_transactions": ["102425077C151171L"],
+    "mentioned_dates": ["November 5, 2026"]
+  }
+}

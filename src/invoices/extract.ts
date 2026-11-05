@@ -1,6 +1,7 @@
 // The AI step: read one messy supplier document (PDF, photo, email text) and return what it says,
 // mapped to the seller's SKUs. The extractor never judges; reconcile.ts decides what is a problem.
 import Anthropic from "@anthropic-ai/sdk";
+import { defaultAiLog, recordCall, sha256Of, type AiLogSink } from "../ai/log.js";
 import { Extracted, type CatalogEntry, type InvoiceDoc } from "./types.js";
 
 export interface Extractor {
@@ -69,12 +70,18 @@ export interface AnthropicExtractorOptions {
   model?: string;
   fallbackModel?: string;
   maxTokens?: number;
+  /** Audit log of every call (default: .spikeready/ai-calls.jsonl; off under tests). */
+  log?: AiLogSink;
+  /** Purpose recorded in the audit log. */
+  purpose?: string;
 }
 
 export class AnthropicExtractor implements Extractor {
   private readonly client: Anthropic;
   private readonly models: string[];
   private readonly maxTokens: number;
+  private readonly log: AiLogSink;
+  private readonly purpose: string;
   /** Calls made, for cost reporting. */
   readonly usage: { model: string; input_tokens: number; output_tokens: number }[] = [];
 
@@ -85,6 +92,8 @@ export class AnthropicExtractor implements Extractor {
     const fallback = opts.fallbackModel ?? FALLBACK_MODEL;
     this.models = primary === fallback ? [primary] : [primary, fallback];
     this.maxTokens = opts.maxTokens ?? 4000;
+    this.log = opts.log ?? defaultAiLog();
+    this.purpose = opts.purpose ?? "invoice-extraction";
   }
 
   async extract(doc: InvoiceDoc, content: Buffer, catalog: CatalogEntry[]): Promise<Extracted> {
@@ -106,25 +115,43 @@ export class AnthropicExtractor implements Extractor {
     const messages: Anthropic.MessageParam[] = [
       { role: "user", content: [{ type: "text", text: catalogText(catalog) }, documentBlock(doc, content)] },
     ];
+    // Audit log: a hash of what was sent (system prompt, catalog, document bytes), never the content.
+    const inputSha256 = sha256Of([EXTRACT_SYSTEM, catalogText(catalog), content]);
     // One retry when the reply is not valid JSON for the schema, telling the model what was wrong.
     for (let attempt = 0; attempt < 2; attempt++) {
-      const msg = await this.client.messages.create({
-        model,
-        max_tokens: this.maxTokens,
-        system: [{ type: "text", text: EXTRACT_SYSTEM, cache_control: { type: "ephemeral" } }],
-        messages,
-      });
+      const startedAt = Date.now();
+      const call = { purpose: this.purpose, model, inputSha256, startedAt };
+      let msg: Anthropic.Message;
+      try {
+        msg = await this.client.messages.create({
+          model,
+          max_tokens: this.maxTokens,
+          system: [{ type: "text", text: EXTRACT_SYSTEM, cache_control: { type: "ephemeral" } }],
+          messages,
+        });
+      } catch (err) {
+        recordCall(this.log, { ...call, status: "error", error: err instanceof Error ? err.name : "error" });
+        throw err;
+      }
+      const tokens = { inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens };
       this.usage.push({ model, input_tokens: msg.usage.input_tokens, output_tokens: msg.usage.output_tokens });
-      if (msg.stop_reason === "refusal") throw new Error(`The model declined to read ${doc.filename}.`);
+      if (msg.stop_reason === "refusal") {
+        recordCall(this.log, { ...call, ...tokens, status: "refusal" });
+        throw new Error(`The model declined to read ${doc.filename}.`);
+      }
       const text = msg.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("");
       let problem: string;
       try {
         const parsed = Extracted.safeParse(firstJsonObject(text));
-        if (parsed.success) return sanitize(parsed.data, catalog);
+        if (parsed.success) {
+          recordCall(this.log, { ...call, ...tokens, status: "ok" });
+          return sanitize(parsed.data, catalog);
+        }
         problem = parsed.error.issues.slice(0, 5).map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
       } catch (e) {
         problem = (e as Error).message;
       }
+      recordCall(this.log, { ...call, ...tokens, status: "invalid_output", error: problem });
       messages.push({ role: "assistant", content: text || "(empty)" }, { role: "user", content: `That reply was not valid (${problem}). Reply with only the JSON object in the required shape.` });
     }
     throw new Error(`Could not read ${doc.filename}: the model did not return valid JSON twice.`);

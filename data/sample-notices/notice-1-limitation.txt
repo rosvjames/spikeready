@@ -1,0 +1,14 @@
+Sample notice written for the SpikeReady demo (fictional; not a message from PayPal).
+
+Subject: We need more information about your account (case LIM-2026-11-0412)
+
+Hello Maria Lopez,
+
+We noticed a sharp increase in your sales this week, and we need more information before we can lift the limits on your account. Until then you can't send or withdraw money.
+
+Please send us the following by November 15, 2026:
+- Invoices from your suppliers for the items you sold between November 3 and November 5, 2026, showing the supplier's name and contact details.
+- Proof of delivery for your recent orders, such as tracking numbers from your shipping carrier.
+- Confirmation of the bank account linked to your account.
+
+Log in to your account and go to the Resolution Center to upload your documents.

@@ -186,3 +186,18 @@ describe("GET routes", () => {
     expect((await fetch(`${t.base}/api/nope`)).status).toBe(404);
   });
 });
+
+describe("GET /api/webhooks/recent", () => {
+  it("lists verified deliveries only (ids and types, no payload)", async () => {
+    const t = await start();
+    await post(t.base, holdEvent());
+    const bad = await start({ verification: "FAILURE" });
+    await post(bad.base, holdEvent());
+    const ok = await (await fetch(`${t.base}/api/webhooks/recent`)).json();
+    expect(ok.configured).toBe(true);
+    expect(ok.verified).toHaveLength(1);
+    expect(ok.verified[0]).toMatchObject({ eventType: holdEvent().event_type, result: "HOLD_RECORDED" });
+    expect(Object.keys(ok.verified[0]).sort()).toEqual(["eventId", "eventType", "result", "verifiedAt"]);
+    expect((await (await fetch(`${bad.base}/api/webhooks/recent`)).json()).verified).toHaveLength(0);
+  });
+});

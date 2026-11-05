@@ -41,7 +41,20 @@
 
     <section class="card wide" id="step-invoices" aria-labelledby="h-invoices">
       <p class="step">Step 4</p>
-      <h2 id="h-invoices">Account limitation: check your supplier invoices</h2>
+      <h2 id="h-invoices">Account limitation: answer what PayPal asks</h2>
+      <div class="notice-box" id="notice-box">
+        <h3 class="sub">What did PayPal ask for?</h3>
+        <p class="muted">Paste the message PayPal sent you (email or Resolution Center). The AI lists what it asks for and quotes the message; code checks every quote and builds your plan from your PayPal data.</p>
+        <label class="sr-only" for="notice-text">PayPal's message</label>
+        <textarea id="notice-text" rows="5" maxlength="20000" placeholder="Paste PayPal's message here"></textarea>
+        <div class="inv-actions">
+          <button type="button" class="btn" id="notice-read">Read message</button>
+          <span class="muted or">or</span>
+          <button type="button" class="btn btn-quiet" id="notice-sample">Use a sample notice</button>
+        </div>
+        <div id="notice-body" aria-live="polite"></div>
+      </div>
+      <h3 class="sub" id="invoice-check-title">Check your supplier invoices</h3>
       <p class="muted">If PayPal limits your account, it asks for supplier invoices that cover what you sold. SpikeReady reads your invoices, matches them to your PayPal sales and shows what a reviewer would flag <strong>before</strong> you send them.</p>
       <div class="inv-actions">
         <button type="button" class="btn" id="use-samples">Use sample invoices</button>

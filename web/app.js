@@ -163,6 +163,14 @@ function updateInvoiceCheck(r) {
 
 function renderInvoices(r) {
   updateInvoiceCheck(r);
+  lastInvoiceCheck = {
+    ready: r.ready,
+    blockers: r.gaps.filter((g) => g.severity === "blocker").length,
+    shortSkus: r.coverage.filter((c) => c.covered < c.sold).length,
+  };
+  // The plan's "Supplier invoices" item depends on this check: refresh a sample plan (free, recorded).
+  // A pasted message is not re-read automatically, so the paid AI runs only when the seller asks.
+  if (lastNoticeRequest?.useSample) requestPlan(lastNoticeRequest, { quiet: true });
   const gaps = r.gaps
     .map((g) => {
       const [cls, label] = SEVERITY[g.severity] ?? ["pill-wait", g.severity];
@@ -203,6 +211,74 @@ async function checkInvoices(payload) {
     body.innerHTML = `<p class="error" role="alert">${esc(err.message)}</p>`;
   }
 }
+
+// ---- Step 4a: what PayPal asked for. The AI quotes the message; the server's code checks every quote
+// and builds the plan. The panel only renders it (escaped).
+let lastInvoiceCheck = null;
+let lastNoticeRequest = null;
+const PLAN_STATUS = {
+  ready: ["pill-ok", "Ready"],
+  needs_work: ["pill-bad", "Needs work"],
+  seller_action: ["pill-wait", "You do this in PayPal"],
+};
+const KIND_LABEL = { limitation: "Account limitation", hold: "Payment hold", reserve: "Reserve", other: "Message from PayPal" };
+const longDate = (d) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+
+function renderPlan(r) {
+  const p = r.plan;
+  if (r.noticeText !== null && r.noticeText !== undefined) $("notice-text").value = r.noticeText;
+  const dl = p.deadline
+    ? `<span><strong>Respond by ${esc(longDate(p.deadline.date))}</strong> · ${p.deadline.overdue ? `<span class="pill pill-bad">${Math.abs(p.deadline.daysLeft)} day(s) overdue</span>` : `${p.deadline.daysLeft} day(s) left`}</span>`
+    : `<span>No deadline stated in the message.</span>`;
+  const meta = `<p class="plan-meta"><span><strong>${esc(KIND_LABEL[p.kind] ?? p.kind)}</strong></span>${p.caseId ? `<span>Case ${esc(p.caseId)}</span>` : ""}${dl}</p>`;
+  const warnings = p.warnings.map((w) => `<div class="alert spike" role="alert"><span class="ico" aria-hidden="true">!</span><div><strong>Careful with this message</strong>${esc(w)}</div></div>`).join("");
+  const items = p.items
+    .map((i) => {
+      const [cls, label] = PLAN_STATUS[i.status] ?? ["pill-wait", i.status];
+      const link = i.link === "invoices" ? ` <a href="#invoice-check-title">Go to the invoice check ↓</a>` : i.link === "tracking" ? ` <a href="#step-tracking">See tracking ↑</a>` : "";
+      return `<li><span class="pill ${cls}">${esc(label)}</span><div class="plan-body"><span class="plan-title">${esc(i.title)}</span><span class="plan-msg">${esc(i.message)}${link}</span>${i.evidence ? `<span class="plan-ev">Evidence pack: ${esc(i.evidence)}</span>` : ""}<span class="plan-quote">PayPal's message: <q>${esc(i.quote)}</q></span></div></li>`;
+    })
+    .join("");
+  const summary = `${p.counts.ready} ready · ${p.counts.needs_work} need work · ${p.counts.seller_action} for you to do in PayPal`;
+  const unverified = p.unverified.length
+    ? `<div class="plan-unverified">Not in your plan, because the words could not be found in the message:<ul>${p.unverified.map((u) => `<li>${esc(u.type)}: ${esc(u.value)}</li>`).join("")}</ul></div>`
+    : "";
+  $("notice-body").innerHTML = `
+    ${meta}
+    ${warnings}
+    <p class="fine">${esc(summary)}${r.source === "sample" ? " · Sample notice, read earlier by the AI (recorded); quotes checked now by code." : ""}</p>
+    ${items ? `<ul class="plan">${items}</ul>` : `<p class="muted">The message does not ask for any documents.</p>`}
+    ${unverified}
+    <p class="plan-note">${esc(p.guidance)}</p>`;
+}
+
+async function requestPlan(payload, { quiet = false } = {}) {
+  const body = $("notice-body");
+  const buttons = [$("notice-read"), $("notice-sample")];
+  if (!quiet) body.innerHTML = `<p class="loading">Reading the message…</p>`;
+  for (const b of buttons) b.disabled = true;
+  try {
+    const res = await fetch("/api/limitation/plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, invoiceCheck: lastInvoiceCheck }) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
+    lastNoticeRequest = payload;
+    renderPlan(data);
+  } catch (err) {
+    body.innerHTML = `<p class="error" role="alert">${esc(err.message)}</p>`;
+  } finally {
+    for (const b of buttons) b.disabled = false;
+  }
+}
+
+$("notice-sample").addEventListener("click", () => requestPlan({ useSample: 1 }));
+$("notice-read").addEventListener("click", () => {
+  const text = $("notice-text").value.trim();
+  if (!text) {
+    $("notice-body").innerHTML = `<p class="error" role="alert">Paste PayPal's message first, or use a sample notice.</p>`;
+    return;
+  }
+  requestPlan({ text });
+});
 
 const TYPE_BY_EXT = { pdf: "application/pdf", png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp", txt: "text/plain" };
 const toBase64 = (file) =>

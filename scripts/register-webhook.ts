@@ -7,7 +7,10 @@ import { HOLD_EVENT_TYPES } from "../src/holds/handler.js";
 import { clientFromEnv } from "../src/paypal/index.js";
 import { run } from "./_cli.js";
 
-const { values: opt } = parseArgs({ options: { url: { type: "string" } } });
+const { values: opt } = parseArgs({ options: { url: { type: "string" }, "extra-events": { type: "string" } } });
+// PayPal's simulator events cannot be signature-verified, so a real sandbox event (for example
+// PAYMENT.CAPTURE.COMPLETED from a new sale) is the way to prove verification end to end.
+const extra = (opt["extra-events"] ?? "").split(",").map((e) => e.trim()).filter(Boolean);
 
 const Webhook = z.looseObject({ id: z.string(), url: z.string(), event_types: z.array(z.looseObject({ name: z.string() })).default([]) });
 const WebhookList = z.looseObject({ webhooks: z.array(Webhook).default([]) });
@@ -25,7 +28,7 @@ run(async () => {
   const created = await client.request("POST", "/v1/notifications/webhooks", {
     requestId: `spikeready-webhook-${url}`,
     schema: Webhook,
-    body: { url, event_types: [...HOLD_EVENT_TYPES].map((name) => ({ name })) },
+    body: { url, event_types: [...new Set([...HOLD_EVENT_TYPES, ...extra])].map((name) => ({ name })) },
   });
   console.log(`Registered webhook ${created.id} for ${created.event_types.map((e) => e.name).join(", ")}`);
   console.log(`Set PAYPAL_WEBHOOK_ID=${created.id} in the server's environment.`);

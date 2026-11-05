@@ -57,6 +57,8 @@ export const GAP_TYPES = [
   "duplicate_file",
   "incomplete_invoice",
   "altered_or_suspicious",
+  /** The AI reported something the (text) document does not contain; it was ignored (src/invoices/grounding.ts). */
+  "unverified_extraction",
 ] as const;
 export type GapType = (typeof GAP_TYPES)[number];
 
