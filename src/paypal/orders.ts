@@ -61,7 +61,7 @@ export type PaymentSource =
   | { kind: "paypal"; returnUrl: string; cancelUrl: string };
 
 /** Body for POST /v2/checkout/orders: one purchase unit with items and the buyer's shipping address. */
-export function buildOrderBody(input: SaleOrderInput, source: PaymentSource): Record<string, unknown> {
+export function buildOrderBody(input: SaleOrderInput, source: PaymentSource, intent: "CAPTURE" | "AUTHORIZE" = "CAPTURE"): Record<string, unknown> {
   const total = input.items.reduce((t, i) => t + i.unitAmountCents * i.quantity, 0);
   const a = input.shipTo;
   const payment_source =
@@ -81,7 +81,7 @@ export function buildOrderBody(input: SaleOrderInput, source: PaymentSource): Re
           },
         };
   return {
-    intent: "CAPTURE",
+    intent,
     purchase_units: [
       {
         reference_id: input.saleId,
@@ -140,3 +140,14 @@ export const addTracking = (c: PayPalClient, orderId: string, t: TrackInput) =>
       items: t.items.map((i) => ({ name: i.name, sku: i.sku, quantity: String(i.quantity) })),
     },
   });
+
+/** POST /v2/checkout/orders/{id}/authorize (orders created with intent AUTHORIZE). */
+export const authorizeOrder = (c: PayPalClient, orderId: string, requestId: string) =>
+  c.request("POST", `/v2/checkout/orders/${encodeURIComponent(orderId)}/authorize`, { body: {}, requestId, schema: Order });
+
+export const firstAuthorization = (o: Order): { id: string; status: string } | undefined =>
+  (o.purchase_units?.[0]?.payments as { authorizations?: { id: string; status: string }[] } | undefined)?.authorizations?.[0];
+
+/** POST /v2/payments/authorizations/{id}/capture. */
+export const captureAuthorization = (c: PayPalClient, authorizationId: string, requestId: string) =>
+  c.request("POST", `/v2/payments/authorizations/${encodeURIComponent(authorizationId)}/capture`, { body: { final_capture: true }, requestId, schema: Capture });

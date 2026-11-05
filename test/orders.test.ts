@@ -56,3 +56,26 @@ describe("orderHasTracking", () => {
     expect(orderHasTracking(Order.parse({ id: "O1", status: "COMPLETED" }), "222")).toBe(false);
   });
 });
+
+describe("authorize-then-capture path", () => {
+  it("buildOrderBody can create AUTHORIZE orders (the path that works for the sandbox wallet buyer)", async () => {
+    const { buildOrderBody } = await import("../src/paypal/orders.js");
+    const body = buildOrderBody(
+      { saleId: "maria-0001", invoiceId: "INV-1", description: "d", items: [{ sku: "A", name: "A", quantity: 1, unitAmountCents: 100 }], shipTo: { name: "n", line1: "l", city: "c", state: "NY", postalCode: "11215", countryCode: "US" } },
+      { kind: "paypal", returnUrl: "https://e/r", cancelUrl: "https://e/c" },
+      "AUTHORIZE",
+    );
+    expect(body.intent).toBe("AUTHORIZE");
+  });
+  it("captureAuthorization posts final_capture to the authorization", async () => {
+    const { captureAuthorization } = await import("../src/paypal/orders.js");
+    const { fakePayPal } = await import("./helpers.js");
+    const fake = fakePayPal(() => ({ status: 201, body: { id: "CAP9", status: "COMPLETED", amount: { currency_code: "USD", value: "120.00" } } }));
+    const cap = await captureAuthorization(fake.client, "AUTH1", "req-1");
+    expect(cap.id).toBe("CAP9");
+    const call = fake.apiCalls()[0]!;
+    expect(call.path).toBe("/v2/payments/authorizations/AUTH1/capture");
+    expect(call.body).toEqual({ final_capture: true });
+    expect(call.headers["PayPal-Request-Id"]).toBe("req-1");
+  });
+});

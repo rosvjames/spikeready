@@ -14,7 +14,7 @@ import { mariaSpikeOrders, SELLER, type SaleDraft } from "../src/demo/maria.js";
 import type { PayPalClient } from "../src/paypal/client.js";
 import { PayPalApiError } from "../src/paypal/client.js";
 import { clientFromEnv } from "../src/paypal/index.js";
-import { buildOrderBody, captureOrder, createOrder, firstCapture, getOrder, type Order, type PaymentSource } from "../src/paypal/orders.js";
+import { authorizeOrder, buildOrderBody, captureAuthorization, captureOrder, createOrder, firstAuthorization, firstCapture, getOrder, type Capture, type Order, type PaymentSource } from "../src/paypal/orders.js";
 import { loadState, saveRaw, saveState, type State } from "../src/store.js";
 import { run } from "./_cli.js";
 
@@ -22,6 +22,8 @@ const { values: opt } = parseArgs({
   options: {
     count: { type: "string", default: "40" },
     mode: { type: "string", default: "card" },
+    /** capture (default) or authorize: authorize first, then capture the authorization. */
+    intent: { type: "string", default: "capture" },
     "capture-approved": { type: "boolean", default: false },
     "dry-run": { type: "boolean", default: false },
   },
@@ -37,8 +39,8 @@ const card: PaymentSource = {
 };
 const wallet: PaymentSource = { kind: "paypal", returnUrl: "https://example.com/spikeready/return", cancelUrl: "https://example.com/spikeready/cancel" };
 
-function toSale(draft: SaleDraft, order: Order): Sale {
-  const cap = firstCapture(order);
+function toSale(draft: SaleDraft, order: Order, captureOverride?: Capture): Sale {
+  const cap = captureOverride ?? firstCapture(order);
   if (!cap) throw new Error(`Order ${order.id} (${draft.saleId}) has no capture; status ${order.status}`);
   return {
     saleId: draft.saleId,
@@ -61,9 +63,18 @@ async function captureApproved(client: PayPalClient, state: State, drafts: SaleD
       console.log(`${p.saleId}: ${order.status} (approve it here: ${p.approveUrl})`);
       continue;
     }
-    const captured = await captureOrder(client, p.orderId, `spikeready-${s.seedRunId}-${p.saleId}-capture`);
     const draft = drafts.find((d) => d.saleId === p.saleId)!;
-    const sale = toSale(draft, captured);
+    let sale: Sale;
+    if ((order as { intent?: string }).intent === "AUTHORIZE") {
+      const authorized = await authorizeOrder(client, p.orderId, `spikeready-${s.seedRunId}-${p.saleId}-authorize`);
+      const auth = firstAuthorization(authorized);
+      if (!auth) throw new Error(`${p.saleId}: no authorization returned (${authorized.status})`);
+      const cap = await captureAuthorization(client, auth.id, `spikeready-${s.seedRunId}-${p.saleId}-capture-auth`);
+      sale = toSale(draft, authorized, cap);
+    } else {
+      const captured = await captureOrder(client, p.orderId, `spikeready-${s.seedRunId}-${p.saleId}-capture`);
+      sale = toSale(draft, captured);
+    }
     s = { ...s, sales: [...s.sales, sale], pendingOrders: s.pendingOrders.filter((x) => x.saleId !== p.saleId) };
     saveState(s);
     console.log(`${p.saleId}: captured ${formatUsd(sale.amountCents)} (${sale.captureStatus})`);
@@ -99,6 +110,7 @@ run(async () => {
     const body = buildOrderBody(
       { saleId: d.saleId, invoiceId: `SR-${state.seedRunId}-${d.saleId}`, items: d.items, shipTo: d.shipTo, description: `${SELLER.name} order ${d.saleId}` },
       source,
+      opt.intent === "authorize" ? "AUTHORIZE" : "CAPTURE",
     );
     let order: Order;
     try {
