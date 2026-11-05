@@ -2,7 +2,7 @@
 
 > Draft for the Devpost form. Every number is verifiable from the README and the receipts in `data/recorded/`.
 
-**Tagline:** Gets small PayPal sellers ready before a sales spike turns into a payment hold, an account limitation or a dispute.
+**Tagline:** Checks every shipping label against the PayPal order before tracking is uploaded, and tells small sellers when their held money comes back.
 
 **Pitch:** Everyone else waits for the dispute; SpikeReady works in the 21 days between the spike and the payout.
 
@@ -14,13 +14,15 @@ PayPal itself has said that 7–21 day waits have been too common. Its Funds Now
 
 ## What it does
 
+**What's new:** SpikeReady checks that a label is addressed to the buyer on the PayPal order before its tracking reaches PayPal (and cancels a wrong tracker it replaces), and forecasts when held money is released from PayPal's own `PAYMENT-ON-HOLD` notices. Nobody else we found does either.
+
 We follow Maria, a sneaker seller: after a viral video, 39 orders arrive in a single night against her usual 1–2 a day. Five moments:
 
 1. **The spike.** SpikeReady compares her PayPal sales with her normal (13x her usual pace) and lists what PayPal will want to see.
 2. **The fix.** It uploads tracking to each PayPal order only after code checks that the label is addressed to the buyer's PayPal shipping address (ZIP, country, recipient), that the number's check digit and carrier format are valid, that the ZIP belongs to the state on the label and that the number is not reused. It does not yet confirm with the carrier that the package was scanned; that is the next step. One label had two ZIP digits swapped, so it was refused. Maria uploads the reprinted label; Claude reads the carrier, tracking number and ZIP, code checks the reading and the address, and the new tracking goes to PayPal; the old label is refused by code (wrong ZIP, and Claude misread one digit, which the check digit caught: that is why code decides). The release calendar updates: "$110.00 moves from Thursday, Nov 26 to Wednesday, Nov 11: 15 days sooner". The calendar links PayPal `PAYMENT-ON-HOLD` notices to sales and shows the expected release (about 24 h after delivery, per PayPal's rule) and the latest date (21 days, because PayPal may hold longer after unusual selling patterns).
 3. **Ask SpikeReady.** "When will my held money be released?" The assistant answers by calling SpikeReady's read-only tools, and code checks every amount, date and fact against the tool results before Maria sees it ("Checked by code: 21/21 facts verified"). It has no tool that can write to PayPal.
 4. **The limitation.** Maria pastes PayPal's message; the AI lists each request with an exact quote, and code keeps only quotes that really appear and builds a plan from her PayPal data. The AI reads her supplier invoices; code reconciles them against her sales ("You sold 14 × Nike Air Force 1 size 10; your invoices cover 12") and builds an evidence pack with a SHA-256 fingerprint of every original.
-5. **The dispute.** A buyer says the item never arrived. In our real sandbox case, PayPal showed the buyer the tracking SpikeReady had verified before letting them file; SpikeReady linked the case to the sale and, with Maria's approval, sent the verified tracking to PayPal through the Disputes API.
+5. **The same data defends her later.** A buyer says the item never arrived. On PayPal's buyer "report a problem" page, PayPal shows the buyer the tracking SpikeReady checked and uploaded before they can file. In our real sandbox case, SpikeReady linked the case to the sale and, with Maria's approval, sent the verified tracking to PayPal through the Disputes API.
 
 It also runs as an **MCP server**, designed to sit next to PayPal's official MCP server as a guardian: an agent checks a label with SpikeReady before uploading tracking.
 
@@ -58,6 +60,10 @@ A strong model already reads invoices well. The value is in connecting it to Pay
 ## What's next
 
 Carrier delivery events for exact release dates, PDF and image grounding, a PayPal ruling on a dispute end to end, and conversations with more sellers to validate the flow.
+
+## How it differs from related projects
+
+Several hackathon projects defend sellers in disputes (for example Cleared, for freelancers of digital work). SpikeReady works earlier and for physical-goods sellers in a sales spike: label checks before tracking, hold-release forecasts and invoice reconciliation for limitation reviews. Dispute evidence is a by-product of the same verified data, not the headline.
 
 ## Built with
 

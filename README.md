@@ -2,24 +2,25 @@
 
 > **TL;DR**
 > - **Who:** small PayPal sellers whose sales suddenly spike, the moment PayPal is most likely to hold their money (up to 21 days) or limit the account.
-> - **What:** SpikeReady uploads tracking only when the label is addressed to the buyer's PayPal shipping address, shows when each held dollar should be released, reads what PayPal asks for and checks supplier invoices before the seller submits anything.
+> - **What's new:** before any tracking reaches PayPal, SpikeReady checks that the label is addressed to the buyer on the PayPal order (and cancels a wrong tracker it replaces); and it tells the seller when each held dollar should come back, from PayPal's own hold notices.
+> - **Also:** reads what PayPal asks for in a limitation and checks supplier invoices against PayPal sales before the seller submits anything.
 > - **AI:** Claude reads labels, invoices and PayPal's messages and answers questions; code checks every value it reads and makes every decision, and only code calls PayPal.
 > - **Real:** run against the PayPal sandbox (orders, captures, tracking, a signed webhook, a real "item not received" case); the public demo replays that run, and its AI answers are recorded real runs.
 > - **Try it:** https://spikeready.onrender.com, then [JUDGING.md](JUDGING.md).
 
-**Everyone else waits for the dispute; SpikeReady works in the 21 days between the spike and the payout.** When a small PayPal seller suddenly sells far more than usual, PayPal may hold the money or limit the account. SpikeReady gets the seller ready before that happens: it uploads tracking only when the label is addressed to the buyer's PayPal shipping address, shows when each held dollar should be released, reads what PayPal asks for, and checks supplier invoices against PayPal sales before the seller submits anything. **The AI reads and explains; the code decides** and is the only part that calls PayPal.
+**SpikeReady checks every shipping label against the PayPal order before its tracking reaches PayPal, and tells the seller when their held money comes back.** Everyone else waits for the dispute; SpikeReady works in the 21 days between the spike and the payout. When a small PayPal seller suddenly sells far more than usual, PayPal may hold the money or limit the account. SpikeReady gets the seller ready before that happens: it uploads tracking only when the label is addressed to the buyer's PayPal shipping address, shows when each held dollar should be released, reads what PayPal asks for, and checks supplier invoices against PayPal sales before the seller submits anything. **The AI reads and explains; the code decides** and is the only part that calls PayPal.
 
 **Live demo: https://spikeready.onrender.com** (no login). It replays our real PayPal sandbox run of Nov 5, 2026. Built for the PayPal AI Hackathon 2026; judges, start with [JUDGING.md](JUDGING.md).
 
 ## What it does
 
-- **Spike alert:** compares the seller's PayPal sales with their normal (13x in the demo) and lists what PayPal will want to see.
-- **Verified tracking:** uploads tracking to the PayPal order only if the label's ZIP matches the buyer's PayPal shipping address, the check digit is valid and the number is not reused.
-- **Release calendar:** links PayPal `PAYMENT-ON-HOLD` notices to sales and shows the expected release date (about 24 h after delivery) and the latest one (21 days), following PayPal's published rules.
+- **Label check before tracking (new):** uploads tracking to the PayPal order only if the label is addressed to the buyer's PayPal shipping address (ZIP, country, recipient), the check digit and carrier format are valid and the number is not reused; when a reprinted label replaces a wrong one, the wrong tracker is cancelled on the PayPal order.
 - **Fix it in place:** when a label is refused, the seller uploads the reprinted label; Claude reads the carrier, tracking number and destination ZIP from it, code checks that reading against the label and the buyer's PayPal address, and only then uploads the tracking to the PayPal order. The release date moves (15 days sooner in the demo: a new label has no carrier delivery estimate yet, so SpikeReady assumes 5 days in transit). A typed ZIP alone is not proof; the reprinted label, with its new tracking number, is.
-- **Ask SpikeReady:** an assistant that answers from SpikeReady's own read-only tools ("When will my held money be released?", "Draft my reply to PayPal"); code checks every amount, date and fact before the seller sees it.
-- **Dispute defense:** if a buyer says "item not received", SpikeReady links the case to the sale and prepares the verified tracking as evidence; the seller approves before anything is sent to PayPal (done for real on a sandbox case, see below).
+- **Release calendar (new):** links PayPal `PAYMENT-ON-HOLD` notices to sales and shows the expected release date (about 24 h after delivery) and the latest one (21 days), following PayPal's published rules.
 - **Limitation help:** reads PayPal's message (AI quotes each request; code checks every quote), reads supplier invoices (AI) and reconciles them against PayPal sales (code), then builds an evidence pack with a SHA-256 fingerprint of every original.
+- **Spike alert:** compares the seller's PayPal sales with their normal (13x in the demo) and lists what PayPal will want to see.
+- **Ask SpikeReady:** an assistant that answers from SpikeReady's own read-only tools ("When will my held money be released?", "Draft my reply to PayPal"); code checks every amount, date and fact before the seller sees it.
+- **Also, dispute defense:** the same verified data helps later: if a buyer says "item not received", SpikeReady links the case to the sale and prepares the verified tracking as evidence; the seller approves before anything is sent to PayPal (done for real on a sandbox case, see below).
 
 Also available to AI assistants as an [MCP server](docs/mcp.md).
 
@@ -201,6 +202,10 @@ See [docs/architecture.md](docs/architecture.md).
 | 5 | Mon Nov 9 | Feature freeze, final README, video | Planned |
 | 6 | Tue Nov 10 | Video editing, Devpost text ([draft](docs/devpost.md)), make repo public | Planned |
 | 7 | Wed Nov 11 | Submit | Planned |
+
+## Related work
+
+Other PayPal AI Hackathon projects help sellers in nearby moments, and we see them as complementary. For example, [Cleared](https://github.com/muhsin9999/cleared) defends freelancers of digital work and services, which PayPal Seller Protection does not cover, in disputes, with an agent whose claims code checks. SpikeReady works earlier and for a different seller: physical goods, during a sales spike, around PayPal's holds and limitations. It checks shipping labels against the PayPal order before tracking is uploaded, forecasts hold releases from PayPal's hold notices, and reconciles supplier invoices for limitation reviews. Some patterns are shared across the field (an AI that reads while code decides, reading PayPal's messages, dispute evidence); we built our versions for this seller and this moment.
 
 ## License
 
