@@ -445,6 +445,162 @@ async function renderBalance() {
   }
 }
 
+// ---------- Ask SpikeReady
+// Tiny Markdown renderer for the assistant's answers. Escape first, then a few safe constructs:
+// headings, bold, inline code, lists, tables, rules and paragraphs. Never inserts raw HTML.
+function inlineMd(text) {
+  return esc(text)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+}
+function renderMarkdown(md) {
+  const lines = String(md ?? "").replace(/\r/g, "").split("\n");
+  const out = [];
+  let para = [];
+  const flush = () => {
+    if (para.length) out.push(`<p>${inlineMd(para.join(" "))}</p>`);
+    para = [];
+  };
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const t = line.trim();
+    if (!t) { flush(); continue; }
+    const h = /^(#{1,4})\s+(.*)$/.exec(t);
+    if (h) { flush(); out.push(`<h4 class="md-h">${inlineMd(h[2])}</h4>`); continue; }
+    if (/^(-{3,}|\*{3,})$/.test(t)) { flush(); out.push("<hr>"); continue; }
+    if (t.startsWith("|") && i + 1 < lines.length && /^\s*\|?\s*:?-{2,}/.test(lines[i + 1])) {
+      flush();
+      const cells = (row) => row.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+      const head = cells(t);
+      const rows = [];
+      i += 2;
+      while (i < lines.length && lines[i].trim().startsWith("|")) rows.push(cells(lines[i++]));
+      i--;
+      out.push(`<div class="table-wrap"><table class="md-table"><thead><tr>${head.map((c) => `<th>${inlineMd(c)}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${inlineMd(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
+      continue;
+    }
+    const li = /^([-*]|\d+[.)])\s+(.*)$/.exec(t);
+    if (li) {
+      flush();
+      const ordered = /\d/.test(li[1]);
+      const items = [];
+      while (i < lines.length) {
+        const m = /^\s*([-*]|\d+[.)])\s+(.*)$/.exec(lines[i]);
+        if (!m || /\d/.test(m[1]) !== ordered) break;
+        items.push(`<li>${inlineMd(m[2])}</li>`);
+        i++;
+      }
+      i--;
+      out.push(ordered ? `<ol>${items.join("")}</ol>` : `<ul>${items.join("")}</ul>`);
+      continue;
+    }
+    para.push(t);
+  }
+  flush();
+  return out.join("");
+}
+/** Splits a reply-mode answer into the advice before "Draft reply" and the draft itself (plain text). */
+function splitDraft(md) {
+  const m = /^#{1,4}\s*draft reply\s*$/im.exec(md ?? "");
+  if (!m) return { advice: md, draft: null };
+  const advice = md.slice(0, m.index).replace(/\n-{3,}\s*$/m, "").trim();
+  const draft = md
+    .slice(m.index + m[0].length)
+    .trim()
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/`([^`]+)`/g, "$1");
+  return { advice, draft };
+}
+
+let askBusy = false;
+function renderAsk(r) {
+  const claims = r.claims ?? [];
+  const ok = claims.filter((c) => c.verified).length;
+  const bad = claims.filter((c) => !c.verified);
+  const source = r.source === "recorded" ? `<span class="pill pill-next">Recorded answer · real run on Nov 5</span>` : `<span class="pill pill-ok">Live answer</span>`;
+  const { advice, draft } = r.mode === "reply" ? splitDraft(r.answer_markdown) : { advice: r.answer_markdown, draft: null };
+  const answerHtml = `<div class="md${r.verified ? "" : " md-unverified"}">${r.verified ? "" : `<p class="unverified-note"><strong>Not fully verified.</strong> Some facts below could not be checked against your data; don't rely on them.</p>`}${renderMarkdown(advice)}</div>`;
+  const draftHtml = draft
+    ? `<div class="draft"><div class="draft-head"><strong>Draft reply for PayPal's Resolution Center</strong><button type="button" class="btn btn-quiet" id="copy-draft">Copy</button></div>
+        <textarea id="draft-text" readonly rows="12" aria-label="Draft reply">${esc(draft)}</textarea>
+        <p class="fine">Review and edit before sending. Send it yourself inside PayPal; SpikeReady never sends anything.</p></div>`
+    : "";
+  const attachments = (r.attachments ?? []).length
+    ? `<div class="attach"><strong>Attach these originals</strong> (unchanged; fingerprints from the invoice check):<ul>${r.attachments
+        .map((a) => `<li><span class="mono-sm">${esc(a.sha256.slice(0, 12))}…</span> ${esc(a.filename)}${a.counted ? "" : ` <span class="pill pill-wait">not counted</span>`}</li>`)
+        .join("")}</ul></div>`
+    : "";
+  const check = `<div class="alert ${r.verified ? "calm" : "spike"} ask-check" role="status"><span class="ico" aria-hidden="true">${r.verified ? "✓" : "!"}</span><div><strong>Checked by code: ${ok}/${plural(claims.length, "fact")} verified</strong>${
+    (r.unsupported ?? []).length ? ` · amounts or dates not found in your data: ${r.unsupported.map((u) => esc(u)).join(", ")}` : ""
+  }${r.regenerated ? " · the assistant had to fix its first answer" : ""}</div></div>`;
+  const claimList = `<details class="claims"><summary>See every checked fact (${claims.length})</summary><ul>${claims
+    .map(
+      (c) =>
+        `<li class="${c.verified ? "" : "claim-bad"}"><span class="ico ${c.verified ? "ok" : "no"}" aria-label="${c.verified ? "verified" : "not verified"}">${c.verified ? "✓" : "✗"}</span><span>${esc(c.text)} <span class="muted">· ${esc(c.tool)} · <span class="mono-sm">${esc(c.field_path)}</span> = ${esc(String(c.value))}${c.verified || !c.reason ? "" : ` · ${esc(c.reason)}`}</span></span></li>`,
+    )
+    .join("")}</ul></details>`;
+  const tools = [...new Set((r.toolCalls ?? []).map((t) => t.tool))];
+  const u = r.usage ?? {};
+  const usage = `<p class="fine ai-line">${r.source === "recorded" ? "Recorded from" : "Answered by"} ${esc(u.model ?? "the assistant")} in ${((u.latency_ms ?? 0) / 1000).toFixed(1)} s (${plural(u.calls ?? 0, "call")}, ${esc(fmtCost(u.cost_usd))}). Tools used: ${tools.map((t) => `<span class="mono-sm">${esc(t)}</span>`).join(", ") || "none"}. The assistant only reads; it has no tool that writes to PayPal.</p>`;
+  return `<div class="ask-answer"><p class="ask-q"><strong>${esc(r.question)}</strong> ${source}</p>${answerHtml}${draftHtml}${attachments}${check}${claimList}${usage}</div>`;
+}
+
+async function askQuestion(payload) {
+  if (askBusy) return;
+  askBusy = true;
+  const body = $("ask-body");
+  const status = $("ask-status");
+  for (const b of document.querySelectorAll("#ask-chips button, #ask-send")) b.disabled = true;
+  body.innerHTML = `<p class="loading-line" role="status"><span class="spinner" aria-hidden="true"></span>Reading your PayPal data…${payload.id ? "" : " Live answers take 20–60 seconds."}</p>`;
+  try {
+    const res = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    const r = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(r.error ?? `HTTP ${res.status}`);
+    body.innerHTML = renderAsk(r);
+    status.textContent = "";
+    $("copy-draft")?.addEventListener("click", async () => {
+      const t = $("draft-text");
+      try {
+        await navigator.clipboard.writeText(t.value);
+        $("copy-draft").textContent = "Copied";
+      } catch {
+        t.select();
+      }
+    });
+  } catch (err) {
+    body.innerHTML = `<p class="error" role="alert">${esc(err.message)}</p>`;
+  } finally {
+    askBusy = false;
+    for (const b of document.querySelectorAll("#ask-chips button")) b.disabled = false;
+    $("ask-send").disabled = !askLive;
+  }
+}
+
+let askLive = false;
+function initAsk(d) {
+  const a = d.ask ?? { live: false, suggestions: [] };
+  askLive = Boolean(a.live);
+  $("ask-chips").innerHTML = a.suggestions
+    .map((q) => `<button type="button" class="chip" data-ask-id="${esc(q.id)}" data-mode="${esc(q.mode)}">${esc(q.question)}</button>`)
+    .join("");
+  const input = $("ask-q");
+  input.disabled = !askLive;
+  $("ask-send").disabled = !askLive;
+  $("ask-status").textContent = askLive
+    ? "Live AI is on: type any question about this seller's PayPal data."
+    : "Live AI is off on this public demo, so typing is disabled. The suggested questions are real answers recorded on Nov 5 and checked by code.";
+  if (!askLive) input.placeholder = "Live AI is off on this public demo: try a suggested question";
+}
+document.addEventListener("click", (e) => {
+  const chip = e.target.closest?.("[data-ask-id]");
+  if (chip) askQuestion({ id: chip.dataset.askId, mode: chip.dataset.mode });
+});
+$("ask-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const q = $("ask-q").value.trim();
+  if (q && askLive) askQuestion({ question: q });
+});
+
 async function loadDashboard() {
   const res = await fetch("/api/dashboard", { headers: { Accept: "application/json" } });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -453,6 +609,7 @@ async function loadDashboard() {
   renderSpike(d);
   renderCalendar(d);
   renderTracking(d);
+  initAsk(d);
   if (d.live?.balance) renderBalance();
   // Keep a finished invoice check reflected in the step-1 checklist after a reload.
   if (lastInvoiceResult) updateInvoiceCheck(lastInvoiceResult);

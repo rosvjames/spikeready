@@ -26,6 +26,20 @@
       <div id="spike-body" class="loading">Loading…</div>
     </section>
 
+    <section class="card wide" id="ask" aria-labelledby="h-ask">
+      <p class="step">Ask</p>
+      <h2 id="h-ask">Ask SpikeReady</h2>
+      <p class="muted">Answers come only from the PayPal data in this panel. Code checks every amount, date and fact before you see it, and the assistant cannot upload, send or change anything.</p>
+      <div class="chips" id="ask-chips" role="group" aria-label="Suggested questions"></div>
+      <form id="ask-form" class="ask-form">
+        <label for="ask-q" class="sr-only">Your question</label>
+        <input id="ask-q" type="text" maxlength="500" autocomplete="off" placeholder="Ask about your held money, tracking or invoices">
+        <button type="submit" class="btn" id="ask-send">Ask</button>
+      </form>
+      <p class="fine" id="ask-status"></p>
+      <div id="ask-body" aria-live="polite"></div>
+    </section>
+
     <section class="card wide" id="step-tracking" aria-labelledby="h-tracking">
       <p class="step">Step 2</p>
       <h2 id="h-tracking">Tracking on PayPal</h2>

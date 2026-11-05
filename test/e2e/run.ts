@@ -71,6 +71,19 @@ try {
   check("tracking: refused maria-0007 row with ZIP 60641 vs 60614", /maria-0007/.test(tracking) && /60641/.test(tracking) && /60614/.test(tracking) && /refused/i.test(tracking));
   check("calendar total $775.00", /\$775\.00/.test(await text("#step-calendar")));
 
+  // Ask SpikeReady: on the public demo, suggested questions replay recorded answers; typing is disabled.
+  check("ask: typing disabled when live AI is off", await page.locator("#ask-q").isDisabled());
+  await page.locator('#ask-chips [data-ask-id="release"]').click();
+  await page.locator("#ask-body .ask-check").waitFor({ timeout: 10_000 });
+  const askText = await text("#ask-body");
+  check("ask: release answer shows $775.00", /\$775\.00/.test(askText));
+  check("ask: every fact verified by code", /Checked by code: (\d+)\/\1 facts verified/.test(askText), askText.slice(0, 160));
+  if (shots) await page.locator("#ask").screenshot({ path: join(imgDir, "ask.png") });
+  await page.locator('#ask-chips [data-ask-id="reply"]').click();
+  await page.locator("#draft-text").waitFor({ timeout: 10_000 });
+  check("ask: reply draft mentions case LIM-2026-11-0412", /LIM-2026-11-0412/.test(await page.locator("#draft-text").inputValue()));
+  check("ask: reply lists the original attachments", (await page.locator("#ask-body .attach li").count()) > 0);
+
   await page.locator("#notice-sample").click();
   await page.locator("#notice-body").getByText("LIM-2026-11-0412").first().waitFor({ timeout: 10_000 });
   check("sample notice → plan shows LIM-2026-11-0412", /LIM-2026-11-0412/.test(await text("#notice-body")));

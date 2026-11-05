@@ -198,3 +198,40 @@ ul.deliveries li { padding: 6px 0; border-top: 1px solid var(--border); overflow
 .recorded-webhook { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin: 6px 0 10px; }
 .recorded-webhook p { margin: 0 0 4px; }
 .ai-line { margin-top: 0; }
+
+/* Ask SpikeReady */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.chip { font: inherit; font-size: .88rem; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg); color: var(--accent); cursor: pointer; text-align: left; }
+.chip:hover:not(:disabled) { border-color: var(--accent); }
+.chip:disabled, .btn:disabled { opacity: .55; cursor: default; }
+.chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ask-form { display: flex; gap: 8px; margin: 4px 0; }
+.ask-form input { flex: 1; min-width: 0; font: inherit; font-size: .92rem; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-1); color: var(--text-primary); }
+.ask-form input:disabled { background: var(--bg); color: var(--text-muted); }
+.ask-form input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.loading-line { display: flex; align-items: center; gap: 10px; color: var(--text-secondary); }
+.spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.9s linear infinite; flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+.ask-answer { border-top: 1px solid var(--border); margin-top: 12px; padding-top: 12px; }
+.ask-q { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 8px; }
+.md p { margin: 0 0 10px; }
+.md ul, .md ol { margin: 0 0 10px; padding-left: 22px; }
+.md li { margin: 2px 0; }
+.md hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+.md-h { margin: 12px 0 6px; font-size: 1rem; }
+.md code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .85em; background: var(--bg); padding: 1px 4px; border-radius: 4px; }
+.md-table { border-collapse: collapse; font-size: .88rem; margin: 0 0 10px; }
+.md-table th, .md-table td { border-bottom: 1px solid var(--border); padding: 5px 10px 5px 0; text-align: left; white-space: nowrap; }
+.md-unverified { border-left: 3px solid var(--warn); padding-left: 10px; }
+.unverified-note { color: var(--warn); }
+.draft { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin: 10px 0; background: var(--bg); }
+.draft-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+.draft textarea { width: 100%; font: inherit; font-size: .88rem; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-1); color: var(--text-primary); resize: vertical; }
+.attach ul { margin: 6px 0 10px; padding-left: 20px; }
+.ask-check { margin: 10px 0 6px; }
+.claims summary { cursor: pointer; color: var(--accent); font-size: .9rem; }
+.claims ul { list-style: none; padding: 0; margin: 8px 0; font-size: .86rem; }
+.claims li { display: flex; gap: 8px; padding: 3px 0; }
+.claims li.claim-bad { color: var(--warn); background: var(--warn-bg); border-radius: 6px; padding: 3px 6px; }
+@media (max-width: 640px) { .ask-form { flex-direction: column; } }

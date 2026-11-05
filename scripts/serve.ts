@@ -10,6 +10,7 @@ import { AnthropicExtractor } from "../src/invoices/extract.js";
 import { AnthropicNoticeExtractor } from "../src/limitation/extract.js";
 import { PayPalClient, type CallReceipt } from "../src/paypal/client.js";
 import { readBalance } from "../src/server/proof.js";
+import { LiveAssistant } from "../src/assistant/agent.js";
 import { dailyCapFromEnv } from "../src/server/ai-rails.js";
 import { createApp, defaultWebDir } from "../src/server/app.js";
 import { buildDemoState } from "../src/server/demo-state.js";
@@ -66,6 +67,9 @@ const app = createApp({
   noticeExtractor: aiUploadsEnabled(process.env) ? () => new AnthropicNoticeExtractor() : null,
   // The "fix label" action shows the PayPal-Debug-Id of the call it made.
   lastPayPalReceipt: () => lastReceipt,
+  // "Ask SpikeReady" with free-text questions: same rule as the other paid AI features. Suggested questions
+  // replay recorded answers either way. One answer may spend at most $0.25.
+  askLive: aiUploadsEnabled(process.env) ? (ctx) => new LiveAssistant(ctx, { maxUsd: 0.25 }) : null,
   // Live AI on a public server: per-visitor rate limit plus a daily dollar cap (default $1.00).
   aiDailyUsd: dailyCapFromEnv(process.env),
 });
@@ -73,6 +77,6 @@ const app = createApp({
 const port = Number(process.env.PORT ?? 3000);
 createServer((req, res) => void app(req, res)).listen(port, () => {
   console.log(
-    `SpikeReady on http://localhost:${port}  (${demoSource}; PayPal ${paypal ? paypal.env : "not configured"}; webhooks ${webhookId && paypal ? "on" : "off"}; AI invoice reading ${aiUploadsEnabled(process.env) ? "on" : "off"})`,
+    `SpikeReady on http://localhost:${port}  (${demoSource}; PayPal ${paypal ? paypal.env : "not configured"}; webhooks ${webhookId && paypal ? "on" : "off"}; live AI (invoices, notices, Ask SpikeReady) ${aiUploadsEnabled(process.env) ? "on" : "off"})`,
   );
 });

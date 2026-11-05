@@ -18,6 +18,10 @@ import type { CallReceipt } from "../paypal/client.js";
 import { DailyAiBudget, summarizeUsage, type AiUsage } from "./ai-rails.js";
 import { FixRequestError, fixLabel } from "./fix-label.js";
 import { clientKey, createRateLimiter } from "./rate-limit.js";
+import { RecordedAssistant } from "../assistant/recorded.js";
+import type { Assistant } from "../assistant/agent.js";
+import { DEFAULT_INVOICES_DIR, type McpContext } from "../mcp/tools.js";
+import { AskRequestError, askUsageSummary, MAX_ASK_BODY_BYTES, planAsk, runAsk, serverMcpContext, suggestionsOf } from "./ask.js";
 
 export interface AppDeps {
   loadState: () => State;
@@ -48,6 +52,10 @@ export interface AppDeps {
   lastPayPalReceipt?: () => CallReceipt | null;
   /** Daily dollar cap for live AI on this server (SPIKEREADY_AI_DAILY_USD, default 1.00). */
   aiDailyUsd?: number;
+  /** "Ask SpikeReady" recorded answers (the suggested questions); defaults to data/recorded/assistant-*.json. */
+  askRecorded?: RecordedAssistant | null;
+  /** Builds the live assistant over the server's data; null/absent when paid AI is not allowed on this server. */
+  askLive?: ((ctx: McpContext) => Assistant) | null;
   /** Per-client limits: live AI requests and "fix label" actions (per minute). */
   rateLimits?: { aiPerMinute?: number; fixPerMinute?: number };
 }
@@ -241,6 +249,44 @@ export function createApp(deps: AppDeps) {
     }
   }
 
+  // "Ask SpikeReady": suggested questions replay recorded answers; free text needs the live assistant.
+  const askRecorded = deps.askRecorded !== undefined ? deps.askRecorded : RecordedAssistant.fromFile();
+  const askCtx = serverMcpContext({
+    loadState: deps.loadState,
+    now: deps.now,
+    demo: deps.demo,
+    banner: deps.banner ?? null,
+    invoicesDir: DEFAULT_INVOICES_DIR,
+    ...(deps.samplesDir ? { samplesDir: deps.samplesDir } : {}),
+  });
+  const askDeps = { recorded: askRecorded, live: deps.askLive ? () => deps.askLive!(askCtx) : null };
+
+  async function ask(req: IncomingMessage, res: ServerResponse): Promise<void> {
+    const raw = await readBody(req, MAX_ASK_BODY_BYTES);
+    let body: unknown;
+    try {
+      body = JSON.parse(raw);
+    } catch {
+      return send(res, 400, { error: "invalid JSON" });
+    }
+    try {
+      const plan = planAsk(body, askDeps);
+      if (plan.live) {
+        const blocked = aiGate(req);
+        if (blocked) return send(res, blocked.status, { error: blocked.error, suggestions: suggestionsOf(askRecorded) });
+      }
+      const out = await runAsk(plan, askDeps);
+      const ai = askUsageSummary(out.result);
+      if (out.live) aiBudget.add(ai);
+      return send(res, 200, { ...out.result, ai });
+    } catch (err) {
+      if (err instanceof AskRequestError) return send(res, err.status, { error: err.message, ...err.extra });
+      if (err instanceof HttpError) throw err;
+      console.error(err instanceof Error ? err.message : err);
+      return send(res, 502, { error: "Could not answer right now. Try again, or try a suggested question.", suggestions: suggestionsOf(askRecorded) });
+    }
+  }
+
   // Labels fixed through the panel (in memory; in demo mode they reset when the server restarts).
   const fixes = new Map<string, { simulated: boolean; paypalDebugId: string | null; status: string }>();
 
@@ -311,6 +357,10 @@ export function createApp(deps: AppDeps) {
         if (method !== "POST") return send(res, 405, { error: "method not allowed" });
         return await trackingFix(req, res);
       }
+      if (url.pathname === "/api/ask") {
+        if (method !== "POST") return send(res, 405, { error: "method not allowed" });
+        return await ask(req, res);
+      }
       if (url.pathname === "/api/limitation/plan") {
         if (method !== "POST") return send(res, 405, { error: "method not allowed" });
         return await limitationPlan(req, res);
@@ -352,6 +402,7 @@ export function createApp(deps: AppDeps) {
           ...buildDashboard(deps.loadState(), deps.now(), deps.demo, deps.banner ?? null),
           live: { balance: Boolean(balance), paypal: Boolean(deps.paypal), ai: Boolean(deps.invoiceExtractor || deps.noticeExtractor) },
           fixes: Object.fromEntries(fixes),
+          ask: { live: Boolean(deps.askLive), suggestions: suggestionsOf(askRecorded) },
         });
       }
       if (url.pathname.startsWith("/api/")) return send(res, 404, { error: "not found" });
