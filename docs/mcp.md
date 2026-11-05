@@ -55,6 +55,32 @@ Resource: `spikeready://policy`, PayPal's hold and release rules as SpikeReady a
 - "PayPal limited my account. Check my invoices in the invoices folder and tell me what to fix before I send them."
 - "Give me the evidence pack."
 
+## Next to PayPal's official MCP server
+
+PayPal's own MCP server ([paypal/agent-toolkit](https://github.com/paypal/agent-toolkit), `npx -y @paypal/mcp --tools=all`) gives agents tools such as `create_shipment_tracking`, `list_disputes` and `list_transactions`. It does not check whether a tracking number is real or goes to the buyer, and it has nothing about holds or limitations. SpikeReady is meant to sit next to it as a guardian and a planner:
+
+```json
+{
+  "mcpServers": {
+    "paypal": {
+      "command": "npx",
+      "args": ["-y", "@paypal/mcp", "--tools=all"],
+      "env": { "PAYPAL_ACCESS_TOKEN": "<sandbox token>", "PAYPAL_ENVIRONMENT": "SANDBOX" }
+    },
+    "spikeready": {
+      "command": "npx",
+      "args": ["tsx", "/absolute/path/to/spikeready/scripts/mcp.ts"]
+    }
+  }
+}
+```
+
+Suggested instruction for the assistant (for example in a Claude project):
+
+> Before calling `paypal.create_shipment_tracking`, always call `spikeready.verify_tracking` with the label's carrier, tracking number and destination ZIP. If the verdict is not UPLOAD, do not upload; tell the seller why. For "when will my money be released?" use `spikeready.get_release_calendar`.
+
+With this, an agent cannot upload a made-up number or a label going to the wrong ZIP through PayPal's tool without the seller seeing SpikeReady's refusal first. (Check the PayPal MCP server's README for its current environment variable names.)
+
 ## Safety model
 
 1. **Code decides, the AI explains.** Tools return results computed by deterministic code (spike rule, ZIP check, release policy, reconciliation). Tool annotations mark every tool read-only except `upload_tracking`.
