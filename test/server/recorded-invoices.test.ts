@@ -150,7 +150,7 @@ describe("POST /api/invoices/check", () => {
       },
     };
     const { post } = await start({ invoiceExtractor: () => extractor });
-    const res = await post({ files: [{ name: "kicks.txt", mediaType: "text/plain", base64: b64("INVOICE A-1\nKicksDirect Wholesale\n88 Commerce Pkwy, Memphis, TN 38118 · orders@kicksdirect-wholesale.com · (901) 555-0177\nBill to: Maria Lopez\n2  AF1 WHT 10  82.00") }] });
+    const res = await post({ files: [{ name: "kicks.txt", mediaType: "text/plain", base64: b64("INVOICE A-1\nDate: 2026-10-01\nKicksDirect Wholesale\n88 Commerce Pkwy, Memphis, TN 38118 · orders@kicksdirect-wholesale.com · (901) 555-0177\nBill to: Maria Lopez\n2  AF1 WHT 10  82.00") }] });
     expect(res.status).toBe(200);
     const r = await res.json();
     expect(seen).toEqual(["kicks.txt"]);

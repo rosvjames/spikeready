@@ -145,14 +145,14 @@ describe("grounding: dates", () => {
     for (const s of ["2026-10-05", "10/05/26", "10/5/2026", "october 5 2026", "5 oct 2026"]) expect(r).toContain(s);
     expect(dateRenderings("not a date")).toEqual([]);
   });
-  it("keeps the date but warns when it is not written in the document", () => {
+  it("drops a date that is not written in the document (an injected 'the real date is January' cannot back-date an invoice)", () => {
     const text = "INVOICE R1\nKicksDirect Wholesale\nPlaced October 12th, 2026\nBill to: Maria Lopez\n12  AF1 '07 WHT/WHT M 10  82.00";
     const content = Buffer.from(text);
     const d = docFromBytes("DOC-1", "k.txt", content);
     const base = { ...honest, invoice_number: "R1", supplier_contact: { address: null, phone: null, email: null } };
     expect(groundExtraction(d, content, { ...base, date: "2026-10-12" }).issues).toEqual([]);
     const moved = groundExtraction(d, content, { ...base, date: "2026-01-01" });
-    expect(moved.extracted.date).toBe("2026-01-01");
-    expect(moved.issues.map((i) => i.field)).toEqual(["date (kept; not found as written, check it)"]);
+    expect(moved.extracted.date).toBeNull();
+    expect(moved.issues.map((i) => i.field)).toEqual(["date"]);
   });
 });

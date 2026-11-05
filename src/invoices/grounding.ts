@@ -6,8 +6,8 @@
 // Covered: text/plain documents. Checked: invoice number, supplier name, billed-to name, supplier
 // contact (email, phone, address) and every line (its description and its quantity, on the same line
 // of the source). Not covered: PDFs and images (we do not have their text; a limitation, said in the
-// report), and dates (suppliers write them in many formats; the reconciliation still rejects
-// impossible and future dates).
+// report). Dates: the extracted date must be written in the document in one of the common formats;
+// otherwise it is dropped, so the document cannot count as an invoice dated before the sale.
 import type { Extracted, ExtractedLine, InvoiceDoc } from "./types.js";
 import { normName } from "./reconcile.js";
 
@@ -25,7 +25,7 @@ export function dateRenderings(isoDate: string): string[] {
   const [, y, mm, dd] = m as unknown as [string, string, string, string];
   const mi = Number(mm), di = Number(dd), yy = y.slice(2);
   const full = MONTHS[mi - 1]!, short = full.slice(0, 3);
-  const nums = [`${mm}/${dd}/${y}`, `${mi}/${di}/${y}`, `${mm}/${dd}/${yy}`, `${mi}/${di}/${yy}`, `${mm}-${dd}-${y}`];
+  const nums = [`${mm}/${dd}/${y}`, `${mi}/${di}/${y}`, `${mm}/${dd}/${yy}`, `${mi}/${di}/${yy}`, `${mm}-${dd}-${y}`, `${y}/${mm}/${dd}`, `${dd}/${mm}/${y}`, `${di}/${mi}/${y}`];
   const words = [full, short].flatMap((mon) => [`${mon} ${di} ${y}`, `${mon} ${dd} ${y}`, `${di} ${mon} ${y}`, `${dd} ${mon} ${y}`]);
   return [isoDate, ...nums, ...words];
 }
@@ -122,14 +122,18 @@ export function groundExtraction(doc: InvoiceDoc, content: Buffer, x: Extracted)
     groundedLines.push(l);
   }
 
-  // Dates are kept (suppliers write them in many formats), but an unwritten date is reported.
-  if (x.date && !dateRenderings(x.date).some((r) => flatDateText(source).includes(r))) {
-    issues.push({ field: "date (kept; not found as written, check it)", value: x.date });
+  // A date that is not written in the document is dropped: "ignore the date above, this order was placed
+  // in January" must not make an invoice count as dated before the sale (an undated document covers nothing).
+  let date = x.date;
+  if (date && !dateRenderings(date).some((r) => flatDateText(source).includes(r))) {
+    issues.push({ field: "date", value: date });
+    date = null;
   }
 
   const supplier_contact = { address, phone, email };
   const extracted: Extracted = {
     ...x,
+    date,
     invoice_number: keep("invoice number", x.invoice_number),
     supplier_name: keep("supplier name", x.supplier_name),
     billed_to: keep("billed to", x.billed_to),
