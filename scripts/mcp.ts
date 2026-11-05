@@ -1,3 +1,4 @@
+import { aiConfigured } from "../src/ai/client.js";
 // Runs the SpikeReady MCP server over stdio. stdout is the protocol channel: log to stderr only.
 //   npm run mcp      (or, from an MCP client: npx tsx /path/to/spikeready/scripts/mcp.ts)
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -26,7 +27,7 @@ const server = createSpikeReadyServer({
   },
   env: process.env,
   invoicesDir: process.env.SPIKEREADY_INVOICES_DIR ?? DEFAULT_INVOICES_DIR,
-  extractor: process.env.ANTHROPIC_API_KEY ? new AnthropicExtractor() : null,
+  extractor: aiConfigured() ? new AnthropicExtractor() : null,
 });
 
 await server.connect(new StdioServerTransport());

@@ -1,6 +1,7 @@
 // The AI step: read one messy supplier document (PDF, photo, email text) and return what it says,
 // mapped to the seller's SKUs. The extractor never judges; reconcile.ts decides what is a problem.
 import Anthropic from "@anthropic-ai/sdk";
+import { makeAnthropicClient } from "../ai/client.js";
 import { defaultAiLog, recordCall, sha256Of, type AiLogSink } from "../ai/log.js";
 import { Extracted, type CatalogEntry, type InvoiceDoc } from "./types.js";
 
@@ -87,7 +88,7 @@ export class AnthropicExtractor implements Extractor {
 
   constructor(opts: AnthropicExtractorOptions = {}) {
     // The SDK reads ANTHROPIC_API_KEY (and ANTHROPIC_BASE_URL, if set) from the environment.
-    this.client = opts.client ?? new Anthropic({ maxRetries: 3 });
+    this.client = opts.client ?? makeAnthropicClient();
     const primary = opts.model ?? process.env.SPIKEREADY_MODEL ?? DEFAULT_MODEL;
     const fallback = opts.fallbackModel ?? FALLBACK_MODEL;
     this.models = primary === fallback ? [primary] : [primary, fallback];

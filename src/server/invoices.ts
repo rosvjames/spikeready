@@ -1,3 +1,4 @@
+import { aiConfigured } from "../ai/client.js";
 // POST /api/invoices/check: the seller's supplier documents (or the bundled samples) are read by the
 // AI and reconciled against their PayPal sales by code. The server never stores, creates or edits a
 // document; it fingerprints the originals (SHA-256) and keeps only the last evidence pack in memory.
@@ -143,7 +144,7 @@ export async function runInvoiceCheck(raw: unknown, ctx: CheckContext): Promise<
 
 /** Whether uploaded invoices may be read by the (paid) AI on this server. */
 export function aiUploadsEnabled(env: NodeJS.ProcessEnv): boolean {
-  if (!env.ANTHROPIC_API_KEY) return false;
+  if (!aiConfigured(env)) return false;
   if (env.SPIKEREADY_DEMO && env.SPIKEREADY_ALLOW_UPLOADS !== "1") return false;
   return true;
 }

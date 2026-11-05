@@ -1,3 +1,4 @@
+import { aiConfigured } from "../src/ai/client.js";
 // Reads supplier invoices, checks them against Maria's PayPal sales and writes the evidence pack.
 //   npm run invoices                              # demo invoices, AI extraction (needs ANTHROPIC_API_KEY)
 //   npm run invoices -- --recorded                # demo invoices, recorded extraction (no key, no cost)
@@ -44,7 +45,7 @@ async function main() {
   let extractor: Extractor;
   if (opt.recorded) {
     extractor = new RecordedExtractor(JSON.parse(readFileSync(join(opt.dir, "extracted.json"), "utf8")));
-  } else if (process.env.ANTHROPIC_API_KEY) {
+  } else if (aiConfigured()) {
     extractor = new AnthropicExtractor();
   } else {
     console.error("ANTHROPIC_API_KEY is not set, so invoices cannot be read with AI.\nSet it as an environment secret, or run with --recorded to use the recorded extraction of the demo invoices.");

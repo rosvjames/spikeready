@@ -7,7 +7,7 @@
 // Flags: --cases N (30) · --seed N · --arms list · --model (pipeline extraction model) ·
 //        --baseline-model · --max-usd (3; stops before exceeding) · --yes · --out DIR ·
 //        --injection (adds 8 prompt-injection cases, each run clean and injected)
-import Anthropic from "@anthropic-ai/sdk";
+import { aiConfigured, makeAnthropicClient } from "../src/ai/client.js";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
@@ -62,7 +62,7 @@ for (const a of aiArms) {
   console.log(`  ${a}: model ${m}, estimated ${Number.isNaN(e) ? "unpriced model" : `$${e.toFixed(2)}`}`);
 }
 if (aiArms.length) {
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!aiConfigured()) {
     console.error("\nThe AI arms need ANTHROPIC_API_KEY (environment or .env). The offline arms run without it: --arms rules,oracle");
     process.exit(1);
   }
@@ -84,7 +84,7 @@ interface Row {
 }
 const rows: Row[] = [];
 let spent = 0;
-const client = aiArms.length ? new Anthropic({ maxRetries: 3 }) : null;
+const client = aiArms.length ? makeAnthropicClient() : null;
 
 /** One arm on one case. `unverifiedDocIds`: documents where grounding dropped values (code arms only). */
 async function runArm(arm: ArmName, c: EvalCase): Promise<{ gaps: EvalGap[]; usage: Usage[]; unverifiedDocIds: string[] }> {

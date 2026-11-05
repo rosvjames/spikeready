@@ -1,6 +1,7 @@
 // The AI step for PayPal notices: read the message a seller received and list what it asks for, each
 // with an exact quote. The message is data, never instructions. ground.ts then checks every quote.
 import Anthropic from "@anthropic-ai/sdk";
+import { makeAnthropicClient } from "../ai/client.js";
 import { DEFAULT_MODEL, FALLBACK_MODEL, firstJsonObject } from "../invoices/extract.js";
 import { NoticeExtraction, REQUEST_TYPES } from "./types.js";
 
@@ -42,7 +43,7 @@ export class AnthropicNoticeExtractor implements NoticeExtractor {
   readonly usage: { model: string; input_tokens: number; output_tokens: number }[] = [];
 
   constructor(opts: AnthropicNoticeExtractorOptions = {}) {
-    this.client = opts.client ?? new Anthropic({ maxRetries: 3 });
+    this.client = opts.client ?? makeAnthropicClient();
     const primary = opts.model ?? process.env.SPIKEREADY_MODEL ?? DEFAULT_MODEL;
     const fallback = opts.fallbackModel ?? FALLBACK_MODEL;
     this.models = primary === fallback ? [primary] : [primary, fallback];
