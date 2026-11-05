@@ -3,6 +3,8 @@
 const $ = (id) => document.getElementById(id);
 const usd = (cents) => (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const instantDate = (iso) => new Date(iso).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "America/New_York" });
+const POLICY_URL = "https://www.paypal.com/us/cshelp/article/how-can-i-release-my-payments-on-hold-help129";
 const shortDate = (d) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 
 const tip = $("tooltip");
@@ -46,8 +48,9 @@ function renderSpike(d) {
   const ratio = Math.round(s.ratio * 10) / 10;
   const checks = d.checklist
     .map((c) => {
+      const id = c.id ? ` id="check-${esc(c.id)}"` : "";
       const [cls, sym, label] = c.ok === null ? ["unk", "?", "Not checked yet"] : c.ok ? ["ok", "✓", "Done"] : ["no", "✗", "Missing"];
-      return `<li><span class="ico ${cls}" aria-label="${label}">${sym}</span><span>${esc(c.message)}</span></li>`;
+      return `<li${id}><span class="ico ${cls}" aria-label="${label}">${sym}</span><span>${esc(c.message)}</span></li>`;
     })
     .join("");
   const table = `<details><summary>Daily orders as a table</summary><div class="table-wrap"><table><thead><tr><th>Day</th><th class="num">Orders</th><th class="num">Sales</th></tr></thead><tbody>${s.days
@@ -87,14 +90,15 @@ function renderCalendar(d) {
   const items = c.days
     .map((day) => {
       const why = day.forecasts
-        .map((f) => `<li>${usd(f.amountCents)} · ${esc(f.saleId ?? "unknown sale")} · ${esc(f.explanation)}${f.action ? ` <span class="cal-action">${esc(f.action)}</span>` : ""}${f.due ? ` <span class="pill pill-wait">Due now</span>` : ""}</li>`)
+        .map((f) => `<li>${usd(f.amountCents)} · ${esc(f.saleId ?? "unknown sale")} · ${esc(f.explanation)}${f.action ? ` <span class="cal-action">${esc(f.action)}</span>` : ""}${f.due ? ` <span class="pill pill-wait">Due now</span>` : ""}<br><span class="cal-dates">expected ${esc(instantDate(f.releaseAt))}${f.latestAt ? ` · at the latest ${esc(instantDate(f.latestAt))}` : ""}</span></li>`)
         .join("");
       return `<li><div class="cal-head"><span class="cal-amt">${usd(day.amountCents)}</span><span class="cal-date">releases ${esc(day.label)}</span></div><ul class="cal-why">${why}</ul></li>`;
     })
     .join("");
   el.innerHTML = `
     <p class="hero">${usd(c.totalHeldCents)}</p>
-    <p class="hero-sub">on hold in ${d.holds.length} payment${d.holds.length === 1 ? "" : "s"}. Dates follow PayPal's published rules: about 24 hours after delivery with tracking, up to 21 days without.</p>
+    <p class="hero-sub">on hold in ${d.holds.length} payment${d.holds.length === 1 ? "" : "s"}.</p>
+    <p class="fine">Expected dates follow PayPal's published rules; after a sales spike PayPal may keep a hold up to 21 days. <a href="${POLICY_URL}" target="_blank" rel="noopener">Source: PayPal Help Center</a></p>
     ${c.actionableCents ? `<div class="alert spike" role="status"><span class="ico" aria-hidden="true">!</span><div><strong>${usd(c.actionableCents)} could be released sooner.</strong>Upload tracking for these payments.</div></div>` : ""}
     <ul class="cal">${items}</ul>`;
 }
@@ -144,6 +148,88 @@ function renderTracking(d) {
   });
 }
 
+// ---- Step 4: invoices. The server reads (AI) and reconciles (code); the panel only shows the result.
+const SEVERITY = { blocker: ["pill-bad", "Fix before sending"], warning: ["pill-wait", "Check"] };
+
+function updateInvoiceCheck(r) {
+  const li = $("check-invoices");
+  if (!li) return;
+  const short = r.coverage.filter((c) => c.covered < c.sold).length;
+  const blockers = r.gaps.filter((g) => g.severity === "blocker").length;
+  const [cls, sym, label] = r.ready ? ["ok", "✓", "Done"] : ["no", "✗", "Missing"];
+  const msg = r.ready ? "Supplier invoices cover the units you sold." : `Supplier invoices: ${blockers} issue(s) to fix${short ? `, ${short} product(s) not fully covered` : ""} (see step 4).`;
+  li.innerHTML = `<span class="ico ${cls}" aria-label="${label}">${sym}</span><span>${esc(msg)}</span>`;
+}
+
+function renderInvoices(r) {
+  updateInvoiceCheck(r);
+  const gaps = r.gaps
+    .map((g) => {
+      const [cls, label] = SEVERITY[g.severity] ?? ["pill-wait", g.severity];
+      return `<li><span class="pill ${cls}">${label}</span><span>${esc(g.message)}${g.filename && !g.message.includes(g.filename) ? ` <span class="muted">(${esc(g.filename)})</span>` : ""}</span></li>`;
+    })
+    .join("");
+  const cov = r.coverage
+    .map((c) => {
+      const short = c.covered < c.sold;
+      return `<tr class="${short ? "rejected" : ""}"><td>${esc(c.name)}<span class="muted mono-sm"> ${esc(c.sku)}</span></td><td class="num">${c.sold}</td><td class="num">${c.covered}${c.coveredLate ? ` <span class="muted">(+${c.coveredLate} late)</span>` : ""}</td><td>${short ? `<span class="pill pill-bad">${c.sold - c.covered} short</span>` : `<span class="pill pill-ok">Covered</span>`}</td></tr>`;
+    })
+    .join("");
+  const docs = r.documents
+    .map((d) => `<li><span class="mono-sm">${esc(d.sha256.slice(0, 12))}…</span> ${esc(d.filename)} · ${esc(d.supplier ?? "unknown supplier")} ${esc(d.invoiceNumber ?? "")} · ${esc(d.date ?? "no date")}${d.counted ? "" : ` <span class="pill pill-wait">not counted</span>`}</li>`)
+    .join("");
+  $("invoices-body").innerHTML = `
+    <div class="alert ${r.ready ? "calm" : "spike"}" role="status"><span class="ico" aria-hidden="true">${r.ready ? "✓" : "!"}</span>
+      <div><strong>${r.ready ? "Ready to send" : `${r.gaps.filter((g) => g.severity === "blocker").length} issue(s) to fix before you send`}</strong>${r.source === "samples" ? "Sample invoices, read earlier by the AI (recorded) and checked now by code against your PayPal sales." : "Your invoices, read by the AI and checked by code against your PayPal sales."}</div></div>
+    ${gaps ? `<ul class="gaps">${gaps}</ul>` : ""}
+    <h3 class="sub">Units sold on PayPal vs. units on your invoices</h3>
+    <div class="table-wrap"><table><thead><tr><th>Product</th><th class="num">Sold</th><th class="num">On invoices</th><th>Status</th></tr></thead><tbody>${cov}</tbody></table></div>
+    <h3 class="sub">Documents (originals, unchanged)</h3>
+    <ul class="docs">${docs}</ul>
+    <p><a class="btn" href="/api/dossier.md" download>Download evidence pack</a></p>`;
+}
+
+async function checkInvoices(payload) {
+  const body = $("invoices-body");
+  body.innerHTML = `<p class="loading">Reading and checking…</p>`;
+  try {
+    const res = await fetch("/api/invoices/check", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
+    renderInvoices(data);
+  } catch (err) {
+    body.innerHTML = `<p class="error" role="alert">${esc(err.message)}</p>`;
+  }
+}
+
+const TYPE_BY_EXT = { pdf: "application/pdf", png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp", txt: "text/plain" };
+const toBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(",")[1] ?? "");
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(file);
+  });
+
+$("use-samples").addEventListener("click", () => checkInvoices({ useSamples: true }));
+$("invoice-files").addEventListener("change", async (e) => {
+  const files = [...e.target.files];
+  if (!files.length) return;
+  try {
+    const payload = await Promise.all(
+      files.map(async (f) => {
+        const mediaType = TYPE_BY_EXT[f.name.split(".").pop().toLowerCase()];
+        if (!mediaType) throw new Error(`${f.name}: unsupported file type.`);
+        return { name: f.name, mediaType, base64: await toBase64(f) };
+      }),
+    );
+    await checkInvoices({ files: payload });
+  } catch (err) {
+    $("invoices-body").innerHTML = `<p class="error" role="alert">${esc(err.message)}</p>`;
+  }
+  e.target.value = "";
+});
+
 async function main() {
   try {
     const res = await fetch("/api/dashboard", { headers: { Accept: "application/json" } });
@@ -151,6 +237,7 @@ async function main() {
     const d = await res.json();
     $("seller").textContent = `${d.seller.name} · ${d.sales.length} sales`;
     $("demo-banner").hidden = !d.demo;
+    if (d.demo) $("demo-banner").textContent = d.banner ?? "Demo data. No real money or accounts.";
     renderSpike(d);
     renderCalendar(d);
     renderTracking(d);

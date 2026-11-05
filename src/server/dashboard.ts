@@ -21,6 +21,8 @@ export interface SaleRow {
 
 export interface Dashboard {
   demo: boolean;
+  /** Text of the demo banner (null outside demo mode). */
+  banner: string | null;
   generatedAt: string;
   seller: State["seller"];
   spike: SpikeResult & { days: DayTotals[]; recentFrom: string; historyNote: string };
@@ -50,7 +52,8 @@ function trackingFor(sale: Sale, state: State): SaleRow["tracking"] {
   return { ...base, status: "READY", code: null, reason: "Verified; not uploaded yet." };
 }
 
-export function buildDashboard(state: State, now: Date, demo: boolean): Dashboard {
+/** `now` is injectable: demo mode passes a frozen clock so recorded data looks as on the recording day. */
+export function buildDashboard(state: State, now: Date, demo: boolean, banner: string | null = null): Dashboard {
   const tz = state.seller.timeZone;
   const today = localDate(now.toISOString(), tz);
   const totalDays = SPIKE_RULE.baselineDays + SPIKE_RULE.recentDays;
@@ -63,6 +66,7 @@ export function buildDashboard(state: State, now: Date, demo: boolean): Dashboar
   const cal = buildCalendar(state.holds, state.shipments, state.uploads, now, tz);
   return {
     demo,
+    banner: demo ? banner : null,
     generatedAt: now.toISOString(),
     seller: state.seller,
     spike: { ...spike, days, recentFrom, historyNote: "Days before the spike window are recorded demo history; the sandbox cannot create past orders." },

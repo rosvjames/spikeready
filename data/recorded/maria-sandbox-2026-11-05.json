@@ -1,0 +1,1771 @@
+{
+  "recordedAt": "2026-11-05T05:40:38.857Z",
+  "source": "PayPal sandbox",
+  "note": "buyers and addresses are fictional demo data; holds come from PayPal's webhook simulator re-pointed to sandbox sales",
+  "state": {
+    "version": 1,
+    "seller": {
+      "name": "Maria's Sneakers",
+      "timeZone": "America/New_York"
+    },
+    "seedRunId": "rmw3407qx",
+    "sales": [
+      {
+        "saleId": "maria-0001",
+        "orderId": "6XU96820VV0472430",
+        "captureId": "4KE20426LS998315U",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:33:07Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-10",
+            "name": "Nike Air Force 1 '07 White Men's Size 10",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Isla Kim",
+          "line1": "5190 Cedar Ln",
+          "city": "Atlanta",
+          "state": "GA",
+          "postalCode": "30309",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0002",
+        "orderId": "9PD45171048927737",
+        "captureId": "7WC03727WG681492A",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:36:47Z",
+        "amountCents": 11000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "NB550-WG-10",
+            "name": "New Balance 550 White Green Size 10",
+            "quantity": 1,
+            "unitAmountCents": 11000
+          }
+        ],
+        "shipTo": {
+          "name": "Ivy Parker",
+          "line1": "5071 Cedar Ln",
+          "city": "Denver",
+          "state": "CO",
+          "postalCode": "80205",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0003",
+        "orderId": "0JT046172X410174S",
+        "captureId": "9FK02329UM218661Y",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:36:50Z",
+        "amountCents": 21000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "SAMBA-BLK-8",
+            "name": "Adidas Samba OG Core Black Size 8",
+            "quantity": 2,
+            "unitAmountCents": 10500
+          }
+        ],
+        "shipTo": {
+          "name": "Jade Nguyen",
+          "line1": "3772 Park Pl",
+          "city": "Phoenix",
+          "state": "AZ",
+          "postalCode": "85004",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0004",
+        "orderId": "6FY755717K123851U",
+        "captureId": "5K7172038H626632P",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:36:52Z",
+        "amountCents": 10500,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "SAMBA-BLK-8",
+            "name": "Adidas Samba OG Core Black Size 8",
+            "quantity": 1,
+            "unitAmountCents": 10500
+          }
+        ],
+        "shipTo": {
+          "name": "Lucas Patel",
+          "line1": "3269 Maple Ave",
+          "city": "Brooklyn",
+          "state": "NY",
+          "postalCode": "11215",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0005",
+        "orderId": "8K934701XG373752B",
+        "captureId": "3BW64165WB875893B",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:36:55Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-9",
+            "name": "Nike Air Force 1 '07 White Men's Size 9",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Ruby Coleman",
+          "line1": "818 Hill St",
+          "city": "Phoenix",
+          "state": "AZ",
+          "postalCode": "85004",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0006",
+        "orderId": "13N18173M1016654J",
+        "captureId": "7BJ68419Y5392364V",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:36:59Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-10",
+            "name": "Nike Air Force 1 '07 White Men's Size 10",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Mason Price",
+          "line1": "6052 Oak St",
+          "city": "Atlanta",
+          "state": "GA",
+          "postalCode": "30309",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0007",
+        "orderId": "2PF47471EF114104V",
+        "captureId": "102425077C151171L",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:37:02Z",
+        "amountCents": 11000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "NB550-WG-10",
+            "name": "New Balance 550 White Green Size 10",
+            "quantity": 1,
+            "unitAmountCents": 11000
+          }
+        ],
+        "shipTo": {
+          "name": "Leah Long",
+          "line1": "7095 Elm St",
+          "city": "Chicago",
+          "state": "IL",
+          "postalCode": "60614",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0008",
+        "orderId": "3UR67329TW8443719",
+        "captureId": "7VH22210624844138",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:37:05Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-10",
+            "name": "Nike Air Force 1 '07 White Men's Size 10",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Nora Patel",
+          "line1": "2977 Pine Rd",
+          "city": "Denver",
+          "state": "CO",
+          "postalCode": "80205",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0009",
+        "orderId": "6W94972001888680G",
+        "captureId": "2VT20633MA217920E",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:37:08Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-10",
+            "name": "Nike Air Force 1 '07 White Men's Size 10",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Caleb Parker",
+          "line1": "5180 Park Pl",
+          "city": "Boston",
+          "state": "MA",
+          "postalCode": "02139",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0010",
+        "orderId": "5LL03288DC642062L",
+        "captureId": "1V559773778503257",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:37:11Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-11",
+            "name": "Nike Air Force 1 '07 White Men's Size 11",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Ava Ortiz",
+          "line1": "2405 Elm St",
+          "city": "Brooklyn",
+          "state": "NY",
+          "postalCode": "11215",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0011",
+        "orderId": "47J80555FC719002F",
+        "captureId": "47023957AC800441B",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:37:14Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-9",
+            "name": "Nike Air Force 1 '07 White Men's Size 9",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Chloe Reyes",
+          "line1": "2398 Maple Ave",
+          "city": "Portland",
+          "state": "OR",
+          "postalCode": "97214",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0012",
+        "orderId": "6LH29154AC386760M",
+        "captureId": "7GD09155T14261841",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:37:17Z",
+        "amountCents": 11000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "NB550-WG-10",
+            "name": "New Balance 550 White Green Size 10",
+            "quantity": 1,
+            "unitAmountCents": 11000
+          }
+        ],
+        "shipTo": {
+          "name": "Lucas Parker",
+          "line1": "7655 Cedar Ln",
+          "city": "Atlanta",
+          "state": "GA",
+          "postalCode": "30309",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0013",
+        "orderId": "3C131165FB693340M",
+        "captureId": "3KD20385CM805840E",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:37:20Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-10",
+            "name": "Nike Air Force 1 '07 White Men's Size 10",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Ezra Ward",
+          "line1": "3713 Cedar Ln",
+          "city": "Nashville",
+          "state": "TN",
+          "postalCode": "37203",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0014",
+        "orderId": "7L113306RM111972R",
+        "captureId": "8FU72672VY5450220",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:37:23Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-10",
+            "name": "Nike Air Force 1 '07 White Men's Size 10",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Noah Parker",
+          "line1": "5416 Pine Rd",
+          "city": "San Diego",
+          "state": "CA",
+          "postalCode": "92101",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0015",
+        "orderId": "11L7094847651330K",
+        "captureId": "57F9543262431830H",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:37:27Z",
+        "amountCents": 10500,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "SAMBA-BLK-8",
+            "name": "Adidas Samba OG Core Black Size 8",
+            "quantity": 1,
+            "unitAmountCents": 10500
+          }
+        ],
+        "shipTo": {
+          "name": "Ezra Reyes",
+          "line1": "3218 Oak St",
+          "city": "Philadelphia",
+          "state": "PA",
+          "postalCode": "19103",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0016",
+        "orderId": "0FC6174176845240N",
+        "captureId": "2EN68720KE0166318",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:37:30Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-10",
+            "name": "Nike Air Force 1 '07 White Men's Size 10",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Jade Long",
+          "line1": "1115 Maple Ave",
+          "city": "Phoenix",
+          "state": "AZ",
+          "postalCode": "85004",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0017",
+        "orderId": "2FM85746YF295135T",
+        "captureId": "2BN43374SD3354512",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:37:33Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-10",
+            "name": "Nike Air Force 1 '07 White Men's Size 10",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Jade Patel",
+          "line1": "6886 Park Pl",
+          "city": "Austin",
+          "state": "TX",
+          "postalCode": "78704",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0018",
+        "orderId": "97L49858KX373170D",
+        "captureId": "82998041F56166048",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:37:36Z",
+        "amountCents": 10500,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "SAMBA-BLK-8",
+            "name": "Adidas Samba OG Core Black Size 8",
+            "quantity": 1,
+            "unitAmountCents": 10500
+          }
+        ],
+        "shipTo": {
+          "name": "Caleb Patel",
+          "line1": "6825 Pine Rd",
+          "city": "Miami",
+          "state": "FL",
+          "postalCode": "33130",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0019",
+        "orderId": "8S805165CR2976609",
+        "captureId": "0TU96137X2470731A",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:37:39Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-9",
+            "name": "Nike Air Force 1 '07 White Men's Size 9",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Chloe Price",
+          "line1": "7999 Pine Rd",
+          "city": "Minneapolis",
+          "state": "MN",
+          "postalCode": "55408",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0020",
+        "orderId": "99859662FB722222X",
+        "captureId": "74R54504GC5900421",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:37:42Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-10",
+            "name": "Nike Air Force 1 '07 White Men's Size 10",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Ezra Brooks",
+          "line1": "1838 Cedar Ln",
+          "city": "Miami",
+          "state": "FL",
+          "postalCode": "33130",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0021",
+        "orderId": "4KL69955GR794521C",
+        "captureId": "1YE380281F003352H",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:37:44Z",
+        "amountCents": 21000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "SAMBA-BLK-8",
+            "name": "Adidas Samba OG Core Black Size 8",
+            "quantity": 2,
+            "unitAmountCents": 10500
+          }
+        ],
+        "shipTo": {
+          "name": "Ava Nguyen",
+          "line1": "8529 Park Pl",
+          "city": "Phoenix",
+          "state": "AZ",
+          "postalCode": "85004",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0022",
+        "orderId": "3X208426V2981132S",
+        "captureId": "82C25773HP989901N",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:37:47Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-9",
+            "name": "Nike Air Force 1 '07 White Men's Size 9",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Ezra Parker",
+          "line1": "4925 Lake Dr",
+          "city": "Phoenix",
+          "state": "AZ",
+          "postalCode": "85004",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0023",
+        "orderId": "5GV89583E1783460H",
+        "captureId": "4VL6054559880642S",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:37:51Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-10",
+            "name": "Nike Air Force 1 '07 White Men's Size 10",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Owen Ward",
+          "line1": "4902 Hill St",
+          "city": "Seattle",
+          "state": "WA",
+          "postalCode": "98103",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0024",
+        "orderId": "6WG41777P66695825",
+        "captureId": "1RB00612BV0963413",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:37:54Z",
+        "amountCents": 10500,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "SAMBA-BLK-8",
+            "name": "Adidas Samba OG Core Black Size 8",
+            "quantity": 1,
+            "unitAmountCents": 10500
+          }
+        ],
+        "shipTo": {
+          "name": "Ava Foster",
+          "line1": "8795 Pine Rd",
+          "city": "San Diego",
+          "state": "CA",
+          "postalCode": "92101",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0025",
+        "orderId": "9Y468724MF243132L",
+        "captureId": "57621454VS6869435",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:37:57Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-9",
+            "name": "Nike Air Force 1 '07 White Men's Size 9",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Ezra Hughes",
+          "line1": "1522 Lake Dr",
+          "city": "San Diego",
+          "state": "CA",
+          "postalCode": "92101",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0026",
+        "orderId": "06N94717DM488722S",
+        "captureId": "95D31587RB3712609",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:38:01Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-10",
+            "name": "Nike Air Force 1 '07 White Men's Size 10",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Owen Foster",
+          "line1": "663 Lake Dr",
+          "city": "Atlanta",
+          "state": "GA",
+          "postalCode": "30309",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0027",
+        "orderId": "9T187952TN0166224",
+        "captureId": "5WJ0068802981405Y",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:38:04Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-9",
+            "name": "Nike Air Force 1 '07 White Men's Size 9",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Chloe Bennett",
+          "line1": "8937 Maple Ave",
+          "city": "Denver",
+          "state": "CO",
+          "postalCode": "80205",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0028",
+        "orderId": "22D80288SJ5605145",
+        "captureId": "5SV62073J37359455",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:38:07Z",
+        "amountCents": 10500,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "SAMBA-BLK-8",
+            "name": "Adidas Samba OG Core Black Size 8",
+            "quantity": 1,
+            "unitAmountCents": 10500
+          }
+        ],
+        "shipTo": {
+          "name": "Chloe Coleman",
+          "line1": "8144 Oak St",
+          "city": "Brooklyn",
+          "state": "NY",
+          "postalCode": "11215",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0029",
+        "orderId": "7EY353510V039732G",
+        "captureId": "51C44920S6376623W",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:38:10Z",
+        "amountCents": 10500,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "SAMBA-BLK-8",
+            "name": "Adidas Samba OG Core Black Size 8",
+            "quantity": 1,
+            "unitAmountCents": 10500
+          }
+        ],
+        "shipTo": {
+          "name": "Owen Brooks",
+          "line1": "8123 Lake Dr",
+          "city": "Portland",
+          "state": "OR",
+          "postalCode": "97214",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0030",
+        "orderId": "26V756427C704961B",
+        "captureId": "93L984146G646742X",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:38:13Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-10",
+            "name": "Nike Air Force 1 '07 White Men's Size 10",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Lucas Coleman",
+          "line1": "7410 Lake Dr",
+          "city": "Atlanta",
+          "state": "GA",
+          "postalCode": "30309",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0031",
+        "orderId": "4DW07788WL753635B",
+        "captureId": "53U78294DT259714K",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:38:16Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-9",
+            "name": "Nike Air Force 1 '07 White Men's Size 9",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Ava Long",
+          "line1": "4551 Lake Dr",
+          "city": "Philadelphia",
+          "state": "PA",
+          "postalCode": "19103",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0032",
+        "orderId": "5NR177173C034515H",
+        "captureId": "55480689CS311414L",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:38:19Z",
+        "amountCents": 10500,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "SAMBA-BLK-9",
+            "name": "Adidas Samba OG Core Black Size 9",
+            "quantity": 1,
+            "unitAmountCents": 10500
+          }
+        ],
+        "shipTo": {
+          "name": "Miles Kim",
+          "line1": "8493 Hill St",
+          "city": "San Diego",
+          "state": "CA",
+          "postalCode": "92101",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0033",
+        "orderId": "95112829N9786793U",
+        "captureId": "5BY05742GT723620R",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:38:22Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-10",
+            "name": "Nike Air Force 1 '07 White Men's Size 10",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Mia Price",
+          "line1": "2233 Oak St",
+          "city": "Denver",
+          "state": "CO",
+          "postalCode": "80205",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0034",
+        "orderId": "4SW81854VS788760U",
+        "captureId": "2FF904536H845284V",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:38:25Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-10",
+            "name": "Nike Air Force 1 '07 White Men's Size 10",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Miles Reyes",
+          "line1": "4403 Elm St",
+          "city": "Seattle",
+          "state": "WA",
+          "postalCode": "98103",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0035",
+        "orderId": "0KK88821K0803144B",
+        "captureId": "2KP6707414012254M",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:38:27Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-9",
+            "name": "Nike Air Force 1 '07 White Men's Size 9",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Owen Coleman",
+          "line1": "8063 Hill St",
+          "city": "Minneapolis",
+          "state": "MN",
+          "postalCode": "55408",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0036",
+        "orderId": "5F092918VT691232Y",
+        "captureId": "4BY26934P82250139",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:38:30Z",
+        "amountCents": 21000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "SAMBA-BLK-8",
+            "name": "Adidas Samba OG Core Black Size 8",
+            "quantity": 2,
+            "unitAmountCents": 10500
+          }
+        ],
+        "shipTo": {
+          "name": "Ivy Hughes",
+          "line1": "6412 Elm St",
+          "city": "Atlanta",
+          "state": "GA",
+          "postalCode": "30309",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0037",
+        "orderId": "9W421960GL743962E",
+        "captureId": "2DM887766H807035K",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:38:33Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-9",
+            "name": "Nike Air Force 1 '07 White Men's Size 9",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Elijah Ward",
+          "line1": "1889 Hill St",
+          "city": "San Diego",
+          "state": "CA",
+          "postalCode": "92101",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0038",
+        "orderId": "0GR61363AT929133N",
+        "captureId": "5DG45453L7838892U",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:38:36Z",
+        "amountCents": 22000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "NB550-WG-10",
+            "name": "New Balance 550 White Green Size 10",
+            "quantity": 2,
+            "unitAmountCents": 11000
+          }
+        ],
+        "shipTo": {
+          "name": "Jade Foster",
+          "line1": "8246 Park Pl",
+          "city": "Philadelphia",
+          "state": "PA",
+          "postalCode": "19103",
+          "countryCode": "US"
+        }
+      },
+      {
+        "saleId": "maria-0039",
+        "orderId": "6D271083E95037904",
+        "captureId": "4EW407779K288453X",
+        "captureStatus": "COMPLETED",
+        "capturedAt": "2026-11-05T05:38:40Z",
+        "amountCents": 12000,
+        "currency": "USD",
+        "items": [
+          {
+            "sku": "AF1-WHT-9",
+            "name": "Nike Air Force 1 '07 White Men's Size 9",
+            "quantity": 1,
+            "unitAmountCents": 12000
+          }
+        ],
+        "shipTo": {
+          "name": "Mason Kim",
+          "line1": "2635 Pine Rd",
+          "city": "Seattle",
+          "state": "WA",
+          "postalCode": "98103",
+          "countryCode": "US"
+        }
+      }
+    ],
+    "pendingOrders": [],
+    "shipments": [
+      {
+        "saleId": "maria-0001",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042000008",
+        "labelPostalCode": "30309-1000",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-07T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0002",
+        "carrier": "UPS",
+        "trackingNumber": "1ZA1B2C30042000378",
+        "labelPostalCode": "80205",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-09T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0003",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042000749",
+        "labelPostalCode": "85004",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-08T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0004",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042001111",
+        "labelPostalCode": "11215",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-07T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0005",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042001487",
+        "labelPostalCode": "85004",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-09T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0006",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042001852",
+        "labelPostalCode": "30309-1035",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-07T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0007",
+        "carrier": "UPS",
+        "trackingNumber": "1ZA1B2C30042002223",
+        "labelPostalCode": "60641",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-08T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0008",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042002590",
+        "labelPostalCode": "80205",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-08T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0009",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042002965",
+        "labelPostalCode": "02139",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-08T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0010",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042003337",
+        "labelPostalCode": "11215",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-09T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0011",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042003702",
+        "labelPostalCode": "97214-1070",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-09T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0012",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042004075",
+        "labelPostalCode": "30309",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-07T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0013",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042004440",
+        "labelPostalCode": "37203",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-07T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0014",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042004815",
+        "labelPostalCode": "92101",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-09T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0015",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042005188",
+        "labelPostalCode": "19103",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-09T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0016",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042005553",
+        "labelPostalCode": "85004-1105",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-08T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0017",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042005928",
+        "labelPostalCode": "78704",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-09T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0018",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042006291",
+        "labelPostalCode": "33130",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-09T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0019",
+        "carrier": "UPS",
+        "trackingNumber": "1ZA1B2C30042006667",
+        "labelPostalCode": "55408",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-07T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0020",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042007038",
+        "labelPostalCode": "33130",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-08T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0021",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042007403",
+        "labelPostalCode": "85004-1140",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-07T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0022",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042007779",
+        "labelPostalCode": "85004",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-09T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0023",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042008141",
+        "labelPostalCode": "98103",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-08T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0024",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042008516",
+        "labelPostalCode": "92101",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-09T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0025",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042008882",
+        "labelPostalCode": "92101",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-09T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0026",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042009254",
+        "labelPostalCode": "30309-1175",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-08T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0027",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042009629",
+        "labelPostalCode": "80205",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-07T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0028",
+        "carrier": "UPS",
+        "trackingNumber": "1ZA1B2C30042009995",
+        "labelPostalCode": "11215",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-07T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0029",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042010366",
+        "labelPostalCode": "97214",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-08T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0030",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042010731",
+        "labelPostalCode": "30309",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-07T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0031",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042011103",
+        "labelPostalCode": "19103-1210",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-09T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0032",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042011479",
+        "labelPostalCode": "92101",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-09T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0033",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042011844",
+        "labelPostalCode": "80205",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-09T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0034",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042012216",
+        "labelPostalCode": "98103",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-08T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0035",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042012582",
+        "labelPostalCode": "55408",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-09T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0036",
+        "carrier": "UPS",
+        "trackingNumber": "1ZA1B2C30042012954",
+        "labelPostalCode": "30309-1245",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-09T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0037",
+        "carrier": "USPS",
+        "trackingNumber": "9400111000000042013329",
+        "labelPostalCode": "92101",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-09T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0038",
+        "carrier": "UPS",
+        "trackingNumber": "1ZA1B2C30042013695",
+        "labelPostalCode": "19103",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-08T05:38:46.947Z",
+        "deliveredAt": null
+      },
+      {
+        "saleId": "maria-0039",
+        "carrier": "UPS",
+        "trackingNumber": "1ZA1B2C30042014069",
+        "labelPostalCode": "98103",
+        "labelCountryCode": "US",
+        "shippedAt": "2026-11-05T05:38:46.947Z",
+        "estimatedDeliveryAt": "2026-11-07T05:38:46.947Z",
+        "deliveredAt": null
+      }
+    ],
+    "uploads": [
+      {
+        "saleId": "maria-0001",
+        "orderId": "6XU96820VV0472430",
+        "trackingNumber": "9400111000000042000008",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:38:46.952Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0002",
+        "orderId": "9PD45171048927737",
+        "trackingNumber": "1ZA1B2C30042000378",
+        "carrier": "UPS",
+        "uploadedAt": "2026-11-05T05:38:49.077Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0003",
+        "orderId": "0JT046172X410174S",
+        "trackingNumber": "9400111000000042000749",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:38:50.723Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0004",
+        "orderId": "6FY755717K123851U",
+        "trackingNumber": "9400111000000042001111",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:38:52.002Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0005",
+        "orderId": "8K934701XG373752B",
+        "trackingNumber": "9400111000000042001487",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:38:53.342Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0006",
+        "orderId": "13N18173M1016654J",
+        "trackingNumber": "9400111000000042001852",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:38:54.775Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0008",
+        "orderId": "3UR67329TW8443719",
+        "trackingNumber": "9400111000000042002590",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:38:56.063Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0009",
+        "orderId": "6W94972001888680G",
+        "trackingNumber": "9400111000000042002965",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:38:57.508Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0010",
+        "orderId": "5LL03288DC642062L",
+        "trackingNumber": "9400111000000042003337",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:38:58.836Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0011",
+        "orderId": "47J80555FC719002F",
+        "trackingNumber": "9400111000000042003702",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:00.045Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0012",
+        "orderId": "6LH29154AC386760M",
+        "trackingNumber": "9400111000000042004075",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:01.260Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0013",
+        "orderId": "3C131165FB693340M",
+        "trackingNumber": "9400111000000042004440",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:02.587Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0014",
+        "orderId": "7L113306RM111972R",
+        "trackingNumber": "9400111000000042004815",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:03.871Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0015",
+        "orderId": "11L7094847651330K",
+        "trackingNumber": "9400111000000042005188",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:05.194Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0016",
+        "orderId": "0FC6174176845240N",
+        "trackingNumber": "9400111000000042005553",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:06.558Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0017",
+        "orderId": "2FM85746YF295135T",
+        "trackingNumber": "9400111000000042005928",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:07.990Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0018",
+        "orderId": "97L49858KX373170D",
+        "trackingNumber": "9400111000000042006291",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:09.295Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0019",
+        "orderId": "8S805165CR2976609",
+        "trackingNumber": "1ZA1B2C30042006667",
+        "carrier": "UPS",
+        "uploadedAt": "2026-11-05T05:39:10.575Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0020",
+        "orderId": "99859662FB722222X",
+        "trackingNumber": "9400111000000042007038",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:11.920Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0021",
+        "orderId": "4KL69955GR794521C",
+        "trackingNumber": "9400111000000042007403",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:13.102Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0022",
+        "orderId": "3X208426V2981132S",
+        "trackingNumber": "9400111000000042007779",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:14.411Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0023",
+        "orderId": "5GV89583E1783460H",
+        "trackingNumber": "9400111000000042008141",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:15.718Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0024",
+        "orderId": "6WG41777P66695825",
+        "trackingNumber": "9400111000000042008516",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:16.982Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0025",
+        "orderId": "9Y468724MF243132L",
+        "trackingNumber": "9400111000000042008882",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:18.278Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0026",
+        "orderId": "06N94717DM488722S",
+        "trackingNumber": "9400111000000042009254",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:19.473Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0027",
+        "orderId": "9T187952TN0166224",
+        "trackingNumber": "9400111000000042009629",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:20.786Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0028",
+        "orderId": "22D80288SJ5605145",
+        "trackingNumber": "1ZA1B2C30042009995",
+        "carrier": "UPS",
+        "uploadedAt": "2026-11-05T05:39:21.970Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0029",
+        "orderId": "7EY353510V039732G",
+        "trackingNumber": "9400111000000042010366",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:23.409Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0030",
+        "orderId": "26V756427C704961B",
+        "trackingNumber": "9400111000000042010731",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:24.689Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0031",
+        "orderId": "4DW07788WL753635B",
+        "trackingNumber": "9400111000000042011103",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:25.972Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0032",
+        "orderId": "5NR177173C034515H",
+        "trackingNumber": "9400111000000042011479",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:27.273Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0033",
+        "orderId": "95112829N9786793U",
+        "trackingNumber": "9400111000000042011844",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:28.599Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0034",
+        "orderId": "4SW81854VS788760U",
+        "trackingNumber": "9400111000000042012216",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:29.953Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0035",
+        "orderId": "0KK88821K0803144B",
+        "trackingNumber": "9400111000000042012582",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:31.309Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0036",
+        "orderId": "5F092918VT691232Y",
+        "trackingNumber": "1ZA1B2C30042012954",
+        "carrier": "UPS",
+        "uploadedAt": "2026-11-05T05:39:32.633Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0037",
+        "orderId": "9W421960GL743962E",
+        "trackingNumber": "9400111000000042013329",
+        "carrier": "USPS",
+        "uploadedAt": "2026-11-05T05:39:33.980Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0038",
+        "orderId": "0GR61363AT929133N",
+        "trackingNumber": "1ZA1B2C30042013695",
+        "carrier": "UPS",
+        "uploadedAt": "2026-11-05T05:39:35.069Z",
+        "result": "UPLOADED"
+      },
+      {
+        "saleId": "maria-0039",
+        "orderId": "6D271083E95037904",
+        "trackingNumber": "1ZA1B2C30042014069",
+        "carrier": "UPS",
+        "uploadedAt": "2026-11-05T05:39:36.291Z",
+        "result": "UPLOADED"
+      }
+    ],
+    "holds": [
+      {
+        "eventId": "WH-7FG21906BR6922340-5KR399879V107821K-maria-0007",
+        "eventType": "CHECKOUT.PAYMENT-RESOURCE.PAYMENT-ON-HOLD",
+        "heldAt": "2026-11-05T05:40:37.180Z",
+        "reason": "PENDING_REVIEW",
+        "orderId": "2PF47471EF114104V",
+        "captureId": "102425077C151171L",
+        "saleId": "maria-0007",
+        "amountCents": 11000,
+        "currency": "USD",
+        "source": "paypal-simulator"
+      },
+      {
+        "eventId": "WH-7FG21906BR6922340-5KR399879V107821K-maria-0001",
+        "eventType": "CHECKOUT.PAYMENT-RESOURCE.PAYMENT-ON-HOLD",
+        "heldAt": "2026-11-05T05:40:37.831Z",
+        "reason": "PENDING_REVIEW",
+        "orderId": "6XU96820VV0472430",
+        "captureId": "4KE20426LS998315U",
+        "saleId": "maria-0001",
+        "amountCents": 12000,
+        "currency": "USD",
+        "source": "paypal-simulator"
+      },
+      {
+        "eventId": "WH-7FG21906BR6922340-5KR399879V107821K-maria-0002",
+        "eventType": "CHECKOUT.PAYMENT-RESOURCE.PAYMENT-ON-HOLD",
+        "heldAt": "2026-11-05T05:40:38.031Z",
+        "reason": "PENDING_REVIEW",
+        "orderId": "9PD45171048927737",
+        "captureId": "7WC03727WG681492A",
+        "saleId": "maria-0002",
+        "amountCents": 11000,
+        "currency": "USD",
+        "source": "paypal-simulator"
+      },
+      {
+        "eventId": "WH-7FG21906BR6922340-5KR399879V107821K-maria-0003",
+        "eventType": "CHECKOUT.PAYMENT-RESOURCE.PAYMENT-ON-HOLD",
+        "heldAt": "2026-11-05T05:40:38.452Z",
+        "reason": "PENDING_REVIEW",
+        "orderId": "0JT046172X410174S",
+        "captureId": "9FK02329UM218661Y",
+        "saleId": "maria-0003",
+        "amountCents": 21000,
+        "currency": "USD",
+        "source": "paypal-simulator"
+      },
+      {
+        "eventId": "WH-7FG21906BR6922340-5KR399879V107821K-maria-0004",
+        "eventType": "CHECKOUT.PAYMENT-RESOURCE.PAYMENT-ON-HOLD",
+        "heldAt": "2026-11-05T05:40:38.642Z",
+        "reason": "PENDING_REVIEW",
+        "orderId": "6FY755717K123851U",
+        "captureId": "5K7172038H626632P",
+        "saleId": "maria-0004",
+        "amountCents": 10500,
+        "currency": "USD",
+        "source": "paypal-simulator"
+      },
+      {
+        "eventId": "WH-7FG21906BR6922340-5KR399879V107821K-maria-0005",
+        "eventType": "CHECKOUT.PAYMENT-RESOURCE.PAYMENT-ON-HOLD",
+        "heldAt": "2026-11-05T05:40:38.857Z",
+        "reason": "PENDING_REVIEW",
+        "orderId": "8K934701XG373752B",
+        "captureId": "3BW64165WB875893B",
+        "saleId": "maria-0005",
+        "amountCents": 12000,
+        "currency": "USD",
+        "source": "paypal-simulator"
+      }
+    ],
+    "processedEventIds": [
+      "WH-7FG21906BR6922340-5KR399879V107821K-maria-0007",
+      "WH-7FG21906BR6922340-5KR399879V107821K-maria-0001",
+      "WH-7FG21906BR6922340-5KR399879V107821K-maria-0002",
+      "WH-7FG21906BR6922340-5KR399879V107821K-maria-0003",
+      "WH-7FG21906BR6922340-5KR399879V107821K-maria-0004",
+      "WH-7FG21906BR6922340-5KR399879V107821K-maria-0005"
+    ]
+  }
+}

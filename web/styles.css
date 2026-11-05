@@ -120,3 +120,26 @@ tr.reason-row td { padding-top: 0; }
   .show-sm { display: block; font-size: .78rem; margin-top: 4px; }
   th, td { padding: 8px 6px; }
 }
+
+.fine { font-size: .82rem; color: var(--text-muted); margin: 6px 0 10px; }
+.fine a, .card a { color: var(--accent); }
+.cal-dates { font-size: .8rem; color: var(--text-muted); }
+.btn { display: inline-block; background: var(--accent); color: var(--surface-1); border: none; border-radius: 8px; padding: 8px 14px; font: inherit; font-size: .9rem; font-weight: 600; cursor: pointer; text-decoration: none; }
+a.btn, .card a.btn { color: var(--surface-1); }
+.btn:hover { filter: brightness(1.08); }
+.btn:focus-visible, .file-label:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.inv-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 10px 0 0; }
+.inv-actions .or { margin: 0; }
+.file-label { font-size: .88rem; color: var(--text-secondary); }
+.inv-actions input[type=file] { font: inherit; font-size: .85rem; max-width: 100%; color: var(--text-secondary); }
+ul.gaps { list-style: none; padding: 0; margin: 0 0 14px; }
+ul.gaps li { display: flex; gap: 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: .92rem; }
+ul.docs { list-style: none; padding: 0; margin: 6px 0 12px; font-size: .86rem; color: var(--text-secondary); }
+ul.docs li { padding: 3px 0; }
+.mono-sm { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .78rem; }
+#invoices-body h3.sub { margin-top: 14px; margin-bottom: 4px; }
+.error { color: var(--serious); background: var(--serious-bg); padding: 8px 12px; border-radius: 8px; }
+@media (max-width: 760px) {
+  ul.gaps li { flex-direction: column; gap: 4px; }
+}
+th.num { text-align: right; }

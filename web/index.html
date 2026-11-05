@@ -17,7 +17,7 @@
     </div>
   </header>
   <div class="wrap">
-    <p class="banner" id="demo-banner" hidden>Demo data: recorded sales and simulated PayPal hold notices. No real money or accounts.</p>
+    <p class="banner" id="demo-banner" hidden></p>
   </div>
   <main id="main" class="wrap grid" aria-live="polite">
     <section class="card wide" id="step-spike" aria-labelledby="h-spike">
@@ -39,11 +39,18 @@
       <div id="calendar-body" class="loading">Loading…</div>
     </section>
 
-    <section class="card wide next" id="step-invoices" aria-labelledby="h-invoices">
+    <section class="card wide" id="step-invoices" aria-labelledby="h-invoices">
       <p class="step">Step 4</p>
       <h2 id="h-invoices">Account limitation: check your supplier invoices</h2>
-      <p>If PayPal limits your account, it asks for supplier invoices that cover what you sold. SpikeReady reads your invoices, matches them to your PayPal sales and shows what a reviewer would flag <strong>before</strong> you send them.</p>
-      <p class="pill pill-next">Coming next</p>
+      <p class="muted">If PayPal limits your account, it asks for supplier invoices that cover what you sold. SpikeReady reads your invoices, matches them to your PayPal sales and shows what a reviewer would flag <strong>before</strong> you send them.</p>
+      <div class="inv-actions">
+        <button type="button" class="btn" id="use-samples">Use sample invoices</button>
+        <span class="muted or">or</span>
+        <label class="file-label" for="invoice-files">Upload your invoices (PDF, PNG, JPG, WEBP, TXT)</label>
+        <input type="file" id="invoice-files" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,application/pdf,image/png,image/jpeg,image/webp,text/plain">
+      </div>
+      <p class="fine">SpikeReady never creates or edits documents; it fingerprints originals (SHA-256).</p>
+      <div id="invoices-body" aria-live="polite"></div>
     </section>
   </main>
   <footer class="wrap foot">
