@@ -1,0 +1,3553 @@
+{
+ "date": "2026-11-05",
+ "seed": 20261101,
+ "cases": 30,
+ "planted": 51,
+ "arms": [
+  "rules",
+  "oracle"
+ ],
+ "prices": {
+  "claude-opus-5-5": [
+   4,
+   20
+  ],
+  "claude-sonnet-5-5": [
+   2,
+   10
+  ],
+  "claude-haiku-5-5": [
+   0.1,
+   0.5
+  ],
+  "claude-opus-5": [
+   5,
+   25
+  ],
+  "claude-sonnet-5": [
+   2,
+   10
+  ],
+  "claude-opus-4-8": [
+   5,
+   25
+  ],
+  "claude-sonnet-4-6": [
+   3,
+   15
+  ],
+  "claude-haiku-4-5": [
+   1,
+   5
+  ]
+ },
+ "summaries": {
+  "rules": {
+   "cases": 30,
+   "errors": 0,
+   "hit": 9,
+   "total": 51,
+   "recall": 0.17647058823529413,
+   "falseAlarms": 122,
+   "exact": 0,
+   "byType": {
+    "no_invoice": [
+     9,
+     9
+    ],
+    "late_invoice": [
+     0,
+     4
+    ],
+    "shortfall": [
+     0,
+     14
+    ],
+    "name_mismatch": [
+     0,
+     8
+    ],
+    "missing_supplier_contact": [
+     0,
+     9
+    ],
+    "duplicate_invoice": [
+     0,
+     7
+    ]
+   },
+   "falseAlarmsByType": {
+    "no_invoice": 122
+   },
+   "costUsd": 0,
+   "medianLatencyMs": null,
+   "model": null
+  },
+  "oracle": {
+   "cases": 30,
+   "errors": 0,
+   "hit": 51,
+   "total": 51,
+   "recall": 1,
+   "falseAlarms": 0,
+   "exact": 30,
+   "byType": {
+    "no_invoice": [
+     9,
+     9
+    ],
+    "late_invoice": [
+     4,
+     4
+    ],
+    "shortfall": [
+     14,
+     14
+    ],
+    "name_mismatch": [
+     8,
+     8
+    ],
+    "missing_supplier_contact": [
+     9,
+     9
+    ],
+    "duplicate_invoice": [
+     7,
+     7
+    ]
+   },
+   "falseAlarmsByType": {},
+   "costUsd": 0,
+   "medianLatencyMs": null,
+   "model": null
+  }
+ },
+ "rows": [
+  {
+   "caseId": "EV-01",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "AF1-WHT-10",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "AF1-WHT-9",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "APP2-USBC",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "PKM-151-BB",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "STANLEY-40-CRM",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 0,
+    "falseAlarms": 5,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 5
+    }
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-02",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "CARH-HAT-BLK",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "LEGO-10311",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "OWALA-24-SHY",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "PKM-151-BB",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "SAMBA-BLK-8",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 2,
+    "falseAlarms": 5,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      1
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      1
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 5
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-03",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "APP2-USBC",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "LEGO-10311",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "SAMBA-BLK-8",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "STANLEY-40-CRM",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "YETI-R20-NVY",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 1,
+    "falseAlarms": 5,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      1
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 5
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-04",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "AF1-WHT-10",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "AF1-WHT-9",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "CARH-HAT-BLK",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "LEGO-10311",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "NSW-OLED-WHT",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 1,
+    "total": 3,
+    "falseAlarms": 4,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      1,
+      1
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      1
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      1
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 4
+    }
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-05",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "LEGO-10311",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "OWALA-24-SHY",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "SAMBA-BLK-8",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "YETI-R20-NVY",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 1,
+    "total": 2,
+    "falseAlarms": 3,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      1,
+      1
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      1
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 3
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-06",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "NSW-OLED-WHT",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "OWALA-24-SHY",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "PKM-151-BB",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "SAMBA-BLK-8",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 1,
+    "total": 3,
+    "falseAlarms": 3,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      1,
+      1
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      1
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      1
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 3
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-07",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "AF1-WHT-10",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "AF1-WHT-9",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "APP2-USBC",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "CARH-HAT-BLK",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "PKM-151-BB",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 0,
+    "falseAlarms": 5,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 5
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-08",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "CARH-HAT-BLK",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "NSW-OLED-WHT",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "SAMBA-BLK-8",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 1,
+    "falseAlarms": 3,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      1
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 3
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-09",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "LEGO-10311",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "OWALA-24-SHY",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "STANLEY-40-CRM",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 1,
+    "falseAlarms": 3,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      1
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 3
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-10",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "AF1-WHT-10",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "AF1-WHT-9",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "APP2-USBC",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "STANLEY-40-CRM",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "YETI-R20-NVY",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 1,
+    "total": 2,
+    "falseAlarms": 4,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      1,
+      1
+     ],
+     "late_invoice": [
+      0,
+      1
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 4
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-11",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "APP2-USBC",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "LEGO-10311",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "SAMBA-BLK-8",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "YETI-R20-NVY",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 3,
+    "falseAlarms": 4,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      2
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      1
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 4
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-12",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "CARH-HAT-BLK",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "LLL-EBB-BLK",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "PKM-151-BB",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "STANLEY-40-CRM",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 1,
+    "total": 3,
+    "falseAlarms": 3,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      1,
+      1
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      1
+     ],
+     "missing_supplier_contact": [
+      0,
+      1
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 3
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-13",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "AF1-WHT-10",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "AF1-WHT-9",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "CARH-HAT-BLK",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "OWALA-24-SHY",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "STANLEY-40-CRM",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 0,
+    "falseAlarms": 5,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 5
+    }
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-14",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "APP2-USBC",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "NSW-OLED-WHT",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "OWALA-24-SHY",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "PKM-151-BB",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 1,
+    "falseAlarms": 4,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      1
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 4
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-15",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "NSW-OLED-WHT",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "PKM-151-BB",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "YETI-R20-NVY",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 1,
+    "falseAlarms": 3,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      1
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 3
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-16",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "AF1-WHT-10",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "AF1-WHT-9",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "APP2-USBC",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "NSW-OLED-WHT",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "OWALA-24-SHY",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 2,
+    "falseAlarms": 5,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      1
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      1
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 5
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-17",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "APP2-USBC",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "NSW-OLED-WHT",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "STANLEY-40-CRM",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 2,
+    "falseAlarms": 3,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      1
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      1
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 3
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-18",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "APP2-USBC",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "LLL-EBB-BLK",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "NSW-OLED-WHT",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "PKM-151-BB",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "SAMBA-BLK-8",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 1,
+    "total": 3,
+    "falseAlarms": 4,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      1,
+      1
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      1
+     ],
+     "missing_supplier_contact": [
+      0,
+      1
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 4
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-19",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "AF1-WHT-10",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "AF1-WHT-9",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "APP2-USBC",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "SAMBA-BLK-8",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "YETI-R20-NVY",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 0,
+    "falseAlarms": 5,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 5
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-20",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "CARH-HAT-BLK",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "NSW-OLED-WHT",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "PKM-151-BB",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "SAMBA-BLK-8",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 1,
+    "falseAlarms": 4,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      1
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 4
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-21",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "LEGO-10311",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "OWALA-24-SHY",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "PKM-151-BB",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 1,
+    "total": 1,
+    "falseAlarms": 2,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      1,
+      1
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 2
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-22",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "AF1-WHT-10",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "AF1-WHT-9",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "CARH-HAT-BLK",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "LEGO-10311",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "SAMBA-BLK-8",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 2,
+    "falseAlarms": 5,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      1
+     ],
+     "name_mismatch": [
+      0,
+      1
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 5
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-23",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "APP2-USBC",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "LEGO-10311",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "OWALA-24-SHY",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "PKM-151-BB",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "SAMBA-BLK-8",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 3,
+    "falseAlarms": 5,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      2
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      1
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 5
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-24",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "PKM-151-BB",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "SAMBA-BLK-8",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "STANLEY-40-CRM",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 4,
+    "falseAlarms": 3,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      1
+     ],
+     "name_mismatch": [
+      0,
+      1
+     ],
+     "missing_supplier_contact": [
+      0,
+      1
+     ],
+     "duplicate_invoice": [
+      0,
+      1
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 3
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-25",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "AF1-WHT-10",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "AF1-WHT-9",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "LLL-EBB-BLK",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "NSW-OLED-WHT",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "YETI-R20-NVY",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 0,
+    "falseAlarms": 5,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 5
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-26",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "APP2-USBC",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "LLL-EBB-BLK",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "OWALA-24-SHY",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "STANLEY-40-CRM",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "YETI-R20-NVY",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 1,
+    "falseAlarms": 5,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      1
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 5
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-27",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "APP2-USBC",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "OWALA-24-SHY",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "PKM-151-BB",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "STANLEY-40-CRM",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 1,
+    "falseAlarms": 4,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      1
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 4
+    }
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-28",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "AF1-WHT-10",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "AF1-WHT-9",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "LLL-EBB-BLK",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "PKM-151-BB",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "STANLEY-40-CRM",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 1,
+    "total": 3,
+    "falseAlarms": 4,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      1,
+      1
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      1
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      1
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 4
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-29",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "APP2-USBC",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "LLL-EBB-BLK",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "OWALA-24-SHY",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "STANLEY-40-CRM",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "YETI-R20-NVY",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 0,
+    "total": 2,
+    "falseAlarms": 5,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      1
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      1
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 5
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-30",
+   "arm": "rules",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "APP2-USBC",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "CARH-HAT-BLK",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "PKM-151-BB",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "SAMBA-BLK-8",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "YETI-R20-NVY",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 1,
+    "total": 3,
+    "falseAlarms": 4,
+    "exact": false,
+    "byType": {
+     "no_invoice": [
+      1,
+      1
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      1
+     ],
+     "missing_supplier_contact": [
+      0,
+      1
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {
+     "no_invoice": 4
+    }
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-01",
+   "arm": "oracle",
+   "gaps": [],
+   "score": {
+    "hit": 0,
+    "total": 0,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 14
+  },
+  {
+   "caseId": "EV-02",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "duplicate_file",
+     "sku": null,
+     "docId": "DOC-2"
+    },
+    {
+     "type": "shortfall",
+     "sku": "OWALA-24-SHY",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 2,
+    "total": 2,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      1,
+      1
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      1,
+      1
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 2
+  },
+  {
+   "caseId": "EV-03",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "shortfall",
+     "sku": "APP2-USBC",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 1,
+    "total": 1,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      1,
+      1
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-04",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "duplicate_file",
+     "sku": null,
+     "docId": "DOC-2"
+    },
+    {
+     "type": "shortfall",
+     "sku": "AF1-WHT-10",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "NSW-OLED-WHT",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 3,
+    "total": 3,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      1,
+      1
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      1,
+      1
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      1,
+      1
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 2
+  },
+  {
+   "caseId": "EV-05",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "shortfall",
+     "sku": "OWALA-24-SHY",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "SAMBA-BLK-8",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 2,
+    "total": 2,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      1,
+      1
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      1,
+      1
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-06",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "duplicate_file",
+     "sku": null,
+     "docId": "DOC-3"
+    },
+    {
+     "type": "shortfall",
+     "sku": "NSW-OLED-WHT",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "OWALA-24-SHY",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 3,
+    "total": 3,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      1,
+      1
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      1,
+      1
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      1,
+      1
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-07",
+   "arm": "oracle",
+   "gaps": [],
+   "score": {
+    "hit": 0,
+    "total": 0,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-08",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "shortfall",
+     "sku": "SAMBA-BLK-8",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 1,
+    "total": 1,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      1,
+      1
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-09",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "missing_supplier_contact",
+     "sku": null,
+     "docId": "DOC-2"
+    }
+   ],
+   "score": {
+    "hit": 1,
+    "total": 1,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      1,
+      1
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-10",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "late_invoice",
+     "sku": "AF1-WHT-9",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "APP2-USBC",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 2,
+    "total": 2,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      1,
+      1
+     ],
+     "late_invoice": [
+      1,
+      1
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-11",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "duplicate_file",
+     "sku": null,
+     "docId": "DOC-2"
+    },
+    {
+     "type": "shortfall",
+     "sku": "LEGO-10311",
+     "docId": null
+    },
+    {
+     "type": "shortfall",
+     "sku": "SAMBA-BLK-8",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 3,
+    "total": 3,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      2,
+      2
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      1,
+      1
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-12",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "name_mismatch",
+     "sku": null,
+     "docId": "DOC-1"
+    },
+    {
+     "type": "missing_supplier_contact",
+     "sku": null,
+     "docId": "DOC-2"
+    },
+    {
+     "type": "no_invoice",
+     "sku": "LLL-EBB-BLK",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 3,
+    "total": 3,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      1,
+      1
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      1,
+      1
+     ],
+     "missing_supplier_contact": [
+      1,
+      1
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-13",
+   "arm": "oracle",
+   "gaps": [],
+   "score": {
+    "hit": 0,
+    "total": 0,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-14",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "missing_supplier_contact",
+     "sku": null,
+     "docId": "DOC-1"
+    }
+   ],
+   "score": {
+    "hit": 1,
+    "total": 1,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      1,
+      1
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-15",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "missing_supplier_contact",
+     "sku": null,
+     "docId": "DOC-1"
+    }
+   ],
+   "score": {
+    "hit": 1,
+    "total": 1,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      1,
+      1
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 0
+  },
+  {
+   "caseId": "EV-16",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "name_mismatch",
+     "sku": null,
+     "docId": "DOC-3"
+    },
+    {
+     "type": "late_invoice",
+     "sku": "NSW-OLED-WHT",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 2,
+    "total": 2,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      1,
+      1
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      1,
+      1
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-17",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "missing_supplier_contact",
+     "sku": null,
+     "docId": "DOC-2"
+    },
+    {
+     "type": "late_invoice",
+     "sku": "NSW-OLED-WHT",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 2,
+    "total": 2,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      1,
+      1
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      1,
+      1
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-18",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "name_mismatch",
+     "sku": null,
+     "docId": "DOC-1"
+    },
+    {
+     "type": "missing_supplier_contact",
+     "sku": null,
+     "docId": "DOC-2"
+    },
+    {
+     "type": "no_invoice",
+     "sku": "LLL-EBB-BLK",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 3,
+    "total": 3,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      1,
+      1
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      1,
+      1
+     ],
+     "missing_supplier_contact": [
+      1,
+      1
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-19",
+   "arm": "oracle",
+   "gaps": [],
+   "score": {
+    "hit": 0,
+    "total": 0,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-20",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "name_mismatch",
+     "sku": null,
+     "docId": "DOC-1"
+    }
+   ],
+   "score": {
+    "hit": 1,
+    "total": 1,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      1,
+      1
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-21",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "no_invoice",
+     "sku": "OWALA-24-SHY",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 1,
+    "total": 1,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      1,
+      1
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-22",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "name_mismatch",
+     "sku": null,
+     "docId": "DOC-2"
+    },
+    {
+     "type": "shortfall",
+     "sku": "AF1-WHT-10",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 2,
+    "total": 2,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      1,
+      1
+     ],
+     "name_mismatch": [
+      1,
+      1
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-23",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "duplicate_file",
+     "sku": null,
+     "docId": "DOC-4"
+    },
+    {
+     "type": "shortfall",
+     "sku": "LEGO-10311",
+     "docId": null
+    },
+    {
+     "type": "shortfall",
+     "sku": "PKM-151-BB",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 3,
+    "total": 3,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      2,
+      2
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      1,
+      1
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-24",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "missing_supplier_contact",
+     "sku": null,
+     "docId": "DOC-1"
+    },
+    {
+     "type": "name_mismatch",
+     "sku": null,
+     "docId": "DOC-2"
+    },
+    {
+     "type": "duplicate_file",
+     "sku": null,
+     "docId": "DOC-3"
+    },
+    {
+     "type": "shortfall",
+     "sku": "SAMBA-BLK-8",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 4,
+    "total": 4,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      1,
+      1
+     ],
+     "name_mismatch": [
+      1,
+      1
+     ],
+     "missing_supplier_contact": [
+      1,
+      1
+     ],
+     "duplicate_invoice": [
+      1,
+      1
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-25",
+   "arm": "oracle",
+   "gaps": [],
+   "score": {
+    "hit": 0,
+    "total": 0,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-26",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "name_mismatch",
+     "sku": null,
+     "docId": "DOC-1"
+    }
+   ],
+   "score": {
+    "hit": 1,
+    "total": 1,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      1,
+      1
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-27",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "late_invoice",
+     "sku": "STANLEY-40-CRM",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 1,
+    "total": 1,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      1,
+      1
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-28",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "duplicate_file",
+     "sku": null,
+     "docId": "DOC-3"
+    },
+    {
+     "type": "shortfall",
+     "sku": "LLL-EBB-BLK",
+     "docId": null
+    },
+    {
+     "type": "no_invoice",
+     "sku": "STANLEY-40-CRM",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 3,
+    "total": 3,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      1,
+      1
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      1,
+      1
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      0,
+      0
+     ],
+     "duplicate_invoice": [
+      1,
+      1
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-29",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "missing_supplier_contact",
+     "sku": null,
+     "docId": "DOC-3"
+    },
+    {
+     "type": "shortfall",
+     "sku": "YETI-R20-NVY",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 2,
+    "total": 2,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      0,
+      0
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      1,
+      1
+     ],
+     "name_mismatch": [
+      0,
+      0
+     ],
+     "missing_supplier_contact": [
+      1,
+      1
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 1
+  },
+  {
+   "caseId": "EV-30",
+   "arm": "oracle",
+   "gaps": [
+    {
+     "type": "name_mismatch",
+     "sku": null,
+     "docId": "DOC-1"
+    },
+    {
+     "type": "missing_supplier_contact",
+     "sku": null,
+     "docId": "DOC-3"
+    },
+    {
+     "type": "no_invoice",
+     "sku": "YETI-R20-NVY",
+     "docId": null
+    }
+   ],
+   "score": {
+    "hit": 3,
+    "total": 3,
+    "falseAlarms": 0,
+    "exact": true,
+    "byType": {
+     "no_invoice": [
+      1,
+      1
+     ],
+     "late_invoice": [
+      0,
+      0
+     ],
+     "shortfall": [
+      0,
+      0
+     ],
+     "name_mismatch": [
+      1,
+      1
+     ],
+     "missing_supplier_contact": [
+      1,
+      1
+     ],
+     "duplicate_invoice": [
+      0,
+      0
+     ]
+    },
+    "falseAlarmsByType": {}
+   },
+   "usage": [],
+   "latencyMs": 0
+  }
+ ]
+}

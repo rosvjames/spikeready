@@ -37,6 +37,18 @@ Maria sells sneakers. A video of hers goes viral and she sells 40 pairs in two d
 
 Why AI is needed for invoices: in our cut test on 30 synthetic reseller cases with 51 planted gaps, exact-title rules found **9/51 (18%)**; reading each invoice with AI and reconciling with code found **49/51 (96%)**, and a strong model in one call found 51/51. Suppliers write "AF1 '07 WHT/WHT 10" for the seller's "Nike Air Force 1 '07 White Men's Size 10".
 
+## Measuring the AI
+
+`npm run eval` reruns the invoice benchmark: 30 synthetic reseller cases with 51 planted gaps (shortfalls, missing or late invoices, wrong names, missing supplier contact, duplicates), scored by code against ground truth. Arms: exact-title **rules** (no AI), an **oracle** that feeds our reconciliation a perfect reading, the **pipeline** (AI reads each document, code reconciles) and a **single-call baseline** (one strong model with everything pasted).
+
+| Arm | Gaps found | False alarms |
+|---|---|---|
+| Rules only (no AI) | 9/51 (18%) | 122 |
+| Oracle: perfect reading + our code | 51/51 (100%) | 0 |
+| Pipeline / baseline | see [Nov 1 evidence](docs/evidence/2026-11-01-stockproof-cut-test.md); rerun with `ANTHROPIC_API_KEY` | |
+
+The oracle shows the reconciliation code is exact whenever the reading is right; the gap between rules and oracle is the work the AI has to do. Results: `eval/results/`.
+
 ## PayPal APIs used
 
 - **Orders v2:** create orders, authorize and capture (`/v2/checkout/orders`, `/authorize`, `/capture`, `/v2/payments/authorizations/{id}/capture`), read orders, and add tracking (`/v2/checkout/orders/{id}/track`).
@@ -110,7 +122,7 @@ See [docs/architecture.md](docs/architecture.md).
 | 1 | Thu Nov 5 | Repo, sandbox data, end-to-end chain: seed, verified tracking, hold webhook, release calendar, spike detector | ✅ Done, run end to end in the sandbox |
 | 2 | Fri Nov 6 | Invoice engine + integrity checks + downloadable evidence pack | ✅ Built (AI extraction pending a run with an API key) |
 | 3 | Sat Nov 7 | Seller panel, webhook endpoint with signature verification, deploy | ✅ Built; deploy to Render pending |
-| 4 | Sun Nov 8 | Measured AI evaluation, more tests, demo mode without keys | Demo mode ✅; evaluation harness in progress |
+| 4 | Sun Nov 8 | Measured AI evaluation, more tests, demo mode without keys | Demo mode ✅; benchmark built (`npm run eval`), AI arms pending an API key |
 | 5 | Mon Nov 9 | Feature freeze, README, JUDGING.md, video | Planned |
 | 6 | Tue Nov 10 | Video editing, Devpost text, make repo public | Planned |
 | 7 | Wed Nov 11 | Submit | Planned |

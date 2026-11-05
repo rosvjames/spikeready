@@ -22,7 +22,8 @@
     "invoices": "tsx scripts/invoices-check.ts",
     "serve": "tsx scripts/serve.ts",
     "register-webhook": "tsx scripts/register-webhook.ts",
-    "record-demo": "tsx scripts/record-demo.ts"
+    "record-demo": "tsx scripts/record-demo.ts",
+    "eval": "tsx eval/run.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.5.0",
