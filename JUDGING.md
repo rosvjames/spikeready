@@ -11,7 +11,10 @@ It replays our real PayPal sandbox run of Nov 5, 2026: 39 captured sales, 38 ver
 3. **Release calendar:** expected and latest (21-day) release date for each held payment, with PayPal's source.
 4. **Account limitation:** click **Use a sample notice** (the AI lists what PayPal asks for, with quotes that code checks), then **Use sample invoices** (the AI reads, code reconciles: "You sold 14 … your invoices cover 12"), then **Download evidence pack**.
 
-Coming (being built now; this guide will be updated): a **Fix label** action that corrects the refused label, re-verifies it, uploads the tracking to the sandbox order and moves that payment's release date in the calendar; and **Ask SpikeReady**, a live assistant over the same tools.
+Try the two actions:
+
+- **Fix label (step 2):** type the buyer's ZIP **60614** in the refused row and click **Re-check and upload**. Code re-verifies the label; the server uploads the tracking to the real sandbox order (or reports that PayPal already has it, which is idempotent and safe) and step 3 shows "$110.00 moves from Thursday, Nov 26 to Monday, Nov 9: 17 days sooner". A wrong ZIP is refused again.
+- **Ask SpikeReady (after step 1):** click a suggested question. The answers were produced by Claude over SpikeReady's read-only tools on Nov 5 and are replayed here; under each answer, "Checked by code: N/N facts verified" lists every amount and date and the tool result it came from. Live free-text questions are off on the public demo to protect the AI budget; run it locally with an API key (`npm run ask -- "your question"`).
 
 Video: *link coming*.
 

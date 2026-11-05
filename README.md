@@ -9,6 +9,8 @@
 - **Spike alert:** compares the seller's PayPal sales with their normal (13x in the demo) and lists what PayPal will want to see.
 - **Verified tracking:** uploads tracking to the PayPal order only if the label's ZIP matches the buyer's PayPal shipping address, the check digit is valid and the number is not reused.
 - **Release calendar:** links PayPal `PAYMENT-ON-HOLD` notices to sales and shows the expected release date (about 24 h after delivery) and the latest one (21 days), following PayPal's published rules.
+- **Fix it in place:** a refused label can be corrected in the panel; code re-verifies it, uploads the tracking to the PayPal order and the release date moves (17 days sooner in the demo).
+- **Ask SpikeReady:** an assistant that answers from SpikeReady's own read-only tools ("When will my held money be released?", "Draft my reply to PayPal"); code checks every amount, date and fact before the seller sees it.
 - **Limitation help:** reads PayPal's message (AI quotes each request; code checks every quote), reads supplier invoices (AI) and reconciles them against PayPal sales (code), then builds an evidence pack with a SHA-256 fingerprint of every original.
 
 Also available to AI assistants as an [MCP server](docs/mcp.md).
@@ -17,6 +19,7 @@ Also available to AI assistants as an [MCP server](docs/mcp.md).
 |---|---|
 | ![Step 1: sales spike](docs/img/step1-spike.png) | ![Step 2: verified tracking, one label refused](docs/img/step2-tracking.png) |
 | ![Step 3: release calendar](docs/img/step3-calendar.png) | ![Step 4: what PayPal asked for, invoice check](docs/img/step4-limitation.png) |
+| ![Ask SpikeReady: every fact checked by code](docs/img/ask.png) | ![Fix label: release moves 17 days sooner](docs/img/step3-release-move.png) |
 | ![Proof: verified webhook and PayPal receipts](docs/img/proof.png) | ![Mobile view](docs/img/mobile.png) |
 
 ## The problem
