@@ -3,6 +3,7 @@
 // - the only write is uploading a verified tracking number, and it needs the seller's explicit
 //   confirmation in the call (confirm: true) AND an operator switch (SPIKEREADY_MCP_ALLOW_WRITES=1);
 // - nothing here moves money, releases holds or creates or edits documents.
+import { normalizeTracking } from "../tracking/numbers.js";
 import { plural } from "../text.js";
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { basename, isAbsolute, join, relative, resolve } from "node:path";
@@ -185,6 +186,14 @@ export async function uploadTracking(ctx: McpContext, raw: unknown): Promise<Too
   if (!sale) return fail(`Unknown sale ${args.saleId}.`);
   const existing = d.state.shipments.find((s) => s.saleId === sale.saleId);
   const shipment = shipmentFrom(args, d.now, existing);
+  // Same tracking number with a different ZIP is the seller's word, not a new label (same rule as the panel).
+  const sameNumber = existing && normalizeTracking(existing.trackingNumber) === normalizeTracking(shipment.trackingNumber);
+  if (sameNumber && existing.labelPostalCode.trim() !== shipment.labelPostalCode.trim()) {
+    return ok(
+      `Not uploaded. ${shipment.trackingNumber} is the label already on file for ${sale.saleId} (ZIP ${existing.labelPostalCode}). Typing a different ZIP does not change where that package goes: reprint the label (it gets a new tracking number) and upload the new label instead.`,
+      { saleId: sale.saleId, uploaded: false, reason: "SAME_TRACKING_DIFFERENT_ZIP" },
+    );
+  }
   const verdict = verifyShipment(sale, shipment, { uploads: d.state.uploads });
   if (verdict.decision !== "UPLOAD") return ok(`Not uploaded. ${describeVerdict(verdict)}`, { saleId: sale.saleId, verdict, uploaded: false });
 

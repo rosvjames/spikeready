@@ -269,3 +269,7 @@ ul.label-checks li { display: flex; gap: 6px; padding: 2px 0; }
 .file-label { display: inline-flex; flex-direction: column; gap: 2px; font-size: .86rem; }
 .prev-tracker { margin: 6px 0 0; }
 .cant-check { margin: 8px 0 4px; }
+
+.buyer-evidence { margin: 12px 0 16px; }
+.buyer-evidence img { max-width: min(100%, 420px); height: auto; border: 1px solid var(--line, #ddd); border-radius: 8px; display: block; }
+.buyer-evidence figcaption { font-size: 0.9em; color: var(--muted, #666); margin-top: 6px; max-width: 60ch; }

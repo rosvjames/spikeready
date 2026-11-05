@@ -197,3 +197,20 @@ describe("MCP protocol round trip (in-memory)", () => {
     await client.close();
   });
 });
+
+describe("upload_tracking refuses a typed ZIP on an existing label", () => {
+  it("same tracking number with a different ZIP is not uploaded", async () => {
+    const { uploadTracking } = await import("../../src/mcp/tools.js");
+    const { emptyState } = await import("../../src/store.js");
+    const { sale } = await import("../helpers.js");
+    const s = sale({ saleId: "maria-0007" });
+    const state = {
+      ...emptyState(),
+      sales: [s],
+      shipments: [{ saleId: "maria-0007", carrier: "UPS" as const, trackingNumber: "1Z999AA10123456784", labelPostalCode: "11251", labelCountryCode: "US", shippedAt: "2026-11-05T20:00:00Z", estimatedDeliveryAt: null, deliveredAt: null }],
+    };
+    const ctx = { load: () => ({ state, now: new Date("2026-11-05T21:00:00Z"), source: "local" as const }), env: { SPIKEREADY_MCP_ALLOW_WRITES: "1" }, paypal: () => null } as any;
+    const r = await uploadTracking(ctx, { saleId: "maria-0007", carrier: "UPS", trackingNumber: "1Z999AA10123456784", labelPostalCode: "11215", confirm: true });
+    expect(JSON.stringify(r)).toContain("SAME_TRACKING_DIFFERENT_ZIP");
+  });
+});
