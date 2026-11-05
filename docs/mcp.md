@@ -39,8 +39,8 @@ Credentials (`PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `ANTHROPIC_API_KEY`) ar
 |---|---|---|
 | `get_spike_status` | Is this a sales spike (recent orders vs. the previous 14 days)? What should be ready before PayPal looks? | No |
 | `get_release_calendar` | For each held payment: expected release, latest possible date (21 days), why, and what would release it sooner | No |
-| `list_sales_missing_tracking` | Sales without tracking on PayPal, with the reason (no label, or refused: the label does not go to the buyer's address) | No |
-| `verify_tracking` | Dry run: does this label go to the buyer's PayPal shipping address? Valid check digit? Not used on another sale? | No |
+| `list_sales_missing_tracking` | Sales without tracking on PayPal, with the reason (no label, or refused: the label is not addressed to the buyer's address) | No |
+| `verify_tracking` | Dry run: is this label addressed to the buyer's PayPal shipping address (ZIP, country)? Valid check digit? Not used on another sale? | No |
 | `upload_tracking` | Uploads a **verified** tracking number to the PayPal order | Only with the seller's confirmation **and** the operator switch (below) |
 | `check_invoices` | Supplier invoices vs. PayPal sales: units sold vs. covered, missing supplier contact, wrong names, duplicates, late or impossible dates. `useSamples: true` needs no API key | No (files are only read, inside one folder) |
 | `get_evidence_pack` | The Markdown evidence pack from the last invoice check, with a SHA-256 fingerprint of every original | No |
@@ -57,7 +57,7 @@ Resource: `spikeready://policy`, PayPal's hold and release rules as SpikeReady a
 
 ## Next to PayPal's official MCP server
 
-PayPal's own MCP server ([paypal/agent-toolkit](https://github.com/paypal/agent-toolkit), `npx -y @paypal/mcp --tools=all`) gives agents tools such as `create_shipment_tracking`, `list_disputes` and `list_transactions`. It does not check whether a tracking number is real or goes to the buyer, and it has nothing about holds or limitations. SpikeReady is meant to sit next to it as a guardian and a planner:
+PayPal's own MCP server ([paypal/agent-toolkit](https://github.com/paypal/agent-toolkit), `npx -y @paypal/mcp --tools=all`) gives agents tools such as `create_shipment_tracking`, `list_disputes` and `list_transactions`. It does not check a tracking number's format or whether the label is addressed to the buyer on the PayPal order, and it has nothing about holds or limitations. SpikeReady is meant to sit next to it as a guardian and a planner:
 
 ```json
 {
@@ -84,7 +84,7 @@ With this, an agent cannot upload a made-up number or a label going to the wrong
 ## Safety model
 
 1. **Code decides, the AI explains.** Tools return results computed by deterministic code (spike rule, ZIP check, release policy, reconciliation). Tool annotations mark every tool read-only except `upload_tracking`.
-2. **One write, two locks.** `upload_tracking` always verifies first and refuses labels that do not go to the buyer's address. It uploads only when the call has `confirm: true` (which the assistant must set only after the seller confirmed in their own words) **and** the operator has set `SPIKEREADY_MCP_ALLOW_WRITES=1`. Otherwise it explains what would happen. The PayPal request uses a deterministic idempotency key, so a repeated call never adds a second tracker.
+2. **One write, two locks.** `upload_tracking` always verifies first and refuses labels not addressed to the buyer's PayPal shipping address. It uploads only when the call has `confirm: true` (which the assistant must set only after the seller confirmed in their own words) **and** the operator has set `SPIKEREADY_MCP_ALLOW_WRITES=1`. Otherwise it explains what would happen. The PayPal request uses a deterministic idempotency key, so a repeated call never adds a second tracker.
 3. **The recorded demo is read-only.** Uploads need the seller's own state.
 4. **Files stay in one folder.** `check_invoices` reads only files inside `SPIKEREADY_INVOICES_DIR` (default `./invoices`); `..`, absolute paths and symlinks pointing outside are refused. Originals are never modified.
 5. **Nothing to game.** The server instructions tell the assistant never to suggest evading PayPal reviews and never to create or edit documents.

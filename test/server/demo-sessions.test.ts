@@ -8,7 +8,7 @@ import { RecordedAssistant, stateFingerprint } from "../../src/assistant/recorde
 import { ROOT } from "../../src/config.js";
 import { DEFAULT_INVOICES_DIR, type McpContext } from "../../src/mcp/tools.js";
 import { createApp } from "../../src/server/app.js";
-import { fixLabel } from "../../src/server/fix-label.js";
+import { applyVerifiedShipment } from "../../src/server/fix-label.js";
 import { loadRecordedDemo } from "../../src/server/recorded.js";
 import { DEMO_COOKIE, DemoSessions, readCookie } from "../../src/server/sessions.js";
 import type { State } from "../../src/store.js";
@@ -58,6 +58,7 @@ function visitor(base: string) {
     },
     dashboard: async () => (await call("/api/dashboard")).json(),
     fix: async (zip: string) => (await call("/api/tracking/fix", { method: "POST", body: JSON.stringify({ saleId: "maria-0007", labelPostalCode: zip }) })).json(),
+    reprint: async () => (await call("/api/tracking/label", { method: "POST", body: JSON.stringify({ saleId: "maria-0007", useSample: "fixed" }) })).json(),
     reset: async () => call("/api/demo/reset", { method: "POST" }),
     ask: async (id: string) => (await call("/api/ask", { method: "POST", body: JSON.stringify({ id }) })).json(),
     dispute: async () => (await call("/api/dispute-proof")).json(),
@@ -84,12 +85,12 @@ describe("per-visitor demo state", () => {
     await a.dashboard();
     await b.dashboard();
     expect(a.cookie).not.toBe(b.cookie);
-    const r = await a.fix("60614");
-    expect(r.status).toBe("UPLOADED");
+    const r = await a.reprint();
+    expect(r.upload.status).toBe("UPLOADED");
     expect(r.perVisitor).toBe(true);
     const da = await a.dashboard();
     expect(statusOf(da, "maria-0007")).toBe("UPLOADED");
-    expect(da.fixes["maria-0007"].headline).toContain("17 days sooner");
+    expect(da.fixes["maria-0007"].headline).toContain("15 days sooner");
     const db = await b.dashboard();
     expect(statusOf(db, "maria-0007")).toBe("REJECTED");
     expect(db.fixes).toEqual({});
@@ -98,7 +99,7 @@ describe("per-visitor demo state", () => {
   it("Reset demo restores the recording for that visitor only", async () => {
     const base = await start();
     const a = visitor(base);
-    await a.fix("60614");
+    await a.reprint();
     expect(statusOf(await a.dashboard(), "maria-0007")).toBe("UPLOADED");
     expect((await a.reset()).status).toBe(200);
     const d = await a.dashboard();
@@ -152,24 +153,40 @@ describe("Ask SpikeReady never shows a stale answer as verified", () => {
     }
   });
 
-  it("after fixing the label: the answer recorded for that data, still verified", async () => {
+  it("typing a ZIP is refused (410) and leaves the visitor's data and answers untouched", async () => {
     const base = await start();
     const v = visitor(base);
-    await v.fix("60614");
-    const r = await v.ask("release");
-    expect(r.recheck.recordedForThisData).toBe(true);
-    expect(r.recheck.stateLabel).toContain("maria-0007");
-    expect(r.verified).toBe(true);
-    expect(r.claims.every((c: { verified: boolean }) => c.verified)).toBe(true);
-    const ready = await v.ask("ready");
-    expect(ready.recheck.recordedForThisData).toBe(true);
-    expect(ready.verified).toBe(true);
+    const res = await v.fix("60614");
+    expect(res.use).toBe("/api/tracking/label");
+    expect(statusOf(await v.dashboard(), "maria-0007")).toBe("REJECTED");
+    expect((await v.ask("release")).verified).toBe(true);
+  });
+
+  it("after uploading the reprinted label (the primary path): every suggested answer is the one recorded for that data, fully verified", async () => {
+    const base = await start();
+    const v = visitor(base);
+    const up = await v.reprint();
+    expect(up.label.verdict).toBe("UPLOAD");
+    for (const id of ["release", "ready", "reply"]) {
+      const r = await v.ask(id);
+      expect({ id, forThisData: r.recheck.recordedForThisData, verified: r.verified, changed: r.recheck.changedFacts, unsupported: r.recheck.unsupported }).toEqual({
+        id,
+        forThisData: true,
+        verified: true,
+        changed: 0,
+        unsupported: [],
+      });
+      expect(r.recheck.stateLabel).toContain("reprinted label");
+    }
+    expect((await v.ask("release")).answer_markdown).toContain("Nov 11");
   });
 
   it("with data no recording matches: the facts that changed are flagged and the answer is not verified", async () => {
     const rec = RecordedAssistant.fromFile()!;
     // The label is fixed but the release answers are taken from the original recording (no match).
-    const fixed = await fixLabel(fresh(), { saleId: "maria-0007", labelPostalCode: "60614" }, { paypal: null, now: NOW });
+    const base0 = fresh();
+    const refused = base0.shipments.find((x) => x.saleId === "maria-0007")!;
+    const fixed = await applyVerifiedShipment(base0, base0.sales.find((x) => x.saleId === "maria-0007")!, refused, { ...refused, trackingNumber: "1ZA1B2C30043000072", labelPostalCode: "60614" }, { paypal: null, now: NOW });
     const state = { ...fixed.state, holds: fixed.state.holds.filter((h) => h.saleId !== "maria-0001") };
     const ctx: McpContext = {
       load: () => ({ state, now: NOW, source: "recorded", banner: null }),
@@ -211,7 +228,7 @@ describe("step 5: verified tracking defends you", () => {
     const base = await start();
     const v = visitor(base);
     expect((await v.dispute()).preview).toMatchObject({ saleId: "maria-0007", verdict: "weak" });
-    await v.fix("60614");
+    await v.reprint();
     expect((await v.dispute()).preview).toMatchObject({ saleId: "maria-0007", verdict: "partial" });
   });
 });
