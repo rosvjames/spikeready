@@ -1,0 +1,32 @@
+{
+  "recordedAt": "2026-11-05T07:50:00Z",
+  "environment": "sandbox",
+  "note": "The sandbox buyer opened PayPal's 'Report a problem' flow for sale maria-0036 (no dispute was filed). Before offering to report the problem to PayPal, PayPal showed the buyer the UPS tracking that SpikeReady had verified and uploaded to the order. Screenshot: docs/img/paypal-shows-buyer-tracking.png (cropped to the card; no account details).",
+  "sale": "maria-0036",
+  "orderId": "5F092918VT691232Y",
+  "captureId": "4BY26934P82250139",
+  "amount": { "currency_code": "USD", "value": "210.00" },
+  "trackingNumber": "1ZA1B2C30042012954",
+  "carrier": "UPS",
+  "trackingUploadedBySpikeReadyAt": "2026-11-05T05:39:32.633Z",
+  "pageUrl": "/resolutioncenter/filing/8KV02832AG9431838",
+  "pageNote": "8KV02832AG9431838 is the buyer-side transaction id PayPal uses in the filing path; the page was reached from the buyer's Resolution Center dashboard via 'Reportar un problema'.",
+  "capturedAt": "2026-11-05T07:48:00Z",
+  "uiLanguage": "es",
+  "uiLanguageNote": "The sandbox buyer account is registered in Ecuador, so PayPal's buyer pages are in Spanish.",
+  "onPageText": [
+    { "es": "Reportar un problema", "en": "Report a problem" },
+    { "es": "Esta es la información de rastreo para su pedido.", "en": "Here is the tracking information for your order." },
+    { "es": "Enviado por United Parcel Service of America, Inc", "en": "Shipped by United Parcel Service of America, Inc" },
+    { "es": "Número de rastreo: 1ZA1B2C30042012954", "en": "Tracking number: 1ZA1B2C30042012954" },
+    { "es": "Rastrear su pedido", "en": "Track your order" },
+    { "es": "Si aún está enfrentando problemas con este pedido, díganos cómo podemos ayudarle.", "en": "If you are still having problems with this order, tell us how we can help." },
+    { "es": "Reportar el problema a PayPal", "en": "Report the problem to PayPal" }
+  ],
+  "filed": false,
+  "relatedCase": {
+    "caseId": "PP-R-QLW-10196536",
+    "sale": "maria-0038",
+    "note": "The same pre-filing tracking page was seen for maria-0038 (UPS 1ZA1B2C30042013695) before that case was filed; see data/recorded/dispute-proof-2026-11-05.json."
+  }
+}
