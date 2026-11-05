@@ -2,7 +2,7 @@
 
 **A copilot that gets small PayPal sellers ready for a sales spike:** it uploads tracking for every shipment (after checking the label really goes to the buyer's address), shows when each held dollar should be released, and, if PayPal limits the account, checks supplier invoices against what was sold and builds the case file **before** it is submitted.
 
-> Built for the PayPal AI Hackathon (2026). Status: end-to-end chain running against the PayPal sandbox; see [Project status](#project-status).
+> Built for the PayPal AI Hackathon (2026). **Live demo: https://spikeready.onrender.com** (recorded PayPal sandbox run, no login). Status: end-to-end chain running against the PayPal sandbox; see [Project status](#project-status).
 
 ## The problem
 
@@ -88,6 +88,8 @@ Without a local state file, demo mode replays **our recorded run against the Pay
 - 40 orders created; **39 captured** (one was declined by the sandbox buyer's funding, `INSTRUMENT_DECLINED`).
 - **38 tracking numbers uploaded**; **1 refused** on purpose: the label for `maria-0007` goes to ZIP 60641, the buyer's PayPal address is 60614.
 - **6 `PAYMENT-ON-HOLD` events** from PayPal's simulator, re-pointed to sales: $775 on hold; calendar: $225 on Sun Nov 8, $210 on Mon Nov 9, $230 on Tue Nov 10, and $110 on Thu Nov 26 (the refused label, no tracking) unless tracking is uploaded.
+- **Live webhook with a verified signature:** the public demo (https://spikeready.onrender.com) is registered as a PayPal sandbox webhook. A new $1 sandbox sale made PayPal deliver a real, signed `PAYMENT.CAPTURE.COMPLETED` 42 seconds later; the server had PayPal verify the signature (`verify-webhook-signature` → `SUCCESS`) before doing anything. Verified deliveries are listed at [`/api/webhooks/recent`](https://spikeready.onrender.com/api/webhooks/recent) (ids and types only; the list resets when the server restarts). Simulator events are not signed, which is why the hold demo uses the simulator only for the event body.
+- **Receipts:** `npm run proof` re-reads every sandbox order live and stores PayPal's `PayPal-Debug-Id` for each call (`data/recorded/proof-sandbox-2026-11-05.json`): 39 captures `COMPLETED`, 38 orders with tracking on PayPal.
 - Sandbox findings: `/v2/checkout/orders/{id}/capture` returned `500 INTERNAL_SERVICE_ERROR` for wallet orders approved by our buyer account, while **authorize → capture** worked every time, so `npm run seed -- --mode paypal --intent authorize` is the reliable path. The simulator reuses one event id, a fixed past date and a $100 sample item; `src/holds/simulator.ts` re-points all of it and marks the event as simulated.
 
 ## What is real and what is simulated
