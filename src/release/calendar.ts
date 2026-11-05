@@ -19,7 +19,13 @@ export interface Forecast {
   eventId: string;
   saleId: string | null;
   amountCents: number;
+  /** Expected release under PayPal's rules. */
   releaseAt: string;
+  /**
+   * Latest release: PayPal may hold up to 21 days even after delivery, e.g. after "an unusual change in
+   * your selling patterns" (a spike). The forecast is the expected date, never a promise.
+   */
+  latestAt: string;
   basis: Basis;
   /** True once releaseAt has passed: the money should be available; if not, contact PayPal. */
   due: boolean;
@@ -44,7 +50,7 @@ export function forecastRelease({ hold, shipment, upload, now }: ForecastInput):
   const base = { eventId: hold.eventId, saleId: hold.saleId, amountCents };
   const done = (releaseAt: number, basis: Basis, explanation: string, action: string | null): Forecast => {
     const capped = Math.min(releaseAt, maxRelease);
-    return { ...base, releaseAt: iso(capped), basis, due: capped <= now.getTime(), explanation, action };
+    return { ...base, releaseAt: iso(capped), latestAt: iso(maxRelease), basis, due: capped <= now.getTime(), explanation, action };
   };
 
   if (!upload || !shipment) {

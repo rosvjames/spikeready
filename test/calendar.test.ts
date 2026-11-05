@@ -79,3 +79,18 @@ describe("buildCalendar", () => {
     expect(buildCalendar([], [], [], now, "America/New_York")).toEqual({ totalHeldCents: 0, days: [], actionableCents: 0 });
   });
 });
+
+describe("latest release date (PayPal may hold up to 21 days after a spike)", () => {
+  it("every forecast carries latestAt = heldAt + 21 days, even when delivered", async () => {
+    const { forecastRelease } = await import("../src/release/calendar.js");
+    const hold = {
+      eventId: "WH-L", eventType: "CHECKOUT.PAYMENT-RESOURCE.PAYMENT-ON-HOLD", heldAt: "2026-11-05T15:00:00Z", reason: "PENDING_REVIEW",
+      orderId: "O", captureId: "C", saleId: "maria-0001", amountCents: 100, currency: "USD", source: "paypal-simulator" as const,
+    };
+    const shipment = { saleId: "maria-0001", carrier: "USPS" as const, trackingNumber: "x", labelPostalCode: "11215", labelCountryCode: "US", shippedAt: "2026-11-05T20:00:00Z", estimatedDeliveryAt: null, deliveredAt: "2026-11-07T18:00:00Z" };
+    const upload = { saleId: "maria-0001", orderId: "O", trackingNumber: "x", carrier: "USPS" as const, uploadedAt: "2026-11-05T20:00:00Z", result: "UPLOADED" as const };
+    const f = forecastRelease({ hold, shipment, upload, now: new Date("2026-11-06T00:00:00Z") });
+    expect(f.releaseAt).toBe("2026-11-08T18:00:00.000Z");
+    expect(f.latestAt).toBe("2026-11-26T15:00:00.000Z");
+  });
+});
