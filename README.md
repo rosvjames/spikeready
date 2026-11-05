@@ -2,7 +2,7 @@
 
 **A copilot that gets small PayPal sellers ready for a sales spike:** it uploads tracking for every shipment (after checking the label really goes to the buyer's address), shows when each held dollar should be released, and, if PayPal limits the account, checks supplier invoices against what was sold and builds the case file **before** it is submitted.
 
-> Built for the PayPal AI Hackathon (2026). Status: work in progress, see [Project status](#project-status).
+> Built for the PayPal AI Hackathon (2026). Status: end-to-end chain running against the PayPal sandbox; see [Project status](#project-status).
 
 ## The problem
 
@@ -31,16 +31,16 @@ Maria sells sneakers. A video of hers goes viral and she sells 40 pairs in two d
 | Spike detector | Last 2 days of sales vs. the previous 14 days (fixed rule: ≥3x and ≥10 orders) | Code |
 | Verified tracking | Uploads tracking only if the carrier's check digit is valid, the payment is completed, the tracking number is not used on another sale, and the label's country and ZIP match the buyer's PayPal shipping address | Code |
 | Hold handling | Parses hold webhooks, links them to a sale by capture or order id, idempotent by event id | Code |
-| Release calendar | Delivery + 24 h, estimated delivery + 24 h while in transit, or the 21-day maximum without tracking | Code |
-| Invoice engine *(in progress)* | Reads messy invoices (PDF, photos, emails) and matches supplier product names to the seller's listings | AI reads, code reconciles |
-| Case file *(in progress)* | Organized evidence for PayPal's Resolution Center, with a hash of every original document | Code |
+| Release calendar | Expected date: delivery + 24 h, estimated delivery + 24 h while in transit, or the 21-day maximum without tracking. Latest date: 21 days, because PayPal may keep a hold after "an unusual change in your selling patterns" ([PayPal Help](https://www.paypal.com/us/cshelp/article/how-can-i-release-my-payments-on-hold-help129)) | Code |
+| Invoice engine | Reads messy invoices (PDF, photos, emails) and matches supplier product names to the seller's listings | AI reads, code reconciles |
+| Evidence pack | Organized evidence for PayPal's Resolution Center, with a hash of every original document | Code |
 
 Why AI is needed for invoices: in our cut test on 30 synthetic reseller cases with 51 planted gaps, exact-title rules found **9/51 (18%)**; reading each invoice with AI and reconciling with code found **49/51 (96%)**, and a strong model in one call found 51/51. Suppliers write "AF1 '07 WHT/WHT 10" for the seller's "Nike Air Force 1 '07 White Men's Size 10".
 
 ## PayPal APIs used
 
-- **Orders v2:** create and capture orders (`/v2/checkout/orders`, `/capture`), read orders, and add tracking (`/v2/checkout/orders/{id}/track`).
-- **Webhooks:** hold events (`CHECKOUT.PAYMENT-RESOURCE.PAYMENT-ON-HOLD`, `PAYMENT.CAPTURE.PENDING`) and the **webhook simulator** (`/v1/notifications/simulate-event`). Signature verification (`/v1/notifications/verify-webhook-signature`) *(in progress, with the webhook endpoint)*.
+- **Orders v2:** create orders, authorize and capture (`/v2/checkout/orders`, `/authorize`, `/capture`, `/v2/payments/authorizations/{id}/capture`), read orders, and add tracking (`/v2/checkout/orders/{id}/track`).
+- **Webhooks:** hold events (`CHECKOUT.PAYMENT-RESOURCE.PAYMENT-ON-HOLD`, `PAYMENT.CAPTURE.PENDING`) and the **webhook simulator** (`/v1/notifications/simulate-event`). Every delivery to `POST /webhooks/paypal` is checked with `/v1/notifications/verify-webhook-signature`; unverified events are never processed. Register the webhook with `npm run register-webhook -- --url https://<host>/webhooks/paypal`.
 - **Transaction Search** (`/v1/reporting/transactions`) and **Balances** (`/v1/reporting/balances`, including `withheld_balance`).
 
 ## Quickstart
@@ -59,11 +59,24 @@ npm run transactions   # do the sales show up in Transaction Search yet? Also ba
 npm test               # unit tests (no network)
 ```
 
-Environment variables (see `.env.example`): `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_ENV` (`sandbox` by default), and `ANTHROPIC_API_KEY` (only for the invoice engine). Options: `npm run seed -- --dry-run`, `--count 5`, `--mode paypal` (buyer-approved wallet orders if card payments are not enabled for your sandbox app), `npm run tracking -- --dry-run`.
+Environment variables (see `.env.example`): `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_ENV` (`sandbox` by default), and `ANTHROPIC_API_KEY` (only for the invoice engine). Options: `npm run seed -- --dry-run`, `--count 5`, `--mode paypal --intent authorize` (buyer-approved wallet orders if card payments are not enabled for your sandbox app; `SANDBOX_BUYER_EMAIL`/`SANDBOX_BUYER_PASSWORD` + `npm run approve` approve them in a headless browser, sandbox only), `npm run tracking -- --dry-run`, `npm run invoices -- --recorded`.
 
 The seed script pays with a sandbox test card only to create demo data without a browser. A real seller's orders come from their own checkout.
 
-Demo mode without keys (`SPIKEREADY_DEMO=1 npm run serve`): *in progress*.
+### Seller panel and demo mode
+
+```bash
+SPIKEREADY_DEMO=1 npm run serve   # http://localhost:3000, no keys needed
+```
+
+Without a local state file, demo mode replays **our recorded run against the PayPal sandbox on Nov 5, 2026** (`data/recorded/`) with the clock frozen at that time, so anyone can see the four steps without credentials. With your own run (`.spikeready/state.json`), `npm run serve` shows your data; `SPIKEREADY_DEMO=force` always shows the recording. Step 4 checks the sample invoices (recorded AI extraction, reconciled live by code) or your own files when `ANTHROPIC_API_KEY` is set.
+
+### Our sandbox run (Nov 5, 2026)
+
+- 40 orders created; **39 captured** (one was declined by the sandbox buyer's funding, `INSTRUMENT_DECLINED`).
+- **38 tracking numbers uploaded**; **1 refused** on purpose: the label for `maria-0007` goes to ZIP 60641, the buyer's PayPal address is 60614.
+- **6 `PAYMENT-ON-HOLD` events** from PayPal's simulator, re-pointed to sales: $775 on hold; calendar: $225 on Sun Nov 8, $210 on Mon Nov 9, $230 on Tue Nov 10, and $110 on Thu Nov 26 (the refused label, no tracking) unless tracking is uploaded.
+- Sandbox findings: `/v2/checkout/orders/{id}/capture` returned `500 INTERNAL_SERVICE_ERROR` for wallet orders approved by our buyer account, while **authorize → capture** worked every time, so `npm run seed -- --mode paypal --intent authorize` is the reliable path. The simulator reuses one event id, a fixed past date and a $100 sample item; `src/holds/simulator.ts` re-points all of it and marks the event as simulated.
 
 ## What is real and what is simulated
 
@@ -94,10 +107,10 @@ See [docs/architecture.md](docs/architecture.md).
 
 | Day | Date | Goal | Status |
 |---|---|---|---|
-| 1 | Thu Nov 5 | Repo, sandbox data, end-to-end chain: seed, verified tracking, hold webhook, release calendar, spike detector | ✅ Done (code and tests; sandbox run pending credentials) |
-| 2 | Fri Nov 6 | Invoice engine + integrity checks + downloadable case file | In progress |
-| 3 | Sat Nov 7 | Seller panel, webhook endpoint with signature verification, deploy | In progress |
-| 4 | Sun Nov 8 | Measured AI evaluation, more tests, demo mode without keys | Planned |
+| 1 | Thu Nov 5 | Repo, sandbox data, end-to-end chain: seed, verified tracking, hold webhook, release calendar, spike detector | ✅ Done, run end to end in the sandbox |
+| 2 | Fri Nov 6 | Invoice engine + integrity checks + downloadable evidence pack | ✅ Built (AI extraction pending a run with an API key) |
+| 3 | Sat Nov 7 | Seller panel, webhook endpoint with signature verification, deploy | ✅ Built; deploy to Render pending |
+| 4 | Sun Nov 8 | Measured AI evaluation, more tests, demo mode without keys | Demo mode ✅; evaluation harness in progress |
 | 5 | Mon Nov 9 | Feature freeze, README, JUDGING.md, video | Planned |
 | 6 | Tue Nov 10 | Video editing, Devpost text, make repo public | Planned |
 | 7 | Wed Nov 11 | Submit | Planned |
