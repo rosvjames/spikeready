@@ -31,7 +31,8 @@
     "ask": "tsx scripts/ask.ts",
     "open-dispute": "tsx scripts/open-sandbox-dispute.ts",
     "dispute-real": "tsx scripts/dispute-real.ts",
-    "record-labels": "tsx scripts/record-sample-labels.ts"
+    "record-labels": "tsx scripts/record-sample-labels.ts",
+    "cancel-wrong-tracker": "tsx scripts/cancel-wrong-tracker.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.5.0",

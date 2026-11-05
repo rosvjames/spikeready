@@ -9,7 +9,8 @@ import { DailyAiBudget, summarizeUsage } from "../../src/server/ai-rails.js";
 import { cashUnlocked } from "../../src/server/cash.js";
 import { buildDashboard } from "../../src/server/dashboard.js";
 import { createApp, type AppDeps } from "../../src/server/app.js";
-import { fixLabel, FixRequestError } from "../../src/server/fix-label.js";
+import { applyVerifiedShipment, FixRequestError } from "../../src/server/fix-label.js";
+import type { Shipment } from "../../src/domain.js";
 import { createRateLimiter } from "../../src/server/rate-limit.js";
 import { loadRecordedDemo } from "../../src/server/recorded.js";
 import type { State } from "../../src/store.js";
@@ -21,62 +22,124 @@ const fresh = (): State => structuredClone(recorded.state);
 const NOW = recorded.clock;
 const TZ = recorded.state.seller.timeZone;
 
-/** Fake sandbox: GET order (with or without our tracker), POST /track. */
-function fakeOrders(opts: { hasTracker?: boolean } = {}) {
-  let hasTracker = opts.hasTracker ?? false;
+const OLD_TRACKING = "1ZA1B2C30042002223";
+const NEW_TRACKING = "1ZA1B2C30043000072";
+const CAPTURE = recorded.state.sales.find((x) => x.saleId === "maria-0007")!.captureId!;
+
+/**
+ * Fake sandbox order for maria-0007: GET (trackers), POST /track, PATCH tracker status.
+ * `oldTracker`: the refused label's tracking on the order ("SHIPPED", "CANCELLED" or absent).
+ */
+function fakeOrders(opts: { oldTracker?: "SHIPPED" | "CANCELLED"; hasNew?: boolean; cancelFails?: boolean } = {}) {
+  let oldStatus = opts.oldTracker ?? null;
+  let hasNew = opts.hasNew ?? false;
   return fakePayPal((call) => {
     if (call.method === "GET" && call.path.startsWith("/v2/checkout/orders/")) {
-      const trackers = hasTracker ? [{ id: "CAP-1ZA1B2C30042002223", tracking_number: "1ZA1B2C30042002223", status: "SHIPPED" }] : [];
+      const trackers = [
+        ...(oldStatus ? [{ id: `${CAPTURE}-${OLD_TRACKING}`, status: oldStatus }] : []),
+        ...(hasNew ? [{ id: `${CAPTURE}-${NEW_TRACKING}`, status: "SHIPPED" }] : []),
+      ];
       return { body: { id: "2PF47471EF114104V", status: "COMPLETED", purchase_units: [{ shipping: { trackers } }] }, headers: { "paypal-debug-id": "dbg-get" } };
     }
     if (call.method === "POST" && call.path.endsWith("/track")) {
-      hasTracker = true;
+      hasNew = true;
       return { status: 201, body: { id: "2PF47471EF114104V", status: "COMPLETED" }, headers: { "paypal-debug-id": "dbg-track" } };
+    }
+    if (call.method === "PATCH" && call.path.includes("/trackers/")) {
+      if (opts.cancelFails) return { status: 422, body: { name: "UNPROCESSABLE_ENTITY", details: [{ issue: "TRACKER_NOT_UPDATABLE" }] }, headers: { "paypal-debug-id": "dbg-cancel-fail" } };
+      oldStatus = "CANCELLED";
+      return { status: 200, headers: { "paypal-debug-id": "dbg-cancel" } }; // PayPal answers 204; the fake Response cannot carry 204
     }
     return { status: 404, body: {} };
   });
 }
 
-describe("fix a refused label", () => {
-  it("refuses again when the corrected ZIP still does not match, and changes nothing", async () => {
+/** The reprinted label as code verified it: new tracking number, buyer's ZIP. */
+function reprinted(s: State, tracking = NEW_TRACKING): { refused: Shipment; corrected: Shipment } {
+  const refused = s.shipments.find((x) => x.saleId === "maria-0007")!;
+  return { refused, corrected: { ...refused, trackingNumber: tracking, labelPostalCode: "60614" } };
+}
+const lastReceipt = (pp: ReturnType<typeof fakeOrders>) => () => {
+  const calls = pp.apiCalls();
+  const c = calls[calls.length - 1];
+  const debug = c?.method === "PATCH" ? "dbg-cancel" : c?.method === "POST" ? "dbg-track" : "dbg-get";
+  return c ? { method: c.method, path: c.path, status: 200, debugId: debug, at: NOW.toISOString() } : null;
+};
+
+describe("replace a refused label (reprinted label, new tracking number)", () => {
+  it("refuses the refused label's own tracking number: typing a ZIP cannot re-attest it", async () => {
     const s = fresh();
-    const out = await fixLabel(s, { saleId: "maria-0007", labelPostalCode: "60615" }, { paypal: null, now: NOW });
-    expect(out.response).toMatchObject({ status: "REFUSED", code: "POSTAL_CODE_MISMATCH" });
-    expect(out.state).toBe(s);
+    const { refused } = reprinted(s);
+    const sale = s.sales.find((x) => x.saleId === "maria-0007")!;
+    await expect(applyVerifiedShipment(s, sale, refused, { ...refused, labelPostalCode: "60614" }, { paypal: null, now: NOW })).rejects.toMatchObject({ status: 409 });
+    await expect(applyVerifiedShipment(s, sale, refused, { ...refused, labelPostalCode: "60614" }, { paypal: null, now: NOW })).rejects.toBeInstanceOf(FixRequestError);
   });
 
-  it("only works for a label refused for its ZIP", async () => {
-    await expect(fixLabel(fresh(), { saleId: "maria-0001", labelPostalCode: "30309" }, { paypal: null, now: NOW })).rejects.toMatchObject({ status: 409 });
-    await expect(fixLabel(fresh(), { saleId: "nope", labelPostalCode: "30309" }, { paypal: null, now: NOW })).rejects.toBeInstanceOf(FixRequestError);
-    await expect(fixLabel(fresh(), { saleId: "maria-0007" }, { paypal: null, now: NOW })).rejects.toMatchObject({ status: 400 });
-  });
-
-  it("with the right ZIP: uploads to PayPal with a deterministic request id and moves the release 17 days sooner", async () => {
-    const pp = fakeOrders();
-    const out = await fixLabel(fresh(), { saleId: "maria-0007", labelPostalCode: "60614" }, { paypal: pp.client, now: NOW, lastReceipt: () => ({ method: "POST", path: "/track", status: 201, debugId: "dbg-track", at: NOW.toISOString() }) });
-    expect(out.response).toMatchObject({ status: "UPLOADED", simulated: false, paypalDebugId: "dbg-track" });
-    const post = pp.apiCalls().find((c) => c.method === "POST")!;
-    expect(post.path).toBe("/v2/checkout/orders/2PF47471EF114104V/track");
-    expect(post.headers["PayPal-Request-Id"]).toBe("spikeready-track-2PF47471EF114104V-1ZA1B2C30042002223");
+  it("uploads the new tracking, then cancels the earlier wrong-address tracker on the order", async () => {
+    const pp = fakeOrders({ oldTracker: "SHIPPED" });
+    const s = fresh();
+    const { refused, corrected } = reprinted(s);
+    const sale = s.sales.find((x) => x.saleId === "maria-0007")!;
+    const out = await applyVerifiedShipment(s, sale, refused, corrected, { paypal: pp.client, now: NOW, lastReceipt: lastReceipt(pp) });
     if (out.response.status === "REFUSED") throw new Error("unexpected");
+    expect(out.response).toMatchObject({ status: "UPLOADED", simulated: false, newLabel: true, paypalDebugId: "dbg-track", trackingNumber: NEW_TRACKING });
+    expect(out.response.message).toContain("addressed to the buyer's PayPal shipping address");
+    expect(out.response.previousTracker).toMatchObject({ status: "CANCELLED", trackerId: `${CAPTURE}-${OLD_TRACKING}`, paypalDebugId: "dbg-cancel" });
+    const calls = pp.apiCalls().map((c) => `${c.method} ${c.path}`);
+    const post = calls.findIndex((c) => c.startsWith("POST") && c.endsWith("/track"));
+    const patch = calls.findIndex((c) => c.startsWith("PATCH"));
+    expect(post).toBeGreaterThanOrEqual(0);
+    expect(patch).toBeGreaterThan(post); // the order always has a valid tracker
+    const p = pp.apiCalls()[patch]!;
+    expect(p.path).toBe(`/v2/checkout/orders/2PF47471EF114104V/trackers/${CAPTURE}-${OLD_TRACKING}`);
+    expect(JSON.parse(p.body as string)).toEqual([{ op: "replace", path: "/status", value: "CANCELLED" }]);
+    expect(p.headers["PayPal-Request-Id"]).toBe(`spikeready-cancel-tracker-2PF47471EF114104V-${CAPTURE}-${OLD_TRACKING}`);
+    expect(pp.apiCalls().find((c) => c.method === "POST")!.headers["PayPal-Request-Id"]).toBe(`spikeready-track-2PF47471EF114104V-${NEW_TRACKING}`);
     expect(out.response.release).toMatchObject({ amountCents: 11_000, daysSooner: 17 });
-    expect(out.response.release!.headline).toBe("$110.00 moves from Thursday, Nov 26 to Monday, Nov 9: 17 days sooner");
-    // The panel now shows the sale on PayPal and the calendar has nothing left to unlock.
     const d = buildDashboard(out.state, NOW, true);
     expect(d.sales.find((x) => x.saleId === "maria-0007")!.tracking.status).toBe("UPLOADED");
     expect(d.calendar.actionableCents).toBe(0);
   });
 
-  it("is idempotent: when PayPal already has the tracker, nothing is posted twice", async () => {
-    const pp = fakeOrders({ hasTracker: true });
-    const out = await fixLabel(fresh(), { saleId: "maria-0007", labelPostalCode: "60614" }, { paypal: pp.client, now: NOW });
+  it("is idempotent: new tracking already on PayPal and old tracker already cancelled → no POST, no PATCH", async () => {
+    const pp = fakeOrders({ oldTracker: "CANCELLED", hasNew: true });
+    const s = fresh();
+    const { refused, corrected } = reprinted(s);
+    const out = await applyVerifiedShipment(s, s.sales.find((x) => x.saleId === "maria-0007")!, refused, corrected, { paypal: pp.client, now: NOW });
+    if (out.response.status === "REFUSED") throw new Error("unexpected");
     expect(out.response.status).toBe("ALREADY_ON_PAYPAL");
-    expect(pp.apiCalls().filter((c) => c.method === "POST")).toHaveLength(0);
+    expect(out.response.previousTracker).toMatchObject({ status: "ALREADY_CANCELLED" });
+    expect(pp.apiCalls().filter((c) => c.method !== "GET")).toHaveLength(0);
   });
 
-  it("without PayPal credentials the upload is marked as simulated", async () => {
-    const out = await fixLabel(fresh(), { saleId: "maria-0007", labelPostalCode: "60614" }, { paypal: null, now: NOW });
+  it("reports NOT_ON_PAYPAL when the wrong label's tracking never reached PayPal", async () => {
+    const pp = fakeOrders();
+    const s = fresh();
+    const { refused, corrected } = reprinted(s);
+    const out = await applyVerifiedShipment(s, s.sales.find((x) => x.saleId === "maria-0007")!, refused, corrected, { paypal: pp.client, now: NOW });
+    if (out.response.status === "REFUSED") throw new Error("unexpected");
+    expect(out.response.previousTracker).toMatchObject({ status: "NOT_ON_PAYPAL", trackerId: null });
+    expect(pp.apiCalls().filter((c) => c.method === "PATCH")).toHaveLength(0);
+  });
+
+  it("a failed cancel keeps the upload and tells the seller to cancel the old tracker in PayPal", async () => {
+    const pp = fakeOrders({ oldTracker: "SHIPPED", cancelFails: true });
+    const s = fresh();
+    const { refused, corrected } = reprinted(s);
+    const out = await applyVerifiedShipment(s, s.sales.find((x) => x.saleId === "maria-0007")!, refused, corrected, { paypal: pp.client, now: NOW });
+    if (out.response.status === "REFUSED") throw new Error("unexpected");
+    expect(out.response.status).toBe("UPLOADED");
+    expect(out.response.previousTracker).toMatchObject({ status: "CANCEL_FAILED", paypalDebugId: "dbg-cancel-fail" });
+    expect(out.response.previousTracker!.message).toContain("cancel the old one in PayPal");
+  });
+
+  it("without PayPal credentials: simulated upload and a simulated cancel note", async () => {
+    const s = fresh();
+    const { refused, corrected } = reprinted(s);
+    const out = await applyVerifiedShipment(s, s.sales.find((x) => x.saleId === "maria-0007")!, refused, corrected, { paypal: null, now: NOW });
+    if (out.response.status === "REFUSED") throw new Error("unexpected");
     expect(out.response).toMatchObject({ status: "UPLOADED", simulated: true, paypalDebugId: null });
+    expect(out.response.previousTracker).toMatchObject({ status: "SIMULATED", simulated: true, trackerId: `${CAPTURE}-${OLD_TRACKING}` });
   });
 });
 
@@ -153,18 +216,16 @@ async function start(over: Partial<AppDeps> = {}) {
 }
 const postJson = (url: string, body: unknown) => fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 
-describe("POST /api/tracking/fix", () => {
-  it("fixes the refused label (simulated without PayPal), shows it in the dashboard, and rate-limits", async () => {
-    const base = await start({ rateLimits: { fixPerMinute: 3 } });
-    const bad = await (await postJson(`${base}/api/tracking/fix`, { saleId: "maria-0007", labelPostalCode: "60641" })).json();
-    expect(bad.status).toBe("REFUSED");
-    const ok = await (await postJson(`${base}/api/tracking/fix`, { saleId: "maria-0007", labelPostalCode: "60614" })).json();
-    expect(ok).toMatchObject({ status: "UPLOADED", simulated: true, resetsOnRestart: true, release: { daysSooner: 17 } });
+describe("POST /api/tracking/fix (typed ZIP)", () => {
+  it("is gone: answers 410 and points to the reprinted-label upload", async () => {
+    const base = await start();
+    const res = await postJson(`${base}/api/tracking/fix`, { saleId: "maria-0007", labelPostalCode: "60614" });
+    expect(res.status).toBe(410);
+    const body = await res.json();
+    expect(body.use).toBe("/api/tracking/label");
+    expect(body.error).toContain("reprinted label");
     const d = await (await fetch(`${base}/api/dashboard`)).json();
-    expect(d.fixes["maria-0007"]).toMatchObject({ simulated: true });
-    expect(d.sales.find((x: { saleId: string }) => x.saleId === "maria-0007").tracking.status).toBe("UPLOADED");
-    expect((await postJson(`${base}/api/tracking/fix`, { saleId: "maria-0007", labelPostalCode: "60614" })).status).toBe(409);
-    expect((await postJson(`${base}/api/tracking/fix`, { saleId: "maria-0007", labelPostalCode: "60614" })).status).toBe(429);
+    expect(d.sales.find((x: { saleId: string }) => x.saleId === "maria-0007").tracking.status).toBe("REJECTED");
   });
 });
 

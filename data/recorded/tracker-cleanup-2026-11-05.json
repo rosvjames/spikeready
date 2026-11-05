@@ -1,0 +1,56 @@
+{
+  "recordedAt": "2026-11-05T07:32:26.197Z",
+  "source": "PayPal sandbox",
+  "note": "maria-0007's first label went to ZIP 60641 (buyer: 60614). An earlier demo run uploaded that label's tracking through the typed-ZIP fix, which has since been removed. The reprinted label (new tracking 1ZA1B2C30043000072) replaces it; this cancels the wrong-address tracker.",
+  "orderId": "2PF47471EF114104V",
+  "trackerToCancel": "102425077C151171L-1ZA1B2C30042002223",
+  "before": {
+    "trackers": [
+      {
+        "id": "102425077C151171L-1ZA1B2C30042002223",
+        "trackingNumber": "1ZA1B2C30042002223",
+        "status": "SHIPPED"
+      },
+      {
+        "id": "102425077C151171L-1ZA1B2C30043000072",
+        "trackingNumber": "1ZA1B2C30043000072",
+        "status": "SHIPPED"
+      }
+    ],
+    "paypalDebugId": "f36250268930f",
+    "at": "2026-11-05T07:32:24.314Z"
+  },
+  "cancel": {
+    "request": {
+      "method": "PATCH",
+      "path": "/v2/checkout/orders/2PF47471EF114104V/trackers/102425077C151171L-1ZA1B2C30042002223",
+      "body": [
+        {
+          "op": "replace",
+          "path": "/status",
+          "value": "CANCELLED"
+        }
+      ]
+    },
+    "ok": true,
+    "status": 204,
+    "debugId": "f362502fef6e3",
+    "error": null
+  },
+  "after": {
+    "trackers": [
+      {
+        "id": "102425077C151171L-1ZA1B2C30042002223",
+        "trackingNumber": "1ZA1B2C30042002223",
+        "status": "CANCELLED"
+      },
+      {
+        "id": "102425077C151171L-1ZA1B2C30043000072",
+        "trackingNumber": "1ZA1B2C30043000072",
+        "status": "SHIPPED"
+      }
+    ],
+    "paypalDebugId": "f19238502e9a1",
+    "at": "2026-11-05T07:32:26.195Z"
+  }
+}

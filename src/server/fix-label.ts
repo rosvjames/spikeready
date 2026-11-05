@@ -1,11 +1,13 @@
-// "Fix the label": the one action the demo lets a visitor take on PayPal. A label refused because its
-// ZIP does not match the buyer's PayPal shipping address can be corrected; code re-verifies it and,
-// only if it now matches, uploads the tracking to the sandbox order (idempotent), then shows how the
-// release date moves. Nothing else can be uploaded from here, and a wrong ZIP is refused again.
-import { z } from "zod";
+// "Fix the label": the one action the demo lets a visitor take on PayPal. A label refused because it
+// goes to the wrong ZIP is replaced by a reprinted label (read by AI, checked by code in
+// src/server/label-upload.ts); only then does the new tracking go to the PayPal order (idempotent),
+// and any tracker on the order that still carries the refused label's number is cancelled, so the
+// order never keeps a tracking number for the wrong address. Typing a corrected ZIP for the same
+// label is not accepted: that would only re-attest the old tracking number.
 import { formatUsd, type Sale, type Shipment, type TrackingUpload } from "../domain.js";
 import type { CallReceipt, PayPalClient } from "../paypal/client.js";
 import { PayPalApiError } from "../paypal/client.js";
+import { cancelTracker, getOrder, orderTrackers } from "../paypal/orders.js";
 import { forecastRelease, localDate, weekdayLabel, type Forecast } from "../release/calendar.js";
 import type { State } from "../store.js";
 import { normalizeTracking } from "../tracking/numbers.js";
@@ -19,10 +21,19 @@ export class FixRequestError extends Error {
   }
 }
 
-export const FixRequest = z.object({
-  saleId: z.string().min(1).max(40),
-  labelPostalCode: z.string().trim().min(3).max(12),
-});
+/** Why typing a ZIP is refused, and where to go instead. */
+export const TYPED_ZIP_GONE =
+  "Typing a corrected ZIP is no longer accepted: the refused label really went to the wrong address, so its tracking number cannot prove delivery to the buyer. Upload the reprinted label instead (POST /api/tracking/label); SpikeReady reads it and checks it before anything goes to PayPal.";
+
+/** What happened to the tracking from the refused (wrong-address) label on the PayPal order. */
+export interface PreviousTracker {
+  trackerId: string | null;
+  trackingNumber: string;
+  status: "CANCELLED" | "ALREADY_CANCELLED" | "NOT_ON_PAYPAL" | "SIMULATED" | "CANCEL_FAILED";
+  simulated: boolean;
+  paypalDebugId: string | null;
+  message: string;
+}
 
 export interface ReleaseMove {
   amountCents: number;
@@ -47,6 +58,8 @@ export type FixResponse =
       paypalDebugId: string | null;
       release: ReleaseMove | null;
       message: string;
+      /** The refused label's tracking on the PayPal order: cancelled, already cancelled, absent, or simulated. */
+      previousTracker: PreviousTracker | null;
     };
 
 export interface FixContext {
@@ -79,30 +92,6 @@ export function releaseMove(before: Forecast | null, after: Forecast | null, tim
   };
 }
 
-/** Returns the new state (unchanged when refused) and the response. */
-export async function fixLabel(state: State, raw: unknown, ctx: FixContext): Promise<{ state: State; response: FixResponse }> {
-  const parsed = FixRequest.safeParse(raw);
-  if (!parsed.success) throw new FixRequestError(400, "Send {saleId, labelPostalCode}.");
-  const { saleId, labelPostalCode } = parsed.data;
-  const sale: Sale | undefined = state.sales.find((s) => s.saleId === saleId);
-  const shipment = state.shipments.find((s) => s.saleId === saleId);
-  if (!sale || !shipment) throw new FixRequestError(404, `No sale with a shipping label: ${saleId}.`);
-
-  // Only a label refused for its ZIP can be corrected here.
-  const current = verifyShipment(sale, shipment, { uploads: state.uploads });
-  if (current.decision !== "REJECT" || current.code !== "POSTAL_CODE_MISMATCH") {
-    throw new FixRequestError(409, "Only a label refused because its ZIP does not match the buyer's address can be fixed here.");
-  }
-
-  const corrected: Shipment = { ...shipment, labelPostalCode };
-  const verdict = verifyShipment(sale, corrected, { uploads: state.uploads });
-  if (verdict.decision !== "UPLOAD") {
-    const code = verdict.decision === "REJECT" ? verdict.code : verdict.code;
-    return { state, response: { status: "REFUSED", saleId, code, reason: verdict.message } };
-  }
-  return applyVerifiedShipment(state, sale, shipment, corrected, ctx);
-}
-
 /** The sale's current label was refused because its ZIP does not match the buyer's PayPal address. */
 export function isZipRefused(state: State, saleId: string): boolean {
   const sale = state.sales.find((s) => s.saleId === saleId);
@@ -113,10 +102,11 @@ export function isZipRefused(state: State, saleId: string): boolean {
 }
 
 /**
- * Shared by both fix paths (typed ZIP and reprinted label read by AI): a shipment that code has
- * already verified replaces the refused one, its tracking goes to the PayPal order (real sandbox
- * call when PayPal is configured, idempotent; otherwise clearly simulated), and the release move is
- * computed from the before and after forecasts. The caller must have verified `corrected`.
+ * A reprinted label that code has already verified replaces the refused one: its NEW tracking goes to
+ * the PayPal order (real sandbox call when PayPal is configured, idempotent; otherwise clearly
+ * simulated), then any tracker on the order with the refused label's number is cancelled, and the
+ * release move is computed from the before and after forecasts. The caller must have verified
+ * `corrected`; the same tracking number as the refused label is refused here.
  */
 export async function applyVerifiedShipment(
   state: State,
@@ -126,10 +116,15 @@ export async function applyVerifiedShipment(
   ctx: FixContext,
 ): Promise<{ state: State; response: FixResponse }> {
   const saleId = sale.saleId;
-  const newLabel = normalizeTracking(corrected.trackingNumber) !== normalizeTracking(refused.trackingNumber);
+  const refusedTracking = normalizeTracking(refused.trackingNumber);
+  const newLabel = normalizeTracking(corrected.trackingNumber) !== refusedTracking;
+  if (!newLabel) {
+    throw new FixRequestError(409, "This is the tracking number of the refused label. A label that went to the wrong address needs a reprinted label with a new tracking number.");
+  }
   const before = forecastFor(state, saleId, refused, undefined, ctx.now);
   let upload: TrackingUpload;
   let paypalDebugId: string | null = null;
+  let previousTracker: PreviousTracker;
   if (ctx.paypal) {
     try {
       const out = await uploadVerifiedTracking(ctx.paypal, sale, corrected, state.uploads, () => ctx.now);
@@ -140,6 +135,7 @@ export async function applyVerifiedShipment(
       if (err instanceof PayPalApiError) throw new FixRequestError(502, `PayPal did not accept the tracking (${err.status}). Nothing changed.`);
       throw err;
     }
+    previousTracker = await cancelRefusedTracker(ctx, sale.orderId, refusedTracking);
   } else {
     upload = {
       saleId,
@@ -148,6 +144,14 @@ export async function applyVerifiedShipment(
       carrier: corrected.carrier,
       uploadedAt: ctx.now.toISOString(),
       result: "UPLOADED",
+    };
+    previousTracker = {
+      trackerId: sale.captureId ? `${sale.captureId}-${refusedTracking}` : null,
+      trackingNumber: refusedTracking,
+      status: "SIMULATED",
+      simulated: true,
+      paypalDebugId: null,
+      message: "Simulated: on a server with PayPal credentials, SpikeReady checks the order and cancels the earlier tracking (wrong address) if it is there.",
     };
   }
 
@@ -159,13 +163,12 @@ export async function applyVerifiedShipment(
   const after = forecastFor(next, saleId, corrected, upload, ctx.now);
   const release = releaseMove(before, after, state.seller.timeZone);
   const simulated = !ctx.paypal;
+  const checked = "Label checked: addressed to the buyer's PayPal shipping address.";
   const message = simulated
-    ? "Label verified. Simulated upload: this server has no PayPal credentials, so nothing was sent to PayPal."
+    ? `${checked} Simulated upload: this server has no PayPal credentials, so nothing was sent to PayPal.`
     : upload.result === "ALREADY_ON_PAYPAL"
-      ? `Label verified. PayPal already has this tracking on the order (for example from an earlier demo run), so nothing was uploaded twice.`
-      : newLabel
-        ? "New label uploaded to PayPal (the earlier tracking stays on the order)."
-        : "Label verified and tracking uploaded to the PayPal sandbox order.";
+      ? `${checked} PayPal already has this tracking on the order (from an earlier demo run), so nothing was uploaded twice.`
+      : `${checked} New tracking uploaded to the PayPal order.`;
   return {
     state: next,
     response: {
@@ -179,6 +182,39 @@ export async function applyVerifiedShipment(
       paypalDebugId,
       release,
       message,
+      previousTracker,
     },
   };
+}
+
+/**
+ * After the new tracking is on the order: cancel every tracker that still carries the refused label's
+ * number (only that number, only on this order). Idempotent: an already cancelled tracker is left alone.
+ * A failed cancel does not undo the upload; it is reported so the seller can cancel it in PayPal.
+ */
+async function cancelRefusedTracker(ctx: FixContext, orderId: string, refusedTracking: string): Promise<PreviousTracker> {
+  const paypal = ctx.paypal!;
+  const debugId = () => ctx.lastReceipt?.()?.debugId ?? null;
+  let base: Omit<PreviousTracker, "status" | "message" | "paypalDebugId"> = { trackerId: null, trackingNumber: refusedTracking, simulated: false };
+  try {
+    const trackers = orderTrackers(await getOrder(paypal, orderId)).filter((t) => normalizeTracking(t.trackingNumber) === refusedTracking);
+    const live = trackers.find((t) => t.status !== "CANCELLED");
+    if (!live) {
+      const done = trackers[0];
+      return done
+        ? { ...base, trackerId: done.id, status: "ALREADY_CANCELLED", paypalDebugId: debugId(), message: "The earlier tracking (wrong address) is already cancelled on the PayPal order." }
+        : { ...base, status: "NOT_ON_PAYPAL", paypalDebugId: debugId(), message: "The earlier tracking (wrong address) was never on the PayPal order, so there was nothing to cancel." };
+    }
+    base = { ...base, trackerId: live.id };
+    await cancelTracker(paypal, orderId, live.id);
+    return { ...base, status: "CANCELLED", paypalDebugId: debugId(), message: "Cancelled the earlier tracking (wrong address) on the PayPal order." };
+  } catch (err) {
+    if (!(err instanceof PayPalApiError)) throw err;
+    return {
+      ...base,
+      status: "CANCEL_FAILED",
+      paypalDebugId: err.debugId,
+      message: `PayPal did not cancel the earlier tracking (wrong address) (${err.status}). The new tracking is on the order; cancel the old one in PayPal.`,
+    };
+  }
 }

@@ -112,8 +112,6 @@ try {
       await page.locator(id).screenshot({ path: join(imgDir, file) });
     }
   }
-  // The live action: fix the refused label. A wrong ZIP is refused again; the buyer's ZIP is uploaded
-  // (simulated here: no PayPal credentials) and the release date moves 17 days sooner.
   const recentLabels = await page.locator("#spike-body .recent-label").allTextContents();
   check("spike chart: one non-overlapping label for the recent window", recentLabels.length === 1 && /^Nov \d+–\d+$/.test(recentLabels[0] ?? ""), recentLabels.join(" | "));
   const cal = await text("#step-calendar");
@@ -132,7 +130,10 @@ try {
   // label is refused by code (ZIP 60641 vs 60614, and a misread digit fails the check digit); the
   // reprinted label passes every check, is uploaded (simulated here: no PayPal credentials) and the
   // release moves 15 days sooner (a new label has no carrier estimate: 5 days of transit assumed).
-  check("fix label: the label-reading path is the primary action; typing a ZIP is only a fallback", await page.locator('[data-label-sample="fixed"]').isVisible() && !(await page.locator("#fix-maria-0007").isVisible()));
+  check(
+    "fix label: only the reprinted-label path exists (no typed-ZIP form)",
+    (await page.locator('[data-label-sample="fixed"]').isVisible()) && (await page.locator("#fix-maria-0007").count()) === 0 && /Typing a corrected ZIP is not enough/.test(await text("#step-tracking")),
+  );
   await page.locator('[data-label-sample="wrong"]').click();
   await page.locator("#label-result-maria-0007 .error").waitFor({ timeout: 10_000 });
   const wrong = await text("#label-result-maria-0007");
@@ -145,6 +146,17 @@ try {
   check("fix label: says only this visitor's copy changed", /Only your copy of the demo changed/.test(moved));
   const reading = page.locator("#tracking-body .fixed-row .label-reading");
   check("reprinted label: reading stays under the row with every code check passed", (await reading.count()) === 1 && (await reading.locator(".ck.bad").count()) === 0 && (await reading.locator(".ck.ok").count()) >= 5 && /1ZA1B2C30043000072/.test(await reading.innerText()));
+  const readingText = await reading.innerText();
+  check(
+    "reprinted label: wording says 'addressed to the buyer' and names what can't be checked yet",
+    /Label checked: addressed to the buyer's PayPal shipping address/.test(readingText) && /What we can't check yet: carrier confirmation of the address and delivery/.test(readingText),
+    readingText.slice(0, 300),
+  );
+  check(
+    "reprinted label: the earlier (wrong-address) tracking is handled (cancel simulated without credentials)",
+    /cancels the earlier tracking \(wrong address\)/.test(readingText),
+    readingText.slice(-300),
+  );
   if (shots) await page.locator("#tracking-body tr.fixed-row").screenshot({ path: join(imgDir, "step2-label.png") });
   check("fix label: row now shows the (simulated) upload", /maria-0007[\s\S]*Simulated upload/.test(await text("#step-tracking")) && !(await page.locator("#tracking-body tr.rejected").count()));
   check("fix label: nothing left to unlock", !/could be released sooner/.test(await text("#step-calendar")));

@@ -168,7 +168,7 @@ function renderTracking(d) {
         <td>${esc(s.shipTo.city)}, ${esc(s.shipTo.state)} <strong>${esc(s.shipTo.postalCode)}</strong></td>
         <td class="mono hide-sm">${esc(s.tracking.carrier ?? "")} ${esc(s.tracking.trackingNumber ?? "")}<br><span class="muted">label ZIP ${esc(s.tracking.labelPostalCode ?? "-")}</span></td>
         <td><span class="pill ${cls}">${label}</span><span class="show-sm muted">${esc(s.tracking.carrier ?? "")} · label ZIP ${esc(s.tracking.labelPostalCode ?? "-")}</span></td>
-      </tr>${rej && s.tracking.reason ? `<tr class="rejected reason-row"${more}><td colspan="6"><span class="reason">Why: ${esc(s.tracking.reason)}</span>${fixForm}</td></tr>` : ""}${fix ? `<tr class="fixed-row"${more}><td colspan="6"><span class="fine">${fixedLine(fix, d)}${fix.paypalDebugId ? ` · PayPal-Debug-Id <span class="mono">${esc(fix.paypalDebugId)}</span>` : ""}.</span>${labelResults[s.saleId] ? renderLabelResult(s.saleId, labelResults[s.saleId]) : ""}</td></tr>` : ""}`;
+      </tr>${rej && s.tracking.reason ? `<tr class="rejected reason-row"${more}><td colspan="6"><span class="reason">Why: ${esc(s.tracking.reason)}</span>${fixForm}</td></tr>` : ""}${fix ? `<tr class="fixed-row"${more}><td colspan="6"><span class="fine">${fixedLine(fix, d)}${fix.paypalDebugId ? ` · PayPal-Debug-Id <span class="mono">${esc(fix.paypalDebugId)}</span>` : ""}.</span>${labelResults[s.saleId] ? renderLabelResult(s.saleId, labelResults[s.saleId]) : previousTrackerLine(fix.previousTracker)}</td></tr>` : ""}`;
     })
     .join("");
   $("tracking-body").className = "";
@@ -178,7 +178,6 @@ function renderTracking(d) {
       <thead><tr><th>Sale</th><th class="hide-sm">Items</th><th class="num">Amount</th><th>Buyer address (PayPal)</th><th class="hide-sm">Label</th><th>Status</th></tr></thead>
       <tbody>${rows}</tbody></table></div>
     ${d.sales.length > VISIBLE ? `<button type="button" class="more" id="more-sales" aria-expanded="false">Show all ${d.sales.length} sales</button>` : ""}`;
-  for (const form of document.querySelectorAll(".fix-form")) form.addEventListener("submit", onFixSubmit);
   for (const b of document.querySelectorAll("[data-label-sample]")) b.addEventListener("click", onLabelSample);
   for (const f of document.querySelectorAll("[data-label-file]")) f.addEventListener("change", onLabelFile);
   const more = $("more-sales");
@@ -197,10 +196,18 @@ const labelResults = {};
 
 function fixedLine(fix, d) {
   const where = d.perVisitor ? " in your copy of the demo" : "";
-  if (fix.simulated) return `Label fixed${where} (simulated upload: no PayPal credentials on this server)`;
-  if (fix.status === "ALREADY_ON_PAYPAL") return `Label fixed${where}: PayPal already has this tracking from an earlier demo run, so nothing was uploaded twice`;
-  if (fix.newLabel) return `Reprinted label verified${where}: new label uploaded to PayPal (the earlier tracking stays on the order)`;
-  return `Label fixed${where}: tracking uploaded to the PayPal sandbox order`;
+  const checked = `Reprinted label checked${where}: addressed to the buyer's PayPal shipping address`;
+  if (fix.simulated) return `${checked} (simulated upload: no PayPal credentials on this server)`;
+  if (fix.status === "ALREADY_ON_PAYPAL") return `${checked}. PayPal already has this tracking from an earlier demo run, so nothing was uploaded twice`;
+  return `${checked}. New tracking uploaded to the PayPal order`;
+}
+
+/** What happened to the refused label's tracking on the PayPal order (cancelled, absent, simulated). */
+function previousTrackerLine(p) {
+  if (!p) return "";
+  const id = p.paypalDebugId ? ` PayPal-Debug-Id <span class="mono">${esc(p.paypalDebugId)}</span>.` : "";
+  const cls = p.status === "CANCEL_FAILED" ? "error" : "fine";
+  return `<p class="${cls} prev-tracker">${esc(p.message)}${id}</p>`;
 }
 
 function labelFixBlock(s, d) {
@@ -217,10 +224,7 @@ function labelFixBlock(s, d) {
     </div>
     ${liveAi ? "" : `<p class="fine">Reading your own label needs live AI, which is off on this public demo. The sample labels show the real readings Claude Sonnet 5 made on Nov 5.</p>`}
     <div class="label-result" id="label-result-${id}" aria-live="polite">${labelResults[s.saleId] ? renderLabelResult(s.saleId, labelResults[s.saleId]) : ""}</div>
-    <details class="zip-fallback"><summary>I already reprinted it, just re-check the ZIP</summary>
-      <form class="fix-form" data-sale="${id}"><label for="fix-${id}">Label ZIP</label><input id="fix-${id}" name="zip" inputmode="numeric" autocomplete="off" maxlength="10" value="${esc(s.tracking.labelPostalCode ?? "")}"><button type="submit" class="btn btn-secondary">Re-check and upload</button><span class="fine">Uses the ZIP you type: uploading the label itself is stronger proof.</span></form>
-      <div class="fix-result" id="fix-result-${id}" aria-live="polite"></div>
-    </details>
+    <p class="fine">Typing a corrected ZIP is not enough: this label really went to the wrong address, so its tracking number cannot prove delivery to the buyer. Upload the reprinted label.</p>
   </div>`;
 }
 
@@ -243,7 +247,7 @@ function renderLabelResult(saleId, r) {
     verdict = `<p class="error" role="alert"><strong>Refused, nothing sent to PayPal.</strong> ${(l.reasons ?? []).map(esc).join(" ")}</p>`;
   } else if (r.upload) {
     const u = r.upload;
-    verdict = `<p class="ok-line" role="status"><strong>${esc(u.message)}</strong>${u.paypalDebugId ? ` PayPal-Debug-Id <span class="mono">${esc(u.paypalDebugId)}</span>.` : ""}${u.release ? ` ${esc(u.release.headline)}. <a href="#step-calendar">See the calendar ↓</a>` : ""}</p>`;
+    verdict = `<p class="ok-line" role="status"><strong>${esc(u.message)}</strong>${u.paypalDebugId ? ` PayPal-Debug-Id <span class="mono">${esc(u.paypalDebugId)}</span>.` : ""}${u.release ? ` ${esc(u.release.headline)}. <a href="#step-calendar">See the calendar ↓</a>` : ""}</p>${previousTrackerLine(u.previousTracker)}`;
   } else if (l.verdict === "ALREADY_UPLOADED") {
     verdict = `<p class="ok-line">This tracking is already on the PayPal order.</p>`;
   }
@@ -253,6 +257,7 @@ function renderLabelResult(saleId, r) {
       ${field("Carrier", x.carrier)}${field("Tracking number", x.tracking_number)}${field("Ship to", addr)}${field("Ship date", x.ship_date)}
     </tbody></table>
     <p class="checks-title"><strong>What code checked</strong></p><ul class="label-checks">${checks}</ul>
+    <p class="fine cant-check">What we can't check yet: carrier confirmation of the address and delivery (next step).</p>
     ${verdict}</div></div>`;
 }
 
@@ -301,34 +306,6 @@ function onLabelFile(e) {
     void sendLabel(input.dataset.sale, { file: { name: file.name, mediaType, base64 } }, thumb);
   };
   reader.readAsDataURL(file);
-}
-
-// The one action on PayPal the demo allows: correct a label refused for its ZIP. The server's code
-// re-verifies it and uploads only if it now matches the buyer's PayPal address.
-async function onFixSubmit(e) {
-  e.preventDefault();
-  const form = e.currentTarget;
-  const saleId = form.dataset.sale;
-  const out = $(`fix-result-${saleId}`);
-  const button = form.querySelector("button");
-  button.disabled = true;
-  out.innerHTML = `<p class="loading">Re-checking the label…</p>`;
-  try {
-    const res = await fetch("/api/tracking/fix", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ saleId, labelPostalCode: form.zip.value.trim() }) });
-    const r = await res.json();
-    if (!res.ok) throw new Error(r.error ?? `HTTP ${res.status}`);
-    if (r.status === "REFUSED") {
-      out.innerHTML = `<p class="error" role="alert">Still refused: ${esc(r.reason)}</p>`;
-      return;
-    }
-    await loadDashboard();
-    // The calendar now shows the move (from this visitor's fixes); take the seller there.
-    if (r.release) $("step-calendar").scrollIntoView({ behavior: "smooth", block: "start" });
-  } catch (err) {
-    out.innerHTML = `<p class="error" role="alert">${esc(err.message)}</p>`;
-  } finally {
-    button.disabled = false;
-  }
 }
 
 // ---- Step 4: invoices. The server reads (AI) and reconciles (code); the panel only shows the result.

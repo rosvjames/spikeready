@@ -16,7 +16,7 @@ import { cachedBalance, defaultProofPath, loadProof, loadWebhookProof, readBalan
 import { dirname } from "node:path";
 import type { CallReceipt } from "../paypal/client.js";
 import { DailyAiBudget, summarizeUsage, type AiUsage } from "./ai-rails.js";
-import { applyVerifiedShipment, FixRequestError, fixLabel, isZipRefused, type FixResponse } from "./fix-label.js";
+import { applyVerifiedShipment, FixRequestError, isZipRefused, TYPED_ZIP_GONE, type FixResponse } from "./fix-label.js";
 import { handleLabelUpload, LabelUploadError, MAX_LABEL_BYTES } from "./label-upload.js";
 import { loadSampleLabels, SAMPLE_FILES, type SampleLabels } from "../labels/samples.js";
 import type { LabelExtractor } from "../labels/extract.js";
@@ -340,6 +340,7 @@ export function createApp(deps: AppDeps) {
       daysSooner: r.release?.daysSooner ?? null,
       via,
       newLabel: r.newLabel,
+      previousTracker: r.previousTracker,
     });
   }
 
@@ -393,35 +394,10 @@ export function createApp(deps: AppDeps) {
     }
   }
 
-  // Labels fixed through the panel live in the visitor's scope (in memory in demo mode).
-  async function trackingFix(req: IncomingMessage, res: ServerResponse): Promise<void> {
-    if (!fixLimiter.take(clientKey(req))) return send(res, 429, { error: "Too many attempts. Wait a minute and try again." });
-    const raw = await readBody(req, 4 * 1024);
-    let body: unknown;
-    try {
-      body = JSON.parse(raw);
-    } catch {
-      return send(res, 400, { error: "invalid JSON" });
-    }
-    const sc = scope(req, res);
-    try {
-      const response = await serialized(async () => {
-        const out = await fixLabel(sc.loadState(), body, {
-          paypal: deps.paypal,
-          now: deps.now(),
-          ...(deps.lastPayPalReceipt ? { lastReceipt: deps.lastPayPalReceipt } : {}),
-        });
-        if (out.response.status !== "REFUSED") {
-          sc.saveState(out.state);
-          recordFix(sc, out.response, "zip");
-        }
-        return out.response;
-      });
-      return send(res, 200, { ...response, resetsOnRestart: deps.demo, perVisitor: Boolean(sessions) });
-    } catch (err) {
-      if (err instanceof FixRequestError) return send(res, err.status, { error: err.message });
-      throw err;
-    }
+  // The typed-ZIP fix is gone: a label that went to the wrong address must be replaced by a reprinted
+  // label (read by AI, checked by code), never re-attested by typing a ZIP for the old tracking number.
+  function trackingFixGone(res: ServerResponse): void {
+    return send(res, 410, { error: TYPED_ZIP_GONE, use: "/api/tracking/label" });
   }
 
   async function staticFile(pathname: string, res: ServerResponse, head: boolean): Promise<void> {
@@ -464,7 +440,7 @@ export function createApp(deps: AppDeps) {
       }
       if (url.pathname === "/api/tracking/fix") {
         if (method !== "POST") return send(res, 405, { error: "method not allowed" });
-        return await trackingFix(req, res);
+        return trackingFixGone(res);
       }
       if (url.pathname === "/api/ask") {
         if (method !== "POST") return send(res, 405, { error: "method not allowed" });

@@ -52,6 +52,11 @@ function fakeSandbox() {
       trackers.push({ id: `102425077C151171L-${NEW_TRACKING}`, tracking_number: NEW_TRACKING, status: "SHIPPED" });
       return { status: 201, body: { id: "2PF47471EF114104V", status: "COMPLETED" } };
     }
+    if (call.method === "PATCH" && call.path.includes("/trackers/")) {
+      const t = trackers.find((x) => call.path.endsWith(`/trackers/${x.id}`));
+      if (t) t.status = "CANCELLED";
+      return { status: t ? 200 : 404, body: t ? undefined : {} }; // PayPal answers 204
+    }
     return { status: 404, body: {} };
   });
 }
@@ -67,7 +72,11 @@ describe("POST /api/tracking/label", () => {
     expect(r.label.extracted).toMatchObject({ carrier: "UPS", tracking_number: NEW_TRACKING });
     expect(r.label.checks.every((c: { ok: boolean | null }) => c.ok !== false)).toBe(true);
     expect(r.upload).toMatchObject({ status: "UPLOADED", simulated: false, newLabel: true, trackingNumber: NEW_TRACKING });
-    expect(r.upload.message).toBe("New label uploaded to PayPal (the earlier tracking stays on the order).");
+    expect(r.upload.message).toBe("Label checked: addressed to the buyer's PayPal shipping address. New tracking uploaded to the PayPal order.");
+    // The refused label's tracking (wrong address) is cancelled on the order, after the new one is up.
+    expect(r.upload.previousTracker).toMatchObject({ status: "CANCELLED", trackerId: "102425077C151171L-1ZA1B2C30042002223" });
+    const methods = pp.apiCalls().map((c) => c.method);
+    expect(methods.lastIndexOf("PATCH")).toBeGreaterThan(methods.indexOf("POST"));
     expect(r.upload.release).toMatchObject({ daysSooner: 15 });
     expect(r.upload.release.headline).toBe("$110.00 moves from Thursday, Nov 26 to Wednesday, Nov 11: 15 days sooner");
     const postCall = pp.apiCalls().find((c) => c.method === "POST")!;

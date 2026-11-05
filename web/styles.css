@@ -185,11 +185,6 @@ ul.deliveries li { padding: 6px 0; border-top: 1px solid var(--border); overflow
 .balance-line { font-size: .88rem; color: var(--text-secondary); margin: 4px 0 10px; }
 
 /* Fix-the-label action (step 2) */
-.fix-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0 2px; }
-.fix-form label { font-weight: 600; font-size: .88rem; color: var(--text); }
-.fix-form input { width: 7.5em; font: inherit; padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-1); color: var(--text); }
-.fix-form input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.fix-form .fine { flex-basis: 100%; margin: 0; }
 .fix-result .error, .fix-result .loading { margin: 6px 0 0; }
 .fixed-row td { padding-top: 0; }
 .alert.move { font-size: 1rem; }
@@ -270,7 +265,7 @@ ul.label-checks li { display: flex; gap: 6px; padding: 2px 0; }
 .ck.bad { color: var(--serious); }
 .ck.na { color: var(--text-secondary, inherit); }
 .ok-line { color: var(--good); margin: 6px 0 0; }
-.zip-fallback { margin-top: 10px; font-size: .88rem; }
-.zip-fallback summary { cursor: pointer; color: var(--accent); }
 .fixed-row .label-reading { margin-bottom: 6px; }
 .file-label { display: inline-flex; flex-direction: column; gap: 2px; font-size: .86rem; }
+.prev-tracker { margin: 6px 0 0; }
+.cant-check { margin: 8px 0 4px; }

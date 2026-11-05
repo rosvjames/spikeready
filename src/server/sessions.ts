@@ -5,6 +5,7 @@
 import { randomBytes } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { State } from "../store.js";
+import type { PreviousTracker } from "./fix-label.js";
 
 export const DEMO_COOKIE = "sr_demo";
 
@@ -19,8 +20,10 @@ export interface FixRecord {
   daysSooner: number | null;
   /** How the label was fixed: a reprinted label read by AI and checked by code, or a re-checked ZIP. */
   via?: "label" | "zip";
-  /** The upload carries a new tracking number (reprinted label); the earlier tracking stays on the order. */
+  /** The upload carries a new tracking number (reprinted label). */
   newLabel?: boolean;
+  /** What happened to the refused label's tracking on the PayPal order (cancelled, absent, simulated). */
+  previousTracker?: PreviousTracker | null;
 }
 
 export interface DemoSession {

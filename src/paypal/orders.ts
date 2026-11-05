@@ -151,3 +151,25 @@ export const firstAuthorization = (o: Order): { id: string; status: string } | u
 /** POST /v2/payments/authorizations/{id}/capture. */
 export const captureAuthorization = (c: PayPalClient, authorizationId: string, requestId: string) =>
   c.request("POST", `/v2/payments/authorizations/${encodeURIComponent(authorizationId)}/capture`, { body: { final_capture: true }, requestId, schema: Capture });
+
+/** PayPal's id for a tracker on an order: "<captureId>-<trackingNumber>". */
+export const trackerId = (captureId: string, trackingNumber: string) => `${captureId}-${trackingNumber}`;
+
+/** Trackers on the order as PayPal reports them (id, tracking number derived from the id, status). */
+export function orderTrackers(o: Order): { id: string; trackingNumber: string; status: string | null }[] {
+  return (o.purchase_units ?? []).flatMap((pu) =>
+    (pu.shipping?.trackers ?? []).flatMap((t) =>
+      t.id ? [{ id: t.id, trackingNumber: t.tracking_number ?? t.id.slice(t.id.indexOf("-") + 1), status: t.status ?? null }] : [],
+    ),
+  );
+}
+
+/**
+ * PATCH /v2/checkout/orders/{id}/trackers/{tracker_id}: marks one tracker CANCELLED (used when a label
+ * turned out to go to the wrong address and a reprinted label replaces it). Deterministic request id.
+ */
+export const cancelTracker = (c: PayPalClient, orderId: string, id: string) =>
+  c.request("PATCH", `/v2/checkout/orders/${encodeURIComponent(orderId)}/trackers/${encodeURIComponent(id)}`, {
+    requestId: `spikeready-cancel-tracker-${orderId}-${id}`,
+    body: [{ op: "replace", path: "/status", value: "CANCELLED" }],
+  });
