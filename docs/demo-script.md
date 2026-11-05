@@ -4,7 +4,7 @@ Recorded on the live demo (https://spikeready.onrender.com), which replays our r
 
 | Time | Shot (exact on-screen action) | Voice-over |
 |---|---|---|
-| 0:00–0:12 | Title card: "Maria sold 39 pairs of sneakers in two days." Cut to the panel's top banner ("Recorded from the PayPal sandbox…") | "This is Maria. She sells sneakers with PayPal. A video of hers went viral, and she sold 39 pairs in two days. Her best week is about to become her worst." |
+| 0:00–0:12 | Title card: "Maria sold 39 pairs of sneakers in one night." Cut to the panel's top banner ("Recorded from the PayPal sandbox…") | "This is Maria. She sells sneakers with PayPal. A video of hers went viral, and 39 orders came in overnight, against her usual one or two a day. Her best week is about to become her worst." |
 | 0:12–0:25 | Stat card: "1 in 5 CFPB complaints about PayPal in 2026: funds held or inaccessible" | "After a spike, PayPal protects buyers by holding the money, up to 21 days, or limiting the account until the seller sends documents. Sellers don't know how long, or what to send." |
 | 0:25–0:45 | **Step 1.** Scroll to "Sales spike". Hover the tall bar on the chart; point at "13× your usual pace" and the checklist | "SpikeReady watches her PayPal sales. Thirteen times her usual pace: PayPal often reviews accounts after spikes like this. So it tells her what to have ready before PayPal asks." |
 | 0:45–1:10 | **Step 2.** Scroll to "Tracking on PayPal". Point at "38 on PayPal · 1 refused"; read the red row for maria-0007 | "It uploads tracking to each PayPal order, but only if the label really goes to the buyer's address on the order. This label says 60641; the buyer is at 60614. Refused. That protects the buyer and PayPal, not just Maria." |

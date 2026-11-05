@@ -3,6 +3,7 @@
 // - the only write is uploading a verified tracking number, and it needs the seller's explicit
 //   confirmation in the call (confirm: true) AND an operator switch (SPIKEREADY_MCP_ALLOW_WRITES=1);
 // - nothing here moves money, releases holds or creates or edits documents.
+import { plural } from "../text.js";
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { basename, isAbsolute, join, relative, resolve } from "node:path";
 import { z } from "zod";
@@ -104,7 +105,7 @@ export function getReleaseCalendar(ctx: McpContext): ToolResult {
     })),
   );
   const lines = [
-    `${formatUsd(cal.totalHeldCents)} on hold in ${payments.length} payment(s).`,
+    `${formatUsd(cal.totalHeldCents)} on hold in ${plural(payments.length, "payment")}.`,
     ...cal.days.map((day) => `- ${formatUsd(day.amountCents)} expected ${day.label}`),
     "",
     "Per payment:",
@@ -264,10 +265,10 @@ export async function checkInvoicesTool(ctx: McpContext, raw: unknown): Promise<
     lastDossier = { markdown: dossier.markdown, generatedAt: d.now.toISOString() };
     const short = response.coverage.filter((c) => c.covered < c.sold);
     const lines = [
-      response.gaps.length === 0 ? "No issues found: your invoices cover what you sold." : `${response.gaps.length} issue(s) to fix before you send anything to PayPal:`,
+      response.gaps.length === 0 ? "No issues found: your invoices cover what you sold." : `${plural(response.gaps.length, "issue")} to fix before you send anything to PayPal:`,
       ...response.gaps.map((g) => `- ${g.message}`),
       "",
-      `${response.documents.length} document(s) read; originals unchanged (SHA-256 fingerprints in the evidence pack). ${short.length} product(s) not fully covered.`,
+      `${plural(response.documents.length, "document")} read; originals unchanged (SHA-256 fingerprints in the evidence pack). ${plural(short.length, "product")} not fully covered.`,
       "Get the full evidence pack with get_evidence_pack.",
     ];
     return ok(lines.join("\n") + demoNote(d), { source: response.source, ready: response.ready, gaps: response.gaps, coverage: response.coverage, documents: response.documents });

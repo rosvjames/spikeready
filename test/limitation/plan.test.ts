@@ -53,7 +53,7 @@ describe("response plan", () => {
     expect(buildPlan(input(["supplier_invoices"])).items[0]).toMatchObject({ status: "needs_work", link: "invoices" });
     const bad = buildPlan(input(["supplier_invoices"], { invoiceCheck: { ready: false, blockers: 2, shortSkus: 1 } })).items[0]!;
     expect(bad.status).toBe("needs_work");
-    expect(bad.message).toContain("2 issue(s)");
+    expect(bad.message).toContain("2 issues");
     expect(bad.message).toContain("never edit an invoice");
     expect(buildPlan(input(["supplier_invoices"], { invoiceCheck: { ready: true, blockers: 0, shortSkus: 0 } })).items[0]!.status).toBe("ready");
   });

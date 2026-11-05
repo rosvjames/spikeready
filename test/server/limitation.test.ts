@@ -48,7 +48,7 @@ describe("POST /api/limitation/plan", () => {
   it("passes the panel's last invoice check into the plan", async () => {
     const post = await start();
     const r = await (await post({ useSample: 1, invoiceCheck: { ready: false, blockers: 2, shortSkus: 1 } })).json();
-    expect(r.plan.items.find((i: any) => i.type === "supplier_invoices").message).toContain("2 issue(s)");
+    expect(r.plan.items.find((i: any) => i.type === "supplier_invoices").message).toContain("2 issues");
   });
 
   it("sample 2 (hold): one tracking item, no deadline, the transaction grounded", async () => {

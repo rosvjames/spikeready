@@ -1,6 +1,7 @@
 // Response plan: what PayPal asked for, what SpikeReady already has, and what the seller still has to
 // do. Pure code over the grounded notice and the seller's data; no model involved. The plan prepares
 // honest evidence for PayPal's review and never suggests a way around it.
+import { plural } from "../text.js";
 import type { Sale, Shipment, TrackingUpload } from "../domain.js";
 import { localDate } from "../release/calendar.js";
 import { verifyShipment } from "../tracking/verify.js";
@@ -97,11 +98,11 @@ function invoicesItem(input: PlanInput, quote: string): PlanItem {
   if (c.ready) {
     return { ...base, status: "ready", message: "Your invoices cover the units you sold and have the supplier's details.", evidence: "Invoice summary and SHA-256 fingerprints of the original files (evidence pack)." };
   }
-  const short = c.shortSkus ? `, ${c.shortSkus} product(s) not fully covered` : "";
+  const short = c.shortSkus ? `, ${plural(c.shortSkus, "product")} not fully covered` : "";
   return {
     ...base,
     status: "needs_work",
-    message: `${c.blockers} issue(s) to fix before sending${short}. Get the missing invoices from your suppliers; never edit an invoice.`,
+    message: `${plural(c.blockers, "issue")} to fix before sending${short}. Get the missing invoices from your suppliers; never edit an invoice.`,
     evidence: "Invoice summary and SHA-256 fingerprints of the original files (evidence pack).",
   };
 }

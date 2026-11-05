@@ -87,8 +87,8 @@ export function readinessChecklist(recentSales: Sale[], uploads: TrackingUpload[
       ok: missing.length === 0,
       message:
         missing.length === 0
-          ? `All ${recentSales.length} recent sales have verified tracking on PayPal.`
-          : `${missing.length} of ${recentSales.length} recent sales have no tracking on PayPal yet.`,
+          ? `All ${recentSales.length} recent sale${recentSales.length === 1 ? " has" : "s have"} verified tracking on PayPal.`
+          : `${missing.length} of ${recentSales.length} recent sales ${missing.length === 1 ? "has" : "have"} no tracking on PayPal yet.`,
     },
     { id: "invoices", ok: null, message: "Supplier invoices that cover the units you sold: not checked yet." },
   ];

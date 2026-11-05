@@ -1,5 +1,6 @@
 // Evidence pack for PayPal's Resolution Center: a summary the seller attaches next to their original
 // files. It describes and indexes the originals; it never generates or edits an invoice.
+import { plural } from "../text.js";
 import type { Sale, TrackingUpload } from "../domain.js";
 import { formatUsd } from "../domain.js";
 import { hasSupplierContact, type ReconcileResult } from "./reconcile.js";
@@ -70,7 +71,7 @@ export function buildDossier(input: DossierInput): Dossier {
   md.push("## Before you submit", "");
   if (result.gaps.length === 0) md.push("No open issues found. Your invoices cover what you sold.", "");
   else {
-    md.push(ready ? "Only warnings left; you can submit, but consider fixing these:" : `**Fix these ${blockers.length} issue(s) first.** PayPal would likely ask again:`, "");
+    md.push(ready ? "Only warnings left; you can submit, but consider fixing these:" : `**Fix these ${plural(blockers.length, "issue")} first.** PayPal would likely ask again:`, "");
     for (const g of result.gaps) md.push(`- [${g.severity === "blocker" ? "FIX" : "check"}] ${g.message}`);
     md.push("");
   }

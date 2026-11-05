@@ -55,7 +55,7 @@ function estimate(arm: ArmName, c: EvalCase): Usage[] {
 const allEstimated = (a: ArmName) => [...cases, ...injectionCases.flatMap((x) => [x.clean, x.injected])].flatMap((c) => estimate(a, c));
 const estByArm = Object.fromEntries(aiArms.map((a) => [a, costUsd(allEstimated(a))]));
 const planted = cases.reduce((t, c) => t + c.truth.length, 0);
-console.log(`${cases.length} cases (seed ${opt.seed}), ${planted} planted gaps, ${cases.reduce((t, c) => t + c.docs.length, 0)} documents. Arms: ${arms.join(", ")}.${injectionCases.length ? ` Plus ${injectionCases.length} prompt-injection cases (each run clean and injected).` : ""}`);
+console.log(`${cases.length === 0 ? "Injection-only run (no main cases)." : `${cases.length} cases (seed ${opt.seed}), ${planted} planted gaps, ${cases.reduce((t, c) => t + c.docs.length, 0)} documents.`} Arms: ${arms.join(", ")}.${injectionCases.length ? ` Plus ${injectionCases.length} prompt-injection cases (each run clean and injected).` : ""}`);
 for (const a of aiArms) {
   const m = a === "pipeline" ? pipelineModel : baselineModel;
   const e = estByArm[a]!;
@@ -224,7 +224,7 @@ const today = new Date().toISOString().slice(0, 10);
 const pct = (h: number, n: number) => (n ? `${Math.round((100 * h) / n)}%` : "-");
 const label = aiArms.length
   ? `Arms run: ${arms.join(", ")}.`
-  : `**Rules arm only (plus the offline oracle bound${injectionCases.length ? " and the simulated worst-case reader for the injection cases" : ""}); AI arms pending an API key.** Run \`npm run eval -- --arms rules,oracle,pipeline,baseline${injectionCases.length ? " --injection" : ""} --yes\` with \`ANTHROPIC_API_KEY\` set to add them.`;
+  : `**Rules arm only (plus the offline oracle bound${injectionCases.length ? " and the simulated worst-case reader for the injection cases" : ""}); AI arms pending an API key.** Run \`npm run eval -- --arms rules,oracle,pipeline,baseline${injectionCases.length ? " --injection" : ""} --yes\` with \`ANTHROPIC_API_KEY\` (or the Astropods gateway variables) set to add them.`;
 const armLabel: Record<ArmName, string> = {
   rules: "rules (exact title match, no AI)",
   oracle: "oracle (perfect reading + SpikeReady code)",
@@ -275,7 +275,7 @@ function injectionSection(): string[] {
       return !r ? "-" : r.error ? "error" : `${yes(r.foundClean)} → ${yes(r.foundInjected)}${r.silenced ? " **(silenced)**" : r.hidden ? " (type changed, seller still alerted)" : ""}`;
     }).join(" | ")} |`),
     "",
-    "Why SpikeReady's pipeline is built to resist this: the model **only extracts fields** (it never decides whether an invoice is acceptable); **code decides** every gap (src/invoices/reconcile.ts); and for text documents a **grounding check** (src/invoices/grounding.ts) drops any extracted invoice number, supplier, billed-to name, contact detail or line whose value is not written in the source, warning the seller (`unverified_extraction`). Dropping can only reveal more gaps, never hide one. Limits: fake details written literally into a document (INJ-05) are document fraud, which grounding cannot tell apart from real text, and dates are not grounded; PDFs and images are not grounded (their text is not available to code). The offline arms do not read text, so they show the case design, not resistance: run the AI arms with `--injection --yes`.",
+    "Why SpikeReady's pipeline is built to resist this: the model **only extracts fields** (it never decides whether an invoice is acceptable); **code decides** every gap (src/invoices/reconcile.ts); and for text documents a **grounding check** (src/invoices/grounding.ts) drops any extracted invoice number, supplier, billed-to name, contact detail or line whose value is not written in the source, warning the seller (`unverified_extraction`). Dropping can only reveal more gaps, never hide one. Limits: fake details written literally into a document (INJ-05) are document fraud, which grounding cannot tell apart from real text, and dates must be written in the document in a common format or they are dropped (an undated invoice covers nothing); PDFs and images are not grounded (their text is not available to code). The offline arms do not read text, so they show the case design, not resistance: run the AI arms with `--injection --yes`.",
     "",
   ];
 }
@@ -286,26 +286,30 @@ const report = [
   "",
   label,
   "",
-  `${cases.length} synthetic reseller cases (seed ${opt.seed}), ${planted} planted gaps: ${TRUTH_GAP_TYPES.map((t) => `${t} ${typeCount(t)}`).join(", ")}. Ground truth is computed by code from the generated invoices; scoring is deterministic (eval/score.ts).`,
-  "",
-  "| Arm | Gaps found (recall) | False alarms | Cases exactly right | Errors | Cost | Median latency / case |",
-  "|---|---|---|---|---|---|---|",
-  ...arms.map((a) => {
-    const s = summaries[a]!;
-    const cost = s.costUsd === null ? "unpriced" : `$${s.costUsd.toFixed(3)}`;
-    return `| ${armLabel[a]} | ${s.hit}/${s.total} (${pct(s.hit, s.total)}) | ${s.falseAlarms} | ${s.exact}/${s.cases} | ${s.errors} | ${cost} | ${s.medianLatencyMs === null ? "-" : `${(s.medianLatencyMs / 1000).toFixed(1)} s`} |`;
-  }),
-  "",
-  "Recall by gap type:",
-  "",
-  `| Arm | ${TRUTH_GAP_TYPES.join(" | ")} |`,
-  `|---|${TRUTH_GAP_TYPES.map(() => "---").join("|")}|`,
-  ...arms.map((a) => `| ${a} | ${TRUTH_GAP_TYPES.map((t) => `${summaries[a]!.byType[t]![0]}/${summaries[a]!.byType[t]![1]}`).join(" | ")} |`),
-  "",
-  "False alarms by type:",
-  "",
-  ...arms.map((a) => `- ${a}: ${Object.entries(summaries[a]!.falseAlarmsByType).map(([t, n]) => `${t} ${n}`).join(", ") || "none"}`),
-  "",
+  ...(cases.length === 0
+    ? ["**Injection-only run:** the main 30-case benchmark was not run here (`--cases 0`); see the full runs in `eval/results/`.", ""]
+    : [
+      `${cases.length} synthetic reseller cases (seed ${opt.seed}), ${planted} planted gaps: ${TRUTH_GAP_TYPES.map((t) => `${t} ${typeCount(t)}`).join(", ")}. Ground truth is computed by code from the generated invoices; scoring is deterministic (eval/score.ts).`,
+      "",
+      "| Arm | Gaps found (recall) | False alarms | Cases exactly right | Errors | Cost | Median latency / case |",
+      "|---|---|---|---|---|---|---|",
+      ...arms.map((a) => {
+        const s = summaries[a]!;
+        const cost = s.costUsd === null ? "unpriced" : `$${s.costUsd.toFixed(3)}`;
+        return `| ${armLabel[a]} | ${s.hit}/${s.total} (${pct(s.hit, s.total)}) | ${s.falseAlarms} | ${s.exact}/${s.cases} | ${s.errors} | ${cost} | ${s.medianLatencyMs === null ? "-" : `${(s.medianLatencyMs / 1000).toFixed(1)} s`} |`;
+      }),
+      "",
+      "Recall by gap type:",
+      "",
+      `| Arm | ${TRUTH_GAP_TYPES.join(" | ")} |`,
+      `|---|${TRUTH_GAP_TYPES.map(() => "---").join("|")}|`,
+      ...arms.map((a) => `| ${a} | ${TRUTH_GAP_TYPES.map((t) => `${summaries[a]!.byType[t]![0]}/${summaries[a]!.byType[t]![1]}`).join(" | ")} |`),
+      "",
+      "False alarms by type:",
+      "",
+      ...arms.map((a) => `- ${a}: ${Object.entries(summaries[a]!.falseAlarmsByType).map(([t, n]) => `${t} ${n}`).join(", ") || "none"}`),
+      "",
+      ]),
   ...injectionSection(),
   "Notes:",
   "- **rules** shows what plain text matching can do: it only notices items with no document at all, and only when the supplier happens to use the listing's exact title.",

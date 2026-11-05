@@ -1,5 +1,7 @@
 # Invoice-check benchmark (2026-11-05)
 
+> First run, before the date-grounding fix. Its notes on dates describe the code at that time; see `../2026-11-05-date-grounding/` for the rerun.
+
 Arms run: rules, oracle, pipeline, baseline.
 
 30 synthetic reseller cases (seed 20261101), 51 planted gaps: no_invoice 9, late_invoice 4, shortfall 14, name_mismatch 8, missing_supplier_contact 9, duplicate_invoice 7. Ground truth is computed by code from the generated invoices; scoring is deterministic (eval/score.ts).

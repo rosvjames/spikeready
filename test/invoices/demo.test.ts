@@ -33,7 +33,7 @@ describe("Maria's demo invoices", async () => {
     const uploads: TrackingUpload[] = sales.slice(0, 39).map((s) => ({ saleId: s.saleId, orderId: s.orderId, trackingNumber: `T${s.saleId}`, carrier: "USPS", uploadedAt: "2026-11-05T20:00:00Z", result: "UPLOADED" }));
     const d = buildDossier({ seller: { name: "Maria's Sneakers", holder: "Maria Lopez" }, sales, docs, result, uploads, generatedAt: "2026-11-06T15:00:00Z" });
     expect(d.ready).toBe(false);
-    expect(d.markdown).toContain("**Fix these 2 issue(s) first.**");
+    expect(d.markdown).toContain("**Fix these 2 issues first.**");
     expect(d.markdown).toContain("You sold 14 × Nike Air Force 1 '07 White Men's Size 10; your invoices cover 12.");
     expect(d.markdown).toContain("39 of 40 have tracking on PayPal");
     expect(d.markdown).toContain("| AF1-WHT-10 | Nike Air Force 1 '07 White Men's Size 10 | 14 | 12 |");

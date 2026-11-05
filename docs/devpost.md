@@ -8,13 +8,13 @@
 
 ## Inspiration
 
-A small seller's best week can become their worst. When sales jump (a viral video, a holiday rush), PayPal protects buyers the way any bank would: it holds the money from those sales for up to 21 days, or limits the account until the seller sends documents. Sellers rarely know how long it will last or which documents will work, so they send the wrong ones and lose weeks of cash flow. In our analysis of CFPB complaints about PayPal from January to mid-October 2026, 20.6% were about funds held or inaccessible and 10.8% about account or verification issues.
+A small seller's best week can become their worst. When sales jump (a viral video, a holiday rush), PayPal protects buyers the way any bank would: it holds the money from those sales for up to 21 days, or limits the account until the seller sends documents. Sellers rarely know how long it will last or which documents will work, so they send the wrong ones and lose weeks of cash flow. In our analysis of CFPB complaints about PayPal from January to mid-October 2026 (filed by consumers, so all PayPal users, Venmo included), 20.6% were about funds held or inaccessible and 10.8% about account or verification issues. Sellers put it more bluntly: "my business will fall apart I can’t afford to lose that money" (r/smallbusiness, about $14,000 held for 21 days). PayPal itself has said that 7–21 day waits are too common; its Funds Now program removes holds for established sellers, but new and spiking sellers don't qualify yet. SpikeReady is their path there.
 
 PayPal already says what helps: tracking from a supported carrier releases held funds about 24 hours after delivery, and limitation reviews ask for supplier invoices with the supplier's details. Sellers need help doing it early and correctly.
 
 ## What it does
 
-We follow Maria, a sneaker seller who sells 39 pairs in two days.
+We follow Maria, a sneaker seller: after a viral video, 39 orders arrive in a single night against her usual 1–2 a day.
 
 1. **Spike alert.** SpikeReady compares her PayPal sales with her normal (13x her usual pace) and lists what PayPal will want to see.
 2. **Verified tracking.** It uploads tracking to each PayPal order, but only after checking that the label goes to the buyer's ZIP on the PayPal order, the check digit is valid and the number is not reused. One label had two ZIP digits swapped, so it was refused.
@@ -46,9 +46,9 @@ Real sandbox calls: 39 captured orders, 38 tracking uploads, 1 refusal. A real s
 
 ## Accomplishments that we're proud of
 
-- **A benchmark anyone can rerun** (`npm run eval`): on 30 reseller cases with 51 planted gaps, exact-title rules find 18%; SpikeReady finds 98% with 8 false alarms in 5.2 s per case, versus 98%, 13 false alarms and 13.6 s for one big model call, at a lower cost ($0.49 vs $0.58).
+- **A benchmark anyone can rerun** (`npm run eval`): on 30 reseller cases with 51 planted gaps, exact-title rules find 18%; SpikeReady finds 98% with 6–8 false alarms (two runs) in about 5 s per case, versus 98%, 13 false alarms and 13.6 s for one big model call, at a slightly lower cost ($0.49 vs $0.58). A strong single call finds as much; our edge is fewer false alarms, speed, and decisions made by checkable code.
 - Tracking verification that protects buyers and PayPal, not just the seller.
-- 241 tests, CI green, and a public demo that replays our real sandbox run with no login.
+- 250+ unit tests plus a browser E2E run, CI green, and a public demo that replays our real sandbox run with no login.
 
 ## What we learned
 

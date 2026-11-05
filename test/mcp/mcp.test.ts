@@ -52,7 +52,7 @@ describe("read tools on the recorded sandbox run", () => {
     const r = getSpikeStatus(ctx());
     expect(r.structuredContent).toMatchObject({ isSpike: true, recentOrders: 39, dataSource: "recorded" });
     expect(text(r)).toContain("Spike detected.");
-    expect(text(r)).toContain("1 of 39 recent sales have no tracking");
+    expect(text(r)).toContain("1 of 39 recent sales has no tracking");
     expect(text(r)).toContain("Recorded from the PayPal sandbox");
   });
   it("get_release_calendar lists expected and latest dates and the action for the refused sale", () => {
