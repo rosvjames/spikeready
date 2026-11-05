@@ -1,0 +1,296 @@
+{
+  "recordedAt": "2026-11-05T07:02:02.826Z",
+  "environment": "sandbox",
+  "note": "A real dispute in the PayPal sandbox: the sandbox buyer opened an 'item not received' case in PayPal's Resolution Center (scripts/open-sandbox-dispute.ts) on sale maria-0038, whose UPS tracking SpikeReady had verified and uploaded. Before filing, PayPal showed the buyer that tracking. PayPal kept the case under its own review and only allowed the seller action 'provide_supporting_info'; SpikeReady sent its verified tracking facts through it after the seller's explicit approval (--confirm), and PayPal accepted it (HTTP 200). provide-evidence, and the sandbox-only require-evidence and adjudicate endpoints, were refused in every state we saw (ACTION_NOT_ALLOWED_IN_CURRENT_DISPUTE_STATE), so no PayPal decision is recorded yet. Each call keeps the PayPal-Debug-Id PayPal returned.",
+  "dispute": {
+    "id": "PP-R-QLW-10196536",
+    "reason": "MERCHANDISE_OR_SERVICE_NOT_RECEIVED",
+    "channel": "INTERNAL",
+    "amount": {
+      "currency_code": "USD",
+      "value": "220.00"
+    },
+    "createdAt": "2026-11-05T06:49:02.453Z",
+    "sellerTransactionId": "5DG45453L7838892U",
+    "buyerTransactionId": "2P176427HC9444511"
+  },
+  "sale": {
+    "saleId": "maria-0038",
+    "orderId": "0GR61363AT929133N",
+    "captureId": "5DG45453L7838892U",
+    "amountCents": 22000,
+    "buyerPostalCode": "19103"
+  },
+  "before": {
+    "status": "UNDER_REVIEW",
+    "stage": "CHARGEBACK",
+    "outcome": null,
+    "sellerResponseDue": null,
+    "actions": [
+      "self",
+      "provide_supporting_info"
+    ]
+  },
+  "evidence": {
+    "disputeId": "PP-R-QLW-10196536",
+    "saleId": "maria-0038",
+    "reason": "MERCHANDISE_OR_SERVICE_NOT_RECEIVED",
+    "daysLeft": null,
+    "verdict": "partial",
+    "summary": "Shipped with verified tracking, delivery not confirmed yet. Proof so far: UPS 1ZA1B2C30042013695, label to ZIP 19103 (the buyer's PayPal shipping ZIP), on the PayPal order since 2026-11-05.",
+    "facts": {
+      "carrier": "UPS",
+      "trackingNumber": "1ZA1B2C30042013695",
+      "labelPostalCode": "19103",
+      "buyerPostalCode": "19103",
+      "shippedAt": "2026-11-05T05:38:46.947Z",
+      "deliveredAt": null,
+      "onPayPalSince": "2026-11-05T05:39:35.069Z"
+    },
+    "nextSteps": [
+      "Check the latest carrier scan; if the package is still moving, tell the buyer the expected delivery date.",
+      "You can send the tracking now as proof of shipment (needs your confirmation), and again after delivery.",
+      "Check the response deadline in PayPal's Resolution Center."
+    ],
+    "submittable": true
+  },
+  "requireEvidence": null,
+  "afterRequireEvidence": null,
+  "evidenceRequest": {
+    "action": "provide_supporting_info",
+    "path": "/v1/customer/disputes/PP-R-QLW-10196536/provide-supporting-info",
+    "input": {
+      "notes": "Proof of fulfillment: UPS tracking 1ZA1B2C30042013695, on the PayPal order since 2026-11-05. Shipped 2026-11-05 with UPS to ZIP 19103, the buyer's PayPal shipping address. The label's destination ZIP was checked against the buyer's PayPal shipping address before the tracking was uploaded."
+    }
+  },
+  "submission": {
+    "submitted": true,
+    "status": 200,
+    "debugId": "f414879393c3c"
+  },
+  "adjudication": null,
+  "after": {
+    "status": "UNDER_REVIEW",
+    "stage": "CHARGEBACK",
+    "outcome": null,
+    "sellerResponseDue": null,
+    "actions": [
+      "self",
+      "provide_supporting_info"
+    ]
+  },
+  "receipts": [
+    {
+      "method": "GET",
+      "path": "/v1/customer/disputes/PP-R-QLW-10196536",
+      "status": 200,
+      "debugId": "f368624b9d0ce",
+      "at": "2026-11-05T07:01:59.906Z",
+      "what": "get dispute (before)"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/customer/disputes/PP-R-QLW-10196536/provide-supporting-info",
+      "status": 200,
+      "debugId": "f414879393c3c",
+      "at": "2026-11-05T07:02:00.917Z",
+      "what": "provide-supporting-info"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/customer/disputes/PP-R-QLW-10196536",
+      "status": 200,
+      "debugId": "f1893526eac8f",
+      "at": "2026-11-05T07:02:02.825Z",
+      "what": "get dispute (after)"
+    }
+  ],
+  "timeline": [
+    {
+      "at": "2026-11-05T06:47:46Z",
+      "event": "Buyer opens the case in the sandbox Resolution Center; PayPal first shows the buyer the UPS tracking SpikeReady uploaded (1ZA1B2C30042013695). Case id PP-R-QLW-10196536."
+    },
+    {
+      "at": "2026-11-05T06:49:02Z",
+      "event": "PayPal creates the dispute (INQUIRY). The buyer is told: \"Espere un tiempo para que se entregue el artículo\" (wait for the item to be delivered); no escalation option is offered."
+    },
+    {
+      "at": "2026-11-05T06:52:35Z",
+      "event": "The public demo on Render receives a signed CUSTOMER.DISPUTE.UPDATED, verified with PayPal before processing (result DISPUTE_RECORDED); see /api/webhooks/recent."
+    },
+    {
+      "at": "~2026-11-05T07:00Z",
+      "event": "PayPal moves the case to the claim stage (CHARGEBACK, UNDER_REVIEW) and offers the seller provide_supporting_info only."
+    },
+    {
+      "at": "2026-11-05T07:02:02.826Z",
+      "event": "Seller approves; SpikeReady sends the verified tracking facts via provide-supporting-info: HTTP 200."
+    }
+  ],
+  "webhookOnRender": {
+    "checkedAt": "2026-11-05T07:08Z",
+    "url": "https://spikeready.onrender.com/api/webhooks/recent",
+    "verified": [
+      {
+        "eventId": "WH-72A27282VX7442204-09V689917Y862942G",
+        "eventType": "CUSTOMER.DISPUTE.UPDATED",
+        "verifiedAt": "2026-11-05T06:52:35.423Z",
+        "result": "DISPUTE_RECORDED"
+      }
+    ]
+  },
+  "comparisonCase": {
+    "disputeId": "PP-R-WXT-10196539",
+    "what": "Same INR claim opened by the script on a $1 smoke-test sale with no tracking on PayPal (not one of Maria's sales, so SpikeReady's verdict is 'unlinked' and it sends nothing).",
+    "sellerTransactionId": "68R73730HN121011A",
+    "stateAt": "2026-11-05T07:08Z",
+    "status": "UNDER_REVIEW",
+    "stage": "INQUIRY",
+    "sellerActions": [
+      "self"
+    ],
+    "reading": "Inconclusive so far: both cases went to UNDER_REVIEW within minutes; only the tracked one had moved to the claim stage when we stopped watching."
+  },
+  "earlierAttempts": [
+    {
+      "what": "provide-evidence while PayPal held the inquiry (INQUIRY / UNDER_REVIEW)",
+      "stateBefore": {
+        "status": "UNDER_REVIEW",
+        "stage": "INQUIRY",
+        "outcome": null,
+        "sellerResponseDue": null,
+        "actions": [
+          "self"
+        ]
+      },
+      "requireEvidence": null,
+      "submission": {
+        "error": "PayPal POST /v1/customer/disputes/PP-R-QLW-10196536/provide-evidence failed (422) UNPROCESSABLE_ENTITY ACTION_NOT_ALLOWED_IN_CURRENT_DISPUTE_STATE The requested action could not be performed, semantically incorrect, or failed business validation. [debug ca559ec6d8eeb]",
+        "issue": "ACTION_NOT_ALLOWED_IN_CURRENT_DISPUTE_STATE",
+        "status": 422
+      },
+      "adjudication": null,
+      "receipts": [
+        {
+          "method": "POST",
+          "path": "/v1/customer/disputes/PP-R-QLW-10196536/provide-evidence",
+          "status": 422,
+          "debugId": "ca559ec6d8eeb",
+          "at": "2026-11-05T06:50:19.406Z",
+          "what": "provide-evidence"
+        }
+      ]
+    },
+    {
+      "what": "sandbox require-evidence + provide-evidence (INQUIRY)",
+      "stateBefore": {
+        "status": "UNDER_REVIEW",
+        "stage": "INQUIRY",
+        "outcome": null,
+        "sellerResponseDue": null,
+        "actions": [
+          "self"
+        ]
+      },
+      "requireEvidence": {
+        "error": "PayPal POST /v1/customer/disputes/PP-R-QLW-10196536/require-evidence failed (400) INVALID_REQUEST ACTION_NOT_ALLOWED_IN_CURRENT_DISPUTE_STATE Request is not well-formed, syntactically incorrect, or violates schema. [debug ca559ecac7ec7]",
+        "issue": "ACTION_NOT_ALLOWED_IN_CURRENT_DISPUTE_STATE",
+        "status": 400
+      },
+      "submission": {
+        "error": "PayPal POST /v1/customer/disputes/PP-R-QLW-10196536/provide-evidence failed (422) UNPROCESSABLE_ENTITY ACTION_NOT_ALLOWED_IN_CURRENT_DISPUTE_STATE The requested action could not be performed, semantically incorrect, or failed business validation. [debug ca559ecb60914]",
+        "issue": "ACTION_NOT_ALLOWED_IN_CURRENT_DISPUTE_STATE",
+        "status": 422
+      },
+      "adjudication": null,
+      "receipts": [
+        {
+          "method": "POST",
+          "path": "/v1/customer/disputes/PP-R-QLW-10196536/require-evidence",
+          "status": 400,
+          "debugId": "ca559ecac7ec7",
+          "at": "2026-11-05T06:50:29.489Z",
+          "what": "require-evidence (sandbox only)"
+        },
+        {
+          "method": "GET",
+          "path": "/v1/customer/disputes/PP-R-QLW-10196536",
+          "status": 200,
+          "debugId": "ca559ecb00f79",
+          "at": "2026-11-05T06:50:30.689Z",
+          "what": "get dispute (after require-evidence)"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/customer/disputes/PP-R-QLW-10196536/provide-evidence",
+          "status": 422,
+          "debugId": "ca559ecb60914",
+          "at": "2026-11-05T06:50:31.076Z",
+          "what": "provide-evidence"
+        }
+      ]
+    },
+    {
+      "what": "sandbox require-evidence + provide-evidence + adjudicate after PayPal escalated to a claim (CHARGEBACK / UNDER_REVIEW)",
+      "stateBefore": {
+        "status": "UNDER_REVIEW",
+        "stage": "CHARGEBACK",
+        "outcome": null,
+        "sellerResponseDue": null,
+        "actions": [
+          "self",
+          "provide_supporting_info"
+        ]
+      },
+      "requireEvidence": {
+        "error": "PayPal POST /v1/customer/disputes/PP-R-QLW-10196536/require-evidence failed (400) INVALID_REQUEST ACTION_NOT_ALLOWED_IN_CURRENT_DISPUTE_STATE Request is not well-formed, syntactically incorrect, or violates schema. [debug f212873a76798]",
+        "issue": "ACTION_NOT_ALLOWED_IN_CURRENT_DISPUTE_STATE",
+        "status": 400
+      },
+      "submission": {
+        "error": "PayPal POST /v1/customer/disputes/PP-R-QLW-10196536/provide-evidence failed (422) UNPROCESSABLE_ENTITY ACTION_NOT_ALLOWED_IN_CURRENT_DISPUTE_STATE The requested action could not be performed, semantically incorrect, or failed business validation. [debug f840639f601d2]",
+        "issue": "ACTION_NOT_ALLOWED_IN_CURRENT_DISPUTE_STATE",
+        "status": 422
+      },
+      "adjudication": {
+        "error": "PayPal POST /v1/customer/disputes/PP-R-QLW-10196536/adjudicate failed (400) INVALID_REQUEST ACTION_NOT_ALLOWED_IN_CURRENT_DISPUTE_STATE Request is not well-formed, syntactically incorrect, or violates schema. [debug f840639942c48]",
+        "issue": "ACTION_NOT_ALLOWED_IN_CURRENT_DISPUTE_STATE",
+        "status": 400
+      },
+      "receipts": [
+        {
+          "method": "POST",
+          "path": "/v1/customer/disputes/PP-R-QLW-10196536/require-evidence",
+          "status": 400,
+          "debugId": "f212873a76798",
+          "at": "2026-11-05T07:01:04.014Z",
+          "what": "require-evidence (sandbox only)"
+        },
+        {
+          "method": "GET",
+          "path": "/v1/customer/disputes/PP-R-QLW-10196536",
+          "status": 200,
+          "debugId": "f21287364314e",
+          "at": "2026-11-05T07:01:04.869Z",
+          "what": "get dispute (after require-evidence)"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/customer/disputes/PP-R-QLW-10196536/provide-evidence",
+          "status": 422,
+          "debugId": "f840639f601d2",
+          "at": "2026-11-05T07:01:05.197Z",
+          "what": "provide-evidence"
+        },
+        {
+          "method": "POST",
+          "path": "/v1/customer/disputes/PP-R-QLW-10196536/adjudicate",
+          "status": 400,
+          "debugId": "f840639942c48",
+          "at": "2026-11-05T07:01:05.527Z",
+          "what": "adjudicate (sandbox only)"
+        }
+      ]
+    }
+  ]
+}

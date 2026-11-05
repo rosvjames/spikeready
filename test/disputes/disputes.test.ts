@@ -6,7 +6,7 @@ import type { Shipment, TrackingUpload } from "../../src/domain.js";
 import { buildInrEvidence, daysUntil } from "../../src/disputes/evidence.js";
 import { disputeFromEvent, upsertDispute } from "../../src/disputes/event.js";
 import { retargetSimulatedDispute } from "../../src/disputes/simulator.js";
-import { buildProvideEvidenceRequest, submitEvidence } from "../../src/disputes/submit.js";
+import { buildProvideEvidenceRequest, buildSupportingInfoRequest, evidenceRequestFor, submitEvidence, type ProvideEvidenceInput } from "../../src/disputes/submit.js";
 import { handleWebhookEvent } from "../../src/holds/handler.js";
 import { getDisputeEvidence, type McpContext } from "../../src/mcp/tools.js";
 import { WebhookEvent } from "../../src/paypal/webhooks.js";
@@ -112,7 +112,8 @@ describe("provide-evidence (human in the loop)", () => {
     const req = buildProvideEvidenceRequest("PP-9", ev);
     expect(req.path).toBe("/v1/customer/disputes/PP-9/provide-evidence");
     expect(req.requestId).toBe(`spikeready-evidence-PP-9-${demoUspsNumber(1)}`);
-    expect(req.input.evidences[0]).toMatchObject({ evidence_type: "PROOF_OF_FULFILLMENT", evidence_info: { tracking_info: [{ carrier_name: "USPS", tracking_number: demoUspsNumber(1) }] } });
+    expect(req.action).toBe("provide_evidence");
+    expect((req.input as ProvideEvidenceInput).evidences[0]).toMatchObject({ evidence_type: "PROOF_OF_FULFILLMENT", evidence_info: { tracking_info: [{ carrier_name: "USPS", tracking_number: demoUspsNumber(1) }] } });
   });
   it("refuses to build a request without verified tracking", () => {
     const weak = { ...ev, verdict: "weak" as const, submittable: false, facts: null };
@@ -133,6 +134,29 @@ describe("provide-evidence (human in the loop)", () => {
     expect((calls[0]!.init!.headers as Record<string, string>)["PayPal-Request-Id"]).toBe(req.requestId);
     const input = (calls[0]!.init!.body as FormData).get("input") as Blob;
     expect(JSON.parse(await input.text())).toEqual(req.input);
+  });
+});
+
+describe("choosing the action PayPal allows (real sandbox claim, 2026-11-05)", () => {
+  const ev = buildInrEvidence({ dispute: { disputeId: "PP-9", reason: "MERCHANDISE_OR_SERVICE_NOT_RECEIVED", responseDueAt: null }, sale: sale(), shipment: shipment(), upload: upload(), uploads: [upload()], now: NOW, timeZone: TZ });
+
+  it("uses provide-evidence when PayPal offers it", () => {
+    expect(evidenceRequestFor("PP-9", ev, ["self", "provide_evidence"])?.action).toBe("provide_evidence");
+  });
+  it("falls back to provide-supporting-info while PayPal reviews the claim itself", () => {
+    const req = evidenceRequestFor("PP-9", ev, ["self", "provide_supporting_info"])!;
+    expect(req.action).toBe("provide_supporting_info");
+    expect(req.path).toBe("/v1/customer/disputes/PP-9/provide-supporting-info");
+    expect(req.requestId).toBe(`spikeready-supporting-PP-9-${demoUspsNumber(1)}`);
+    expect((req.input as { notes: string }).notes).toContain(`USPS tracking ${demoUspsNumber(1)}`);
+    expect((req.input as { notes: string }).notes).toContain("ZIP 11215");
+  });
+  it("sends nothing when PayPal allows no seller action yet", () => {
+    expect(evidenceRequestFor("PP-9", ev, ["self"])).toBeNull();
+  });
+  it("never builds a request without verified tracking", () => {
+    const weak = { ...ev, verdict: "weak" as const, submittable: false, facts: null };
+    expect(() => buildSupportingInfoRequest("PP-9", weak)).toThrow(/No verified tracking/);
   });
 });
 
