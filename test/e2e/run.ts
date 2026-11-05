@@ -128,27 +128,34 @@ try {
   check("step 5: maria-0007's evidence is weak before the fix", /If maria-0007's buyer says it never arrived Weak/.test(dispute), dispute.slice(-400));
   check("demo banner offers Reset demo", await page.locator("#demo-reset").isVisible());
   check("proof shows the recorded signed webhook", /Recorded signed delivery/.test(await text("#proof")) && /PAYMENT\.CAPTURE\.COMPLETED/.test(await text("#proof")));
-  const zip = page.locator("#fix-maria-0007");
-  await zip.fill("60641");
-  await page.locator('.fix-form[data-sale="maria-0007"] button').click();
-  await page.locator("#fix-result-maria-0007").getByText("Still refused").waitFor({ timeout: 10_000 });
-  check("fix label: wrong ZIP refused again", /Still refused/.test(await text("#fix-result-maria-0007")));
-  await zip.fill("60614");
-  await page.locator('.fix-form[data-sale="maria-0007"] button').click();
-  await page.locator("#release-move").getByText("17 days sooner").waitFor({ timeout: 10_000 });
+  // The live action, primary path: upload the reprinted label. The AI's (recorded) reading of the old
+  // label is refused by code (ZIP 60641 vs 60614, and a misread digit fails the check digit); the
+  // reprinted label passes every check, is uploaded (simulated here: no PayPal credentials) and the
+  // release moves 15 days sooner (a new label has no carrier estimate: 5 days of transit assumed).
+  check("fix label: the label-reading path is the primary action; typing a ZIP is only a fallback", await page.locator('[data-label-sample="fixed"]').isVisible() && !(await page.locator("#fix-maria-0007").isVisible()));
+  await page.locator('[data-label-sample="wrong"]').click();
+  await page.locator("#label-result-maria-0007 .error").waitFor({ timeout: 10_000 });
+  const wrong = await text("#label-result-maria-0007");
+  check("old label: refused by code with the ZIP reason and the misread number", /Refused, nothing sent to PayPal/.test(wrong) && /60641/.test(wrong) && /60614/.test(wrong) && /not a valid USPS, UPS or FedEx number/.test(wrong), wrong.slice(0, 300));
+  check("old label: shows what the AI read and the label image", /What the AI read/.test(wrong) && (await page.locator("#label-result-maria-0007 img.label-thumb").count()) === 1);
+  await page.locator('[data-label-sample="fixed"]').click();
+  await page.locator("#release-move").getByText("15 days sooner").waitFor({ timeout: 10_000 });
   const moved = await text("#release-move");
-  check("fix label: 'You fixed maria-0007's label: $110.00 moves … 17 days sooner'", /You fixed maria-0007's label: \$110\.00 moves from Thursday, Nov 26 to Monday, Nov 9: 17 days sooner/.test(moved), moved);
+  check("reprinted label: 'You uploaded maria-0007's reprinted label: $110.00 moves … 15 days sooner'", /You uploaded maria-0007's reprinted label: \$110\.00 moves from Thursday, Nov 26 to Wednesday, Nov 11: 15 days sooner/.test(moved), moved);
   check("fix label: says only this visitor's copy changed", /Only your copy of the demo changed/.test(moved));
+  const reading = page.locator("#tracking-body .fixed-row .label-reading");
+  check("reprinted label: reading stays under the row with every code check passed", (await reading.count()) === 1 && (await reading.locator(".ck.bad").count()) === 0 && (await reading.locator(".ck.ok").count()) >= 5 && /1ZA1B2C30043000072/.test(await reading.innerText()));
+  if (shots) await page.locator("#tracking-body tr.fixed-row").screenshot({ path: join(imgDir, "step2-label.png") });
   check("fix label: row now shows the (simulated) upload", /maria-0007[\s\S]*Simulated upload/.test(await text("#step-tracking")) && !(await page.locator("#tracking-body tr.rejected").count()));
   check("fix label: nothing left to unlock", !/could be released sooner/.test(await text("#step-calendar")));
   if (shots) await page.locator("#step-calendar").screenshot({ path: join(imgDir, "step3-release-move.png") });
   await page.locator("#dispute-body").getByText("Partial").waitFor({ timeout: 10_000 });
   check("step 5: maria-0007's evidence is partial after the fix", /If maria-0007's buyer says it never arrived Partial/.test(await text("#step-dispute")));
   // Ask after the fix: the answer recorded for this data, still fully verified (never a stale answer).
-  await page.locator('[data-ask-id="release"]').click();
+  await page.locator('[data-ask-id="ready"]').click();
   await page.locator("#ask-body .ask-check").waitFor({ timeout: 15_000 });
   const askAfter = await text("#ask-body");
-  check("ask after the fix: answer recorded for this data, every fact verified", /real run for this data/.test(askAfter) && /Checked by code: (\d+)\/\1 facts verified/.test(askAfter) && /maria-0007 \$110\.00 Mon, Nov 9/.test(askAfter), askAfter.slice(0, 300));
+  check("ask after the fix: answer recorded for this data, every fact verified", /real run for this data/.test(askAfter) && /Checked by code: (\d+)\/\1 facts verified/.test(askAfter), askAfter.slice(0, 300));
 
   // Another visitor (new cookies) still sees the recording: one judge's fix never leaks to the next.
   const other = await browser.newContext({ viewport: { width: 1200, height: 900 } });

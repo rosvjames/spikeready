@@ -562,6 +562,7 @@
       }
     },
     {
+      "id": "ready",
       "question": "What do I still need before PayPal reviews my account?",
       "mode": "answer",
       "answer_markdown": "**Good news:** You're in a sales spike (39 orders in 2 days, about 13x your usual 1.5/day), and **tracking is fully done** — all 39 recent sales have verified tracking on PayPal.\n\n**Still needed — supplier invoices have 2 blocker issues:**\n\n1. **Missing supplier contact info**: the Brightline Liquidators document (`brightline-forwarded-email.txt`) doesn't show their address, phone, or email. PayPal wants invoices with full supplier contact details. Ask Brightline Liquidators for a proper invoice with that info.\n2. **Shortfall on one SKU**: you sold 14 Nike Air Force 1 '07 White, Men's Size 10, but your invoices only cover 12. You need documentation for the missing 2 units.\n\n**Not urgent right now:** $775.00 is currently on hold across 6 payments, all still in transit — nothing is actionable yet. The earliest is expected Sunday, Nov 8, with the latest possible release by Thursday, Nov 26 if PayPal extends the hold after the spike.\n\n**Next steps in the SpikeReady panel:**\n- Pull the full evidence pack for the invoice issues and request the corrected Brightline invoice.\n- Gather proof of purchase for the 2 extra Air Force 1 Size 10 units.\n- Tracking is already good — no action needed there.",
@@ -649,6 +650,8 @@
         }
       ],
       "attachments": [],
+      "stateFingerprint": "b8434dffc7cbefef",
+      "stateLabel": "after fixing maria-0007's label",
       "usage": {
         "model": "claude-sonnet-5",
         "calls": 2,
@@ -656,10 +659,100 @@
         "output_tokens": 1794,
         "cost_usd": 0.025258000000000003,
         "latency_ms": 17334
-      },
+      }
+    },
+    {
       "id": "ready",
-      "stateFingerprint": "b8434dffc7cbefef",
-      "stateLabel": "after fixing maria-0007's label"
+      "question": "What do I still need before PayPal reviews my account?",
+      "mode": "answer",
+      "answer_markdown": "Good news: your tracking is fully in order. The main thing still missing before PayPal reviews your account is your supplier invoice documentation.\n\n**✅ Tracking:** All 39 of your recent sales have verified tracking on PayPal — nothing to fix here.\n\n**❌ Supplier invoices (2 blockers to fix):**\n1. **Missing supplier contact info** — the file `brightline-forwarded-email.txt` doesn't show Brightline Liquidators' address, phone, or email. PayPal wants invoices with full supplier contact details, so ask Brightline for a proper invoice with that info.\n2. **Shortfall on one SKU** — you sold 14 Nike Air Force 1 '07 White, Men's Size 10, but your invoices only cover 12 units. You'll need documentation (e.g., another supplier invoice) covering the remaining 2 units.\n\nOnce you have an updated Brightline invoice and proof for the 2 extra Air Force 1 units, re-run the invoice check in SpikeReady. You can also pull the detailed evidence pack (with document fingerprints) for PayPal's Resolution Center if needed.\n\nSeparately, you have $775.00 in held payments releasing between Nov 8 and Nov 11 as tracking confirms delivery — that's expected and needs no action; PayPal could hold up to Nov 26 at the latest under their rules.",
+      "claims": [
+        {
+          "text": "All 39 of your recent sales have verified tracking on PayPal",
+          "tool": "get_spike_status",
+          "field_path": "checklist[0].ok",
+          "value": true,
+          "verified": true
+        },
+        {
+          "text": "All 39 sales have verified tracking on PayPal",
+          "tool": "list_sales_missing_tracking",
+          "field_path": "missing.length",
+          "value": 0,
+          "verified": true
+        },
+        {
+          "text": "brightline-forwarded-email.txt does not show the supplier's address, phone or email",
+          "tool": "check_invoices",
+          "field_path": "gaps[0].message",
+          "value": "brightline-forwarded-email.txt does not show the supplier's address, phone or email. PayPal asks for invoices with the supplier's contact details; ask Brightline Liquidators for a full invoice.",
+          "verified": true
+        },
+        {
+          "text": "You sold 14 Nike Air Force 1 '07 White Men's Size 10 but invoices cover only 12",
+          "tool": "check_invoices",
+          "field_path": "gaps[1].message",
+          "value": "You sold 14 × Nike Air Force 1 '07 White Men's Size 10; your invoices cover 12.",
+          "verified": true
+        },
+        {
+          "text": "$775.00 in held payments",
+          "tool": "get_release_calendar",
+          "field_path": "totalHeldCents",
+          "value": "$775.00",
+          "verified": true
+        },
+        {
+          "text": "held payments releasing between Nov 8 and Nov 11",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0007].expected",
+          "value": "2026-11-11",
+          "verified": true
+        },
+        {
+          "text": "latest possible release date is Nov 26",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0007].latest",
+          "value": "2026-11-26",
+          "verified": true
+        }
+      ],
+      "unsupported": [],
+      "verified": true,
+      "regenerated": false,
+      "toolCalls": [
+        {
+          "tool": "get_spike_status",
+          "input": {},
+          "isError": false
+        },
+        {
+          "tool": "list_sales_missing_tracking",
+          "input": {},
+          "isError": false
+        },
+        {
+          "tool": "check_invoices",
+          "input": {},
+          "isError": false
+        },
+        {
+          "tool": "get_release_calendar",
+          "input": {},
+          "isError": false
+        }
+      ],
+      "attachments": [],
+      "stateFingerprint": "9a79fa4c60440da7",
+      "stateLabel": "after uploading maria-0007's reprinted label",
+      "usage": {
+        "model": "claude-sonnet-5",
+        "calls": 2,
+        "input_tokens": 3732,
+        "output_tokens": 1795,
+        "cost_usd": 0.025414,
+        "latency_ms": 18023
+      }
     }
   ]
 }

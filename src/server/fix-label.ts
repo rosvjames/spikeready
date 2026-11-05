@@ -40,6 +40,8 @@ export type FixResponse =
       orderId: string;
       trackingNumber: string;
       labelPostalCode: string;
+      /** The upload carries a new tracking number (a reprinted label), not the refused one. */
+      newLabel: boolean;
       /** True when the server has no PayPal credentials, so nothing was sent to PayPal. */
       simulated: boolean;
       paypalDebugId: string | null;
@@ -98,8 +100,34 @@ export async function fixLabel(state: State, raw: unknown, ctx: FixContext): Pro
     const code = verdict.decision === "REJECT" ? verdict.code : verdict.code;
     return { state, response: { status: "REFUSED", saleId, code, reason: verdict.message } };
   }
+  return applyVerifiedShipment(state, sale, shipment, corrected, ctx);
+}
 
-  const before = forecastFor(state, saleId, shipment, undefined, ctx.now);
+/** The sale's current label was refused because its ZIP does not match the buyer's PayPal address. */
+export function isZipRefused(state: State, saleId: string): boolean {
+  const sale = state.sales.find((s) => s.saleId === saleId);
+  const shipment = state.shipments.find((s) => s.saleId === saleId);
+  if (!sale || !shipment) return false;
+  const v = verifyShipment(sale, shipment, { uploads: state.uploads });
+  return v.decision === "REJECT" && v.code === "POSTAL_CODE_MISMATCH";
+}
+
+/**
+ * Shared by both fix paths (typed ZIP and reprinted label read by AI): a shipment that code has
+ * already verified replaces the refused one, its tracking goes to the PayPal order (real sandbox
+ * call when PayPal is configured, idempotent; otherwise clearly simulated), and the release move is
+ * computed from the before and after forecasts. The caller must have verified `corrected`.
+ */
+export async function applyVerifiedShipment(
+  state: State,
+  sale: Sale,
+  refused: Shipment,
+  corrected: Shipment,
+  ctx: FixContext,
+): Promise<{ state: State; response: FixResponse }> {
+  const saleId = sale.saleId;
+  const newLabel = normalizeTracking(corrected.trackingNumber) !== normalizeTracking(refused.trackingNumber);
+  const before = forecastFor(state, saleId, refused, undefined, ctx.now);
   let upload: TrackingUpload;
   let paypalDebugId: string | null = null;
   if (ctx.paypal) {
@@ -134,8 +162,10 @@ export async function fixLabel(state: State, raw: unknown, ctx: FixContext): Pro
   const message = simulated
     ? "Label verified. Simulated upload: this server has no PayPal credentials, so nothing was sent to PayPal."
     : upload.result === "ALREADY_ON_PAYPAL"
-      ? "Label verified. PayPal already has this tracking on the order (for example from an earlier demo run), so nothing was uploaded twice."
-      : "Label verified and tracking uploaded to the PayPal sandbox order.";
+      ? `Label verified. PayPal already has this tracking on the order (for example from an earlier demo run), so nothing was uploaded twice.`
+      : newLabel
+        ? "New label uploaded to PayPal (the earlier tracking stays on the order)."
+        : "Label verified and tracking uploaded to the PayPal sandbox order.";
   return {
     state: next,
     response: {
@@ -143,7 +173,8 @@ export async function fixLabel(state: State, raw: unknown, ctx: FixContext): Pro
       saleId,
       orderId: sale.orderId,
       trackingNumber: upload.trackingNumber,
-      labelPostalCode,
+      labelPostalCode: corrected.labelPostalCode,
+      newLabel,
       simulated,
       paypalDebugId,
       release,

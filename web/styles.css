@@ -245,3 +245,32 @@ ul.deliveries li { padding: 6px 0; border-top: 1px solid var(--border); overflow
 .dispute-story li { margin: 4px 0; }
 .caveats { padding-left: 1.2em; }
 .chart .recent-label { font-weight: 600; }
+
+/* Reprinted label: the AI reads it, code checks it. */
+.btn-secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.btn:disabled { opacity: .55; cursor: not-allowed; filter: none; }
+.label-fix { margin: 10px 0 4px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-1); color: var(--text-primary, var(--text)); font-weight: 400; }
+.label-fix-title { margin: 0 0 8px; }
+.label-fix-title .fine { display: block; margin-top: 2px; }
+.label-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.label-fix .file-label.disabled { opacity: .6; }
+.label-reading { display: flex; gap: 14px; align-items: flex-start; margin-top: 10px; flex-wrap: wrap; }
+.label-thumb { width: 220px; max-width: 100%; height: auto; border: 1px solid var(--border); border-radius: 6px; background: #fff; }
+.label-body { flex: 1 1 280px; min-width: 0; }
+.label-body .fine { margin: 0 0 6px; }
+table.label-read { width: 100%; font-size: .88rem; margin: 0 0 8px; }
+table.label-read caption { text-align: left; font-weight: 600; padding-bottom: 4px; }
+table.label-read th { text-align: left; font-weight: 500; color: var(--text-secondary, var(--muted, inherit)); width: 9em; padding: 3px 8px 3px 0; text-transform: none; letter-spacing: 0; }
+table.label-read td { padding: 3px 0; overflow-wrap: anywhere; }
+.checks-title { margin: 6px 0 4px; font-size: .9rem; }
+ul.label-checks { list-style: none; margin: 0 0 8px; padding: 0; font-size: .86rem; }
+ul.label-checks li { display: flex; gap: 6px; padding: 2px 0; }
+.ck { flex: 0 0 1.1em; font-weight: 700; text-align: center; }
+.ck.ok { color: var(--good); }
+.ck.bad { color: var(--serious); }
+.ck.na { color: var(--text-secondary, inherit); }
+.ok-line { color: var(--good); margin: 6px 0 0; }
+.zip-fallback { margin-top: 10px; font-size: .88rem; }
+.zip-fallback summary { cursor: pointer; color: var(--accent); }
+.fixed-row .label-reading { margin-bottom: 6px; }
+.file-label { display: inline-flex; flex-direction: column; gap: 2px; font-size: .86rem; }

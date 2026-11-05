@@ -17,6 +17,10 @@ export interface FixRecord {
   headline: string | null;
   amountCents: number | null;
   daysSooner: number | null;
+  /** How the label was fixed: a reprinted label read by AI and checked by code, or a re-checked ZIP. */
+  via?: "label" | "zip";
+  /** The upload carries a new tracking number (reprinted label); the earlier tracking stays on the order. */
+  newLabel?: boolean;
 }
 
 export interface DemoSession {

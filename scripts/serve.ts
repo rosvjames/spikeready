@@ -8,6 +8,7 @@ import { createServer } from "node:http";
 import { loadDotEnv, loadPayPalConfig, MissingConfigError, ROOT } from "../src/config.js";
 import { AnthropicExtractor } from "../src/invoices/extract.js";
 import { AnthropicNoticeExtractor } from "../src/limitation/extract.js";
+import { AnthropicLabelExtractor } from "../src/labels/extract.js";
 import { PayPalClient, type CallReceipt } from "../src/paypal/client.js";
 import { readBalance } from "../src/server/proof.js";
 import { LiveAssistant } from "../src/assistant/agent.js";
@@ -70,6 +71,8 @@ const app = createApp({
   // Same rule for reading pasted PayPal notices with the AI.
   balanceReader: paypal ? () => readBalance(paypal!, () => lastReceipt) : null,
   noticeExtractor: aiUploadsEnabled(process.env) ? () => new AnthropicNoticeExtractor() : null,
+  // Same rule for reading an uploaded shipping label (the sample labels work without it).
+  labelExtractor: aiUploadsEnabled(process.env) ? () => new AnthropicLabelExtractor() : null,
   // The "fix label" action shows the PayPal-Debug-Id of the call it made.
   lastPayPalReceipt: () => lastReceipt,
   // "Ask SpikeReady" with free-text questions: same rule as the other paid AI features. Suggested questions
@@ -82,6 +85,6 @@ const app = createApp({
 const port = Number(process.env.PORT ?? 3000);
 createServer((req, res) => void app(req, res)).listen(port, () => {
   console.log(
-    `SpikeReady on http://localhost:${port}  (${demoSource}; PayPal ${paypal ? paypal.env : "not configured"}; webhooks ${webhookId && paypal ? "on" : "off"}; live AI (invoices, notices, Ask SpikeReady) ${aiUploadsEnabled(process.env) ? "on" : "off"})`,
+    `SpikeReady on http://localhost:${port}  (${demoSource}; PayPal ${paypal ? paypal.env : "not configured"}; webhooks ${webhookId && paypal ? "on" : "off"}; live AI (invoices, notices, labels, Ask SpikeReady) ${aiUploadsEnabled(process.env) ? "on" : "off"})`,
   );
 });

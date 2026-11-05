@@ -16,7 +16,10 @@ import { cachedBalance, defaultProofPath, loadProof, loadWebhookProof, readBalan
 import { dirname } from "node:path";
 import type { CallReceipt } from "../paypal/client.js";
 import { DailyAiBudget, summarizeUsage, type AiUsage } from "./ai-rails.js";
-import { FixRequestError, fixLabel } from "./fix-label.js";
+import { applyVerifiedShipment, FixRequestError, fixLabel, isZipRefused, type FixResponse } from "./fix-label.js";
+import { handleLabelUpload, LabelUploadError, MAX_LABEL_BYTES } from "./label-upload.js";
+import { loadSampleLabels, SAMPLE_FILES, type SampleLabels } from "../labels/samples.js";
+import type { LabelExtractor } from "../labels/extract.js";
 import { clientKey, createRateLimiter } from "./rate-limit.js";
 import { RecordedAssistant } from "../assistant/recorded.js";
 import type { Assistant } from "../assistant/agent.js";
@@ -66,6 +69,10 @@ export interface AppDeps {
   sessionOptions?: SessionOptions;
   /** Recorded real dispute (data/recorded/dispute-proof-*.json); defaults next to the proof file. */
   disputeProofPath?: string;
+  /** Builds the AI reader for uploaded shipping labels; null when paid AI is not allowed on this server. */
+  labelExtractor?: (() => LabelExtractor) | null;
+  /** Sample labels and their recorded readings; defaults to data/sample-labels + data/recorded. */
+  labelSamples?: SampleLabels | null;
   /** Per-client limits: live AI requests and "fix label" actions (per minute). */
   rateLimits?: { aiPerMinute?: number; fixPerMinute?: number };
 }
@@ -321,6 +328,71 @@ export function createApp(deps: AppDeps) {
     }
   }
 
+  const labelSamples = deps.labelSamples !== undefined ? deps.labelSamples : loadSampleLabels();
+
+  function recordFix(sc: { fixes: Map<string, FixRecord> }, r: Extract<FixResponse, { status: "UPLOADED" | "ALREADY_ON_PAYPAL" }>, via: "label" | "zip"): void {
+    sc.fixes.set(r.saleId, {
+      simulated: r.simulated,
+      paypalDebugId: r.paypalDebugId,
+      status: r.status,
+      headline: r.release?.headline ?? null,
+      amountCents: r.release?.amountCents ?? null,
+      daysSooner: r.release?.daysSooner ?? null,
+      via,
+      newLabel: r.newLabel,
+    });
+  }
+
+  // "Upload the reprinted label": the AI reads the label, code checks the reading and the PayPal order,
+  // and only a verified label for a refused sale goes to PayPal (same upload path as the ZIP fix).
+  async function trackingLabel(req: IncomingMessage, res: ServerResponse): Promise<void> {
+    if (!fixLimiter.take(clientKey(req))) return send(res, 429, { error: "Too many attempts. Wait a minute and try again." });
+    const raw = await readBody(req, Math.ceil(MAX_LABEL_BYTES * 1.4) + 4096);
+    let body: unknown;
+    try {
+      body = JSON.parse(raw);
+    } catch {
+      return send(res, 400, { error: "invalid JSON" });
+    }
+    const saleId = (body as { saleId?: unknown } | null)?.saleId;
+    const ownFile = Boolean((body as { file?: unknown } | null)?.file);
+    const live = ownFile && Boolean(deps.labelExtractor);
+    const sc = scope(req, res);
+    if (typeof saleId === "string" && !isZipRefused(sc.loadState(), saleId)) {
+      return send(res, 409, { error: "Only a sale whose label was refused (ZIP does not match the buyer's address) takes a reprinted label here." });
+    }
+    if (live) {
+      const blocked = aiGate(req);
+      if (blocked) return send(res, blocked.status, { error: blocked.error });
+    }
+    try {
+      const out = await serialized(async () => {
+        const state = sc.loadState();
+        const label = await handleLabelUpload(
+          { state, now: deps.now(), aiEnabled: live, live: live ? deps.labelExtractor!() : null, samples: labelSamples },
+          body,
+        );
+        if (label.source === "live") aiBudget.add(label.ai ? { model: label.ai.model, calls: label.ai.calls, inputTokens: 0, outputTokens: 0, costUsd: label.ai.costUsd, latencyMs: label.ai.latencyMs } : null);
+        if (label.verdict !== "UPLOAD" || !label.shipment) return { label, upload: null };
+        const sale = state.sales.find((s) => s.saleId === label.saleId)!;
+        const refused = state.shipments.find((s) => s.saleId === label.saleId)!;
+        const applied = await applyVerifiedShipment(state, sale, refused, label.shipment, {
+          paypal: deps.paypal,
+          now: deps.now(),
+          ...(deps.lastPayPalReceipt ? { lastReceipt: deps.lastPayPalReceipt } : {}),
+        });
+        sc.saveState(applied.state);
+        if (applied.response.status !== "REFUSED") recordFix(sc, applied.response, "label");
+        return { label, upload: applied.response };
+      });
+      return send(res, 200, { ...out, resetsOnRestart: deps.demo, perVisitor: Boolean(sessions) });
+    } catch (err) {
+      if (err instanceof LabelUploadError) return send(res, err.status, { error: err.message });
+      if (err instanceof FixRequestError) return send(res, err.status, { error: err.message });
+      throw err;
+    }
+  }
+
   // Labels fixed through the panel live in the visitor's scope (in memory in demo mode).
   async function trackingFix(req: IncomingMessage, res: ServerResponse): Promise<void> {
     if (!fixLimiter.take(clientKey(req))) return send(res, 429, { error: "Too many attempts. Wait a minute and try again." });
@@ -341,15 +413,7 @@ export function createApp(deps: AppDeps) {
         });
         if (out.response.status !== "REFUSED") {
           sc.saveState(out.state);
-          const r = out.response;
-          sc.fixes.set(r.saleId, {
-            simulated: r.simulated,
-            paypalDebugId: r.paypalDebugId,
-            status: r.status,
-            headline: r.release?.headline ?? null,
-            amountCents: r.release?.amountCents ?? null,
-            daysSooner: r.release?.daysSooner ?? null,
-          });
+          recordFix(sc, out.response, "zip");
         }
         return out.response;
       });
@@ -394,6 +458,10 @@ export function createApp(deps: AppDeps) {
         if (method !== "POST") return send(res, 405, { error: "method not allowed" });
         return await invoicesCheck(req, res);
       }
+      if (url.pathname === "/api/tracking/label") {
+        if (method !== "POST") return send(res, 405, { error: "method not allowed" });
+        return await trackingLabel(req, res);
+      }
       if (url.pathname === "/api/tracking/fix") {
         if (method !== "POST") return send(res, 405, { error: "method not allowed" });
         return await trackingFix(req, res);
@@ -426,6 +494,13 @@ export function createApp(deps: AppDeps) {
         });
         return void res.end(method === "HEAD" ? undefined : data);
       }
+      const sampleMatch = /^\/api\/labels\/sample\/(fixed|wrong)\.png$/.exec(url.pathname);
+      if (sampleMatch) {
+        const file = labelSamples?.files[sampleMatch[1] as keyof typeof SAMPLE_FILES];
+        if (!file) return send(res, 404, { error: "no sample labels on this server" });
+        res.writeHead(200, { "Content-Type": "image/png", "Content-Length": file.content.length, "Cache-Control": "public, max-age=3600", "X-Content-Type-Options": "nosniff" });
+        return void res.end(method === "HEAD" ? undefined : file.content);
+      }
       if (url.pathname === "/healthz") return send(res, 200, { ok: true, demo: deps.demo });
       if (url.pathname === "/api/webhooks/recent") {
         return send(res, 200, { configured: Boolean(deps.webhookId && deps.paypal), verified: verifiedDeliveries });
@@ -455,7 +530,7 @@ export function createApp(deps: AppDeps) {
         const sc = scope(req, res);
         return send(res, 200, {
           ...buildDashboard(sc.loadState(), deps.now(), deps.demo, deps.banner ?? null),
-          live: { balance: Boolean(balance), paypal: Boolean(deps.paypal), ai: Boolean(deps.invoiceExtractor || deps.noticeExtractor) },
+          live: { balance: Boolean(balance), paypal: Boolean(deps.paypal), ai: Boolean(deps.invoiceExtractor || deps.noticeExtractor), labelAi: Boolean(deps.labelExtractor), labelSamples: Boolean(labelSamples) },
           fixes: Object.fromEntries(sc.fixes),
           perVisitor: Boolean(sessions),
           ask: { live: Boolean(deps.askLive), suggestions: suggestionsOf(askRecorded) },

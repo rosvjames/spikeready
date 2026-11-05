@@ -20,12 +20,14 @@ SpikeReady is a small TypeScript codebase. Pure functions make the decisions; th
 | `src/ai/` | Claude client for the Anthropic API or the Astropods AI Gateway (`client.ts`), price table (`pricing.ts`) and append-only AI audit log: model, tokens, cost, latency, input hash, never content (`log.ts`) |
 | `src/invoices/` | Invoice engine: AI extraction per document (`extract.ts`), grounding of every extracted value in the source text (`grounding.ts`), SHA-256 fingerprints and duplicate files (`integrity.ts`), deterministic reconciliation against PayPal sales (`reconcile.ts`), the pipeline (`pipeline.ts`) and the evidence pack (`dossier.ts`) |
 | `src/limitation/` | Limitation notice reader: AI lists PayPal's requests with quotes (`extract.ts`), code keeps only quotes found in the message (`ground.ts`) and builds the response plan from PayPal data (`plan.ts`) |
-| `src/server/` | HTTP server: dashboard API, PayPal webhook endpoint with signature verification (`verify-webhook.ts`), invoice and notice routes, recorded demo with a frozen clock (`recorded.ts`), static panel in `web/` |
+| `src/server/` | HTTP server: dashboard API, PayPal webhook endpoint with signature verification (`verify-webhook.ts`), invoice, notice and ask routes, the Fix label action (`fix-label.ts`), cash metric (`cash.ts`), receipts (`proof.ts`), public-demo AI limits (`ai-rails.ts`, `rate-limit.ts`), recorded demo with a frozen clock (`recorded.ts`) and per-visitor demo state (`sessions.ts`), so one visitor's clicks never change the demo for others, plus the reprinted-label upload route (`label-upload.ts`) and the dispute card data (`dispute-proof.ts`); static panel in `web/` |
 | `src/mcp/` | MCP server for AI assistants: 8 tools over the same modules; only `upload_tracking` writes, and only with the seller's confirmation and an operator switch |
-| `src/disputes/` | Item-not-received dispute evidence: parses `CUSTOMER.DISPUTE.*` events and links them to sales (`event.ts`), rates the evidence from verified tracking as strong, partial or weak (`evidence.ts`), and builds PayPal's `provide-evidence` request, sent only with explicit confirmation (`submit.ts`). Built and tested with PayPal's simulator; a real sandbox dispute end to end is in progress |
+| `src/disputes/` | Item-not-received dispute evidence: parses `CUSTOMER.DISPUTE.*` events and links them to sales (`event.ts`), rates the evidence from verified tracking as strong, partial or weak (`evidence.ts`), and picks the seller action PayPal currently allows on the case (`provide-evidence`, otherwise `provide-supporting-info`), sent only with explicit confirmation (`submit.ts`). Tested with PayPal's simulator and on one real sandbox case (`PP-R-QLW-10196536`, receipts in `data/recorded/dispute-proof-2026-11-05.json`) |
+| `src/assistant/` | Ask SpikeReady: a tool-use loop with Claude over the read-only tools (`agent.ts`, `tools.ts`); code checks every cited claim, amount and date against the tool results (`claims.ts`); recorded answers for the demo (`recorded.ts`); no write tool is ever exposed |
+| `src/labels/` | Reprinted-label reading: Claude reads carrier, tracking number and destination ZIP from the label the seller uploads; code checks the reading against the document before the normal tracking verification and upload. Files: `extract.ts` (Claude reader + recorded reader), `verify.ts` (grounding for text; check digit, carrier format, ZIP↔state and recipient for photos/PDFs; then `verifyShipment`), `zip.ts`, `samples.ts` (two fictional sample labels in `data/sample-labels/` with the model's recorded readings). Wired through `POST /api/tracking/label`, which shares the upload path with the typed-ZIP fix (`applyVerifiedShipment` in `fix-label.ts`). |
 | `src/demo/` | Deterministic demo data (Maria's catalog, buyers, labels, baseline history) and the resumable seed helpers |
 | `eval/` | Invoice benchmark: generated cases with ground truth, arms (rules, oracle, pipeline, single call), prompt-injection cases, deterministic scoring, reports in `eval/results/` |
-| `scripts/` | `check`, `seed`, `approve` (sandbox only), `tracking`, `hold`, `report`, `transactions`, `proof`, `invoices`, `serve`, `mcp`, `register-webhook`, `record-demo`, `eval` (via `npm run …`) |
+| `scripts/` | `check`, `seed`, `approve` (sandbox only), `tracking`, `hold`, `report`, `transactions`, `proof`, `invoices`, `serve`, `mcp`, `ask`, `register-webhook`, `record-demo`, `dispute` (simulator), `open-dispute` (sandbox buyer helper), `dispute-real`, `eval` (via `npm run …`) |
 
 ## Demo chain
 
@@ -36,6 +38,8 @@ flowchart TD
   C --> D{verifyShipment<br/>check digit, completed payment,<br/>not reused, ZIP + country match}
   D -- UPLOAD --> E[Orders v2: GET order<br/>already tracked?] --> F[Orders v2: /track]
   D -- REJECT --> G[Explain to the seller<br/>e.g. ZIP mismatch]
+  G --> LB[Seller uploads reprinted label] --> LR[AI reads carrier, tracking, ZIP] --> LC{Code: reading found<br/>in the label?}
+  LC -- yes --> D
   H[PayPal webhook<br/>signed delivery or simulator sample] --> V{verify-webhook-signature<br/>real deliveries only}
   V -- SUCCESS --> J[handleWebhookEvent<br/>links hold to sale, once per capture]
   H -. simulator sample, re-pointed and marked simulated .-> J
@@ -46,11 +50,19 @@ flowchart TD
   R[Supplier invoices] --> S[AI extracts fields] --> T{Grounding: value written<br/>in the document?}
   T -- yes --> U[Code reconciles vs PayPal sales] --> W[Evidence pack<br/>SHA-256 of originals]
   T -- no --> X[Dropped + warning]
+  DS[Buyer opens 'item not received'<br/>CUSTOMER.DISPUTE.* signed webhook] --> V
+  J --> DE[Dispute evidence from verified tracking<br/>strong / partial / weak]
+  F --> DE
+  DE --> DC{Seller confirms?}
+  DC -- yes --> DP[Disputes API: action PayPal allows<br/>provide-supporting-info / provide-evidence]
   B --> L[Seller panel / MCP tools]
   K --> L
   Q --> L
   W --> L
   F --> Q
+  DE --> L
+  L --> AS[Ask SpikeReady<br/>Claude calls read-only tools] --> AC{Code checks every<br/>amount, date, fact}
+  AC --> L
 ```
 
 ## Principles

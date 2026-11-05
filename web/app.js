@@ -121,8 +121,12 @@ function renderCalendar(d) {
         ? "Simulated upload: this server has no PayPal credentials, so nothing was sent to PayPal."
         : f.status === "ALREADY_ON_PAYPAL"
           ? "PayPal already has this tracking from an earlier demo run, so nothing was uploaded twice."
-          : "Tracking uploaded to the PayPal sandbox order.";
-      return `<div class="alert calm move" role="status"><span class="ico" aria-hidden="true">✓</span><div><strong>You fixed ${esc(saleId)}'s label: ${esc(f.headline)}.</strong>${esc(how)}${f.paypalDebugId ? ` PayPal-Debug-Id <span class="mono">${esc(f.paypalDebugId)}</span>.` : ""}${d.perVisitor ? " Only your copy of the demo changed; Reset demo starts over." : ""}</div></div>`;
+          : f.newLabel
+            ? "New label uploaded to PayPal (the earlier tracking stays on the order)."
+            : "Tracking uploaded to the PayPal sandbox order.";
+      const what = f.via === "label" ? `You uploaded ${esc(saleId)}'s reprinted label` : `You fixed ${esc(saleId)}'s label`;
+      const est = f.via === "label" ? " A new label has no carrier delivery estimate yet, so SpikeReady assumes 5 days in transit." : "";
+      return `<div class="alert calm move" role="status"><span class="ico" aria-hidden="true">✓</span><div><strong>${what}: ${esc(f.headline)}.</strong>${esc(how)}${est}${f.paypalDebugId ? ` PayPal-Debug-Id <span class="mono">${esc(f.paypalDebugId)}</span>.` : ""}${d.perVisitor ? " Only your copy of the demo changed; Reset demo starts over." : ""}</div></div>`;
     })
     .join("");
   el.innerHTML = `
@@ -155,9 +159,7 @@ function renderTracking(d) {
       const [cls, label] = fix?.simulated ? ["pill-wait", "Simulated upload"] : (STATUS[s.tracking.status] ?? ["pill-wait", s.tracking.status]);
       const rej = s.tracking.status === "REJECTED";
       const fixable = rej && s.tracking.code === "POSTAL_CODE_MISMATCH";
-      const fixForm = fixable
-        ? `<form class="fix-form" data-sale="${esc(s.saleId)}"><label for="fix-${esc(s.saleId)}">Fix the label's ZIP</label><input id="fix-${esc(s.saleId)}" name="zip" inputmode="numeric" autocomplete="off" maxlength="10" value="${esc(s.tracking.labelPostalCode ?? "")}"><button type="submit" class="btn">Re-check and upload</button><span class="fine">Code re-checks the label against the buyer's PayPal address; only a match is uploaded to PayPal.</span></form><div class="fix-result" id="fix-result-${esc(s.saleId)}" aria-live="polite"></div>`
-        : "";
+      const fixForm = fixable ? labelFixBlock(s, d) : "";
       const more = i >= VISIBLE ? " data-more hidden" : "";
       return `<tr class="${rej ? "rejected" : ""}"${more}>
         <td>${esc(s.saleId)}</td>
@@ -166,7 +168,7 @@ function renderTracking(d) {
         <td>${esc(s.shipTo.city)}, ${esc(s.shipTo.state)} <strong>${esc(s.shipTo.postalCode)}</strong></td>
         <td class="mono hide-sm">${esc(s.tracking.carrier ?? "")} ${esc(s.tracking.trackingNumber ?? "")}<br><span class="muted">label ZIP ${esc(s.tracking.labelPostalCode ?? "-")}</span></td>
         <td><span class="pill ${cls}">${label}</span><span class="show-sm muted">${esc(s.tracking.carrier ?? "")} · label ZIP ${esc(s.tracking.labelPostalCode ?? "-")}</span></td>
-      </tr>${rej && s.tracking.reason ? `<tr class="rejected reason-row"${more}><td colspan="6"><span class="reason">Why: ${esc(s.tracking.reason)}</span>${fixForm}</td></tr>` : ""}${fix ? `<tr class="fixed-row"${more}><td colspan="6"><span class="fine">Label fixed${d.perVisitor ? " in your copy of the demo" : ""}${fix.simulated ? " (simulated upload: no PayPal credentials on this server)" : fix.status === "ALREADY_ON_PAYPAL" ? ": PayPal already has this tracking from an earlier demo run, so nothing was uploaded twice" : ": tracking uploaded to the PayPal sandbox order"}${fix.paypalDebugId ? ` · PayPal-Debug-Id <span class="mono">${esc(fix.paypalDebugId)}</span>` : ""}.</span></td></tr>` : ""}`;
+      </tr>${rej && s.tracking.reason ? `<tr class="rejected reason-row"${more}><td colspan="6"><span class="reason">Why: ${esc(s.tracking.reason)}</span>${fixForm}</td></tr>` : ""}${fix ? `<tr class="fixed-row"${more}><td colspan="6"><span class="fine">${fixedLine(fix, d)}${fix.paypalDebugId ? ` · PayPal-Debug-Id <span class="mono">${esc(fix.paypalDebugId)}</span>` : ""}.</span>${labelResults[s.saleId] ? renderLabelResult(s.saleId, labelResults[s.saleId]) : ""}</td></tr>` : ""}`;
     })
     .join("");
   $("tracking-body").className = "";
@@ -177,6 +179,8 @@ function renderTracking(d) {
       <tbody>${rows}</tbody></table></div>
     ${d.sales.length > VISIBLE ? `<button type="button" class="more" id="more-sales" aria-expanded="false">Show all ${d.sales.length} sales</button>` : ""}`;
   for (const form of document.querySelectorAll(".fix-form")) form.addEventListener("submit", onFixSubmit);
+  for (const b of document.querySelectorAll("[data-label-sample]")) b.addEventListener("click", onLabelSample);
+  for (const f of document.querySelectorAll("[data-label-file]")) f.addEventListener("change", onLabelFile);
   const more = $("more-sales");
   more?.addEventListener("click", () => {
     const open = more.getAttribute("aria-expanded") === "true";
@@ -184,6 +188,119 @@ function renderTracking(d) {
     more.setAttribute("aria-expanded", String(!open));
     more.textContent = open ? `Show all ${d.sales.length} sales` : "Show fewer";
   });
+}
+
+// ---------- Reprinted label: the AI reads the label, code checks the reading and the PayPal order.
+// Last label result per sale in this page (the server keeps the visitor's state; this keeps the reading
+// on screen after the dashboard reloads).
+const labelResults = {};
+
+function fixedLine(fix, d) {
+  const where = d.perVisitor ? " in your copy of the demo" : "";
+  if (fix.simulated) return `Label fixed${where} (simulated upload: no PayPal credentials on this server)`;
+  if (fix.status === "ALREADY_ON_PAYPAL") return `Label fixed${where}: PayPal already has this tracking from an earlier demo run, so nothing was uploaded twice`;
+  if (fix.newLabel) return `Reprinted label verified${where}: new label uploaded to PayPal (the earlier tracking stays on the order)`;
+  return `Label fixed${where}: tracking uploaded to the PayPal sandbox order`;
+}
+
+function labelFixBlock(s, d) {
+  const id = esc(s.saleId);
+  const samples = d.live?.labelSamples !== false;
+  const liveAi = Boolean(d.live?.labelAi);
+  return `<div class="label-fix" data-sale="${id}">
+    <p class="label-fix-title"><strong>Upload the reprinted label</strong> <span class="fine">The AI reads the label; code checks the reading and the buyer's PayPal address before anything goes to PayPal.</span></p>
+    <div class="label-actions">
+      ${samples ? `<button type="button" class="btn" data-label-sample="fixed" data-sale="${id}">Use the reprinted sample label</button>
+      <button type="button" class="btn btn-secondary" data-label-sample="wrong" data-sale="${id}">Use the old label</button>` : ""}
+      <label class="file-label${liveAi ? "" : " disabled"}">Your own label (PDF, PNG, JPG)
+        <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt" data-label-file data-sale="${id}"${liveAi ? "" : " disabled"}></label>
+    </div>
+    ${liveAi ? "" : `<p class="fine">Reading your own label needs live AI, which is off on this public demo. The sample labels show the real readings Claude Sonnet 5 made on Nov 5.</p>`}
+    <div class="label-result" id="label-result-${id}" aria-live="polite">${labelResults[s.saleId] ? renderLabelResult(s.saleId, labelResults[s.saleId]) : ""}</div>
+    <details class="zip-fallback"><summary>I already reprinted it, just re-check the ZIP</summary>
+      <form class="fix-form" data-sale="${id}"><label for="fix-${id}">Label ZIP</label><input id="fix-${id}" name="zip" inputmode="numeric" autocomplete="off" maxlength="10" value="${esc(s.tracking.labelPostalCode ?? "")}"><button type="submit" class="btn btn-secondary">Re-check and upload</button><span class="fine">Uses the ZIP you type: uploading the label itself is stronger proof.</span></form>
+      <div class="fix-result" id="fix-result-${id}" aria-live="polite"></div>
+    </details>
+  </div>`;
+}
+
+const CHECK_ICON = (ok) => (ok === true ? `<span class="ck ok" aria-label="passed">✓</span>` : ok === false ? `<span class="ck bad" aria-label="failed">✗</span>` : `<span class="ck na" aria-label="not checked">–</span>`);
+
+function renderLabelResult(saleId, r) {
+  const l = r.label;
+  const x = l.extracted ?? {};
+  const to = x.ship_to ?? {};
+  const img = r.thumb ? `<img class="label-thumb" src="${esc(r.thumb)}" alt="The label that was read (${esc(l.file?.name ?? "label")})" loading="lazy">` : "";
+  const how =
+    l.source === "live" && l.ai
+      ? `Read live by ${esc(l.ai.model)} in ${(l.ai.latencyMs / 1000).toFixed(1)} s, ${esc(fmtCost(l.ai.costUsd))}.`
+      : `Recorded reading: Claude Sonnet 5 read this sample label on Nov 5; its real output is replayed here.`;
+  const field = (k, v) => `<tr><th scope="row">${k}</th><td>${v ? esc(v) : `<span class="muted">not read</span>`}</td></tr>`;
+  const addr = [to.name, to.line1, [to.city, to.state].filter(Boolean).join(", "), to.postal_code].filter(Boolean).join(" · ");
+  const checks = (l.checks ?? []).map((c) => `<li>${CHECK_ICON(c.ok)} ${esc(c.message)}</li>`).join("");
+  let verdict = "";
+  if (l.verdict === "REJECT") {
+    verdict = `<p class="error" role="alert"><strong>Refused, nothing sent to PayPal.</strong> ${(l.reasons ?? []).map(esc).join(" ")}</p>`;
+  } else if (r.upload) {
+    const u = r.upload;
+    verdict = `<p class="ok-line" role="status"><strong>${esc(u.message)}</strong>${u.paypalDebugId ? ` PayPal-Debug-Id <span class="mono">${esc(u.paypalDebugId)}</span>.` : ""}${u.release ? ` ${esc(u.release.headline)}. <a href="#step-calendar">See the calendar ↓</a>` : ""}</p>`;
+  } else if (l.verdict === "ALREADY_UPLOADED") {
+    verdict = `<p class="ok-line">This tracking is already on the PayPal order.</p>`;
+  }
+  return `<div class="label-reading">${img}<div class="label-body">
+    <p class="fine">${how} Code decided.</p>
+    <table class="label-read"><caption>What the AI read from ${esc(l.file?.name ?? "the label")}</caption><tbody>
+      ${field("Carrier", x.carrier)}${field("Tracking number", x.tracking_number)}${field("Ship to", addr)}${field("Ship date", x.ship_date)}
+    </tbody></table>
+    <p class="checks-title"><strong>What code checked</strong></p><ul class="label-checks">${checks}</ul>
+    ${verdict}</div></div>`;
+}
+
+async function sendLabel(saleId, body, thumb) {
+  const out = $(`label-result-${saleId}`);
+  const buttons = document.querySelectorAll(`[data-sale="${CSS.escape(saleId)}"][data-label-sample], [data-sale="${CSS.escape(saleId)}"][data-label-file]`);
+  for (const b of buttons) b.disabled = true;
+  out.innerHTML = `<p class="loading">Reading the label…</p>`;
+  try {
+    const res = await fetch("/api/tracking/label", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ saleId, ...body }) });
+    const r = await res.json();
+    if (!res.ok) throw new Error(r.error ?? `HTTP ${res.status}`);
+    labelResults[saleId] = { ...r, thumb };
+    if (r.upload) {
+      await loadDashboard(); // the row is now on PayPal; the reading stays under it
+      document.querySelector(`#tracking-body .fixed-row .label-reading`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    } else {
+      out.innerHTML = renderLabelResult(saleId, labelResults[saleId]);
+    }
+  } catch (err) {
+    out.innerHTML = `<p class="error" role="alert">${esc(err.message)}</p>`;
+  } finally {
+    for (const b of buttons) b.disabled = false;
+  }
+}
+
+function onLabelSample(e) {
+  const b = e.currentTarget;
+  const which = b.dataset.labelSample;
+  void sendLabel(b.dataset.sale, { useSample: which }, `/api/labels/sample/${which}.png`);
+}
+
+function onLabelFile(e) {
+  const input = e.currentTarget;
+  const file = input.files?.[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    $(`label-result-${input.dataset.sale}`).innerHTML = `<p class="error" role="alert">Labels must be 5 MB or smaller.</p>`;
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const base64 = String(reader.result).split(",")[1] ?? "";
+    const mediaType = file.type || (file.name.toLowerCase().endsWith(".pdf") ? "application/pdf" : "text/plain");
+    const thumb = file.type.startsWith("image/") ? URL.createObjectURL(file) : null;
+    void sendLabel(input.dataset.sale, { file: { name: file.name, mediaType, base64 } }, thumb);
+  };
+  reader.readAsDataURL(file);
 }
 
 // The one action on PayPal the demo allows: correct a label refused for its ZIP. The server's code
