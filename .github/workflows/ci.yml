@@ -20,3 +20,19 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+
+  e2e:
+    # Browser check of the seller panel (demo mode, no secrets). Separate job so unit tests stay fast.
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # Playwright is not a project dependency (only this check needs it).
+      - run: npm install --no-save --legacy-peer-deps playwright@1
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e

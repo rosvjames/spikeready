@@ -3,6 +3,7 @@
 //   npm run register-webhook -- --url https://<your-app>.onrender.com/webhooks/paypal
 import { parseArgs } from "node:util";
 import { z } from "zod";
+import { DISPUTE_EVENT_TYPES } from "../src/disputes/types.js";
 import { HOLD_EVENT_TYPES } from "../src/holds/handler.js";
 import { clientFromEnv } from "../src/paypal/index.js";
 import { run } from "./_cli.js";
@@ -28,7 +29,7 @@ run(async () => {
   const created = await client.request("POST", "/v1/notifications/webhooks", {
     requestId: `spikeready-webhook-${url}`,
     schema: Webhook,
-    body: { url, event_types: [...new Set([...HOLD_EVENT_TYPES, ...extra])].map((name) => ({ name })) },
+    body: { url, event_types: [...new Set([...HOLD_EVENT_TYPES, ...DISPUTE_EVENT_TYPES, ...extra])].map((name) => ({ name })) },
   });
   console.log(`Registered webhook ${created.id} for ${created.event_types.map((e) => e.name).join(", ")}`);
   console.log(`Set PAYPAL_WEBHOOK_ID=${created.id} in the server's environment.`);

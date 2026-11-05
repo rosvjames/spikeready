@@ -169,3 +169,17 @@ ul.plan .plan-body { min-width: 0; display: flex; flex-direction: column; gap: 3
 @media (max-width: 760px) {
   ul.plan > li { grid-template-columns: 1fr; }
 }
+
+/* Proof section */
+#proof > details { margin-top: 0; font-size: 1rem; }
+#proof summary { cursor: pointer; list-style-position: outside; }
+#proof summary .inline-h { display: inline; font-size: 1.15rem; margin: 0 8px 0 0; }
+.proof-totals { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 6px; }
+.proof-grid { display: grid; gap: 18px; grid-template-columns: 1fr; margin-top: 10px; }
+.proof-grid h3 { margin-bottom: 4px; }
+ul.simulated { margin: 6px 0 0; padding-left: 20px; font-size: .9rem; color: var(--text-secondary); }
+ul.simulated li { margin: 4px 0; }
+ul.deliveries { list-style: none; padding: 0; margin: 6px 0 0; font-size: .88rem; }
+ul.deliveries li { padding: 6px 0; border-top: 1px solid var(--border); overflow-wrap: anywhere; }
+.mono, td.mono { overflow-wrap: anywhere; }
+.balance-line { font-size: .88rem; color: var(--text-secondary); margin: 4px 0 10px; }

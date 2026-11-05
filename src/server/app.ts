@@ -12,6 +12,7 @@ import { InvoiceRequestError, MAX_INVOICE_BODY_BYTES, runInvoiceCheck } from "./
 import { LimitationRequestError, MAX_LIMITATION_BODY_BYTES, runLimitationPlan } from "./limitation.js";
 import type { NoticeExtractor } from "../limitation/extract.js";
 import { verifyWebhookSignature } from "./verify-webhook.js";
+import { cachedBalance, defaultProofPath, loadProof, readBalance, SIMULATED, type BalanceReading } from "./proof.js";
 
 export interface AppDeps {
   loadState: () => State;
@@ -34,6 +35,10 @@ export interface AppDeps {
   noticeExtractor?: (() => NoticeExtractor) | null;
   /** Override for the sample notices folder (tests). */
   noticesDir?: string;
+  /** Receipts of the recorded sandbox run (npm run proof); defaults to data/recorded next to webDir. */
+  proofPath?: string;
+  /** Live balance reader (with PayPal-Debug-Id); defaults to reading through `paypal` without the debug id. */
+  balanceReader?: (() => Promise<BalanceReading>) | null;
 }
 
 export const MAX_BODY_BYTES = 1024 * 1024;
@@ -88,6 +93,15 @@ export function createApp(deps: AppDeps) {
   // Public, in-memory list of the last deliveries PayPal signed and we verified (ids and types only),
   // so anyone can check that signature verification works on the live deployment.
   const verifiedDeliveries: { eventId: string; eventType: string; verifiedAt: string; result: string }[] = [];
+
+  const proofPath = deps.proofPath ?? defaultProofPath(deps.webDir);
+  const paypalForBalance = deps.paypal;
+  const balance =
+    deps.balanceReader !== undefined
+      ? deps.balanceReader && cachedBalance(deps.balanceReader)
+      : paypalForBalance
+        ? cachedBalance(() => readBalance(paypalForBalance))
+        : null;
 
   async function webhook(req: IncomingMessage, res: ServerResponse): Promise<void> {
     if (!deps.webhookId || !deps.paypal) return send(res, 503, { error: "webhook not configured" });
@@ -242,7 +256,24 @@ export function createApp(deps: AppDeps) {
       if (url.pathname === "/api/webhooks/recent") {
         return send(res, 200, { configured: Boolean(deps.webhookId && deps.paypal), verified: verifiedDeliveries });
       }
-      if (url.pathname === "/api/dashboard") return send(res, 200, buildDashboard(deps.loadState(), deps.now(), deps.demo, deps.banner ?? null));
+      if (url.pathname === "/api/proof") {
+        const proof = await loadProof(proofPath);
+        if (!proof) return send(res, 404, { error: "no recorded proof on this server" });
+        return send(res, 200, { ...proof, simulated: SIMULATED });
+      }
+      if (url.pathname === "/api/balance") {
+        if (!balance) return send(res, 503, { error: "PayPal is not configured on this server" });
+        try {
+          return send(res, 200, { environment: deps.paypal?.env ?? "sandbox", ...(await balance()) });
+        } catch (err) {
+          if (err instanceof PayPalApiError) return send(res, 502, { error: "could not read the balance from PayPal" });
+          throw err;
+        }
+      }
+      if (url.pathname === "/api/dashboard") {
+        // `live` tells the panel which live PayPal reads this server can do, so it never calls a disabled endpoint.
+        return send(res, 200, { ...buildDashboard(deps.loadState(), deps.now(), deps.demo, deps.banner ?? null), live: { balance: Boolean(balance) } });
+      }
       if (url.pathname.startsWith("/api/")) return send(res, 404, { error: "not found" });
       return await staticFile(url.pathname, res, method === "HEAD");
     } catch (err) {

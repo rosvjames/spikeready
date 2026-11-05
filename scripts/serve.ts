@@ -8,7 +8,8 @@ import { createServer } from "node:http";
 import { loadDotEnv, loadPayPalConfig, MissingConfigError, ROOT } from "../src/config.js";
 import { AnthropicExtractor } from "../src/invoices/extract.js";
 import { AnthropicNoticeExtractor } from "../src/limitation/extract.js";
-import { PayPalClient } from "../src/paypal/client.js";
+import { PayPalClient, type CallReceipt } from "../src/paypal/client.js";
+import { readBalance } from "../src/server/proof.js";
 import { createApp, defaultWebDir } from "../src/server/app.js";
 import { buildDemoState } from "../src/server/demo-state.js";
 import { loadRecordedDemo, SYNTHETIC_BANNER } from "../src/server/recorded.js";
@@ -16,8 +17,10 @@ import { loadState, saveState, STATE_FILE, type State } from "../src/store.js";
 
 loadDotEnv();
 let paypal: PayPalClient | null = null;
+// Receipts of PayPal calls (method, path, status, PayPal-Debug-Id), used to show the debug id of the live balance read.
+let lastReceipt: CallReceipt | null = null;
 try {
-  paypal = new PayPalClient(loadPayPalConfig());
+  paypal = new PayPalClient(loadPayPalConfig(), { onResponse: (r) => (lastReceipt = r) });
 } catch (err) {
   if (!(err instanceof MissingConfigError)) throw err;
 }
@@ -58,6 +61,7 @@ const app = createApp({
   // where anyone could spend the key; there it needs SPIKEREADY_ALLOW_UPLOADS=1 explicitly.
   invoiceExtractor: aiUploadsEnabled(process.env) ? () => new AnthropicExtractor() : null,
   // Same rule for reading pasted PayPal notices with the AI.
+  balanceReader: paypal ? () => readBalance(paypal!, () => lastReceipt) : null,
   noticeExtractor: aiUploadsEnabled(process.env) ? () => new AnthropicNoticeExtractor() : null,
 });
 

@@ -1,28 +1,31 @@
-# Demo video script (draft, under 3 minutes)
+# Demo video script (under 3 minutes)
 
-Tone: plain, honest, seller-first. Say on screen what is simulated.
+Recorded on the live demo (https://spikeready.onrender.com), which replays our real PayPal sandbox run of Nov 5, 2026. Tone: plain, honest, seller-first. Say on screen what is simulated. Browser at 1280 px wide, zoom 110%.
 
-| Time | Shot | Voice-over (draft) |
+| Time | Shot (exact on-screen action) | Voice-over |
 |---|---|---|
-| 0:00–0:15 | Phone video of sneakers going viral; sales notifications piling up | "This is Maria. She sells sneakers on PayPal. Last week a video of hers went viral, and she sold 40 pairs in two days." |
-| 0:15–0:30 | Screenshot-style card: "Your payment is on hold" / "Your account has been limited" | "For a small seller, that's when the trouble starts. PayPal protects itself by holding the money, or limiting the account until she sends documents. She doesn't know for how long, or which documents will work." |
-| 0:30–0:40 | Stat card: CFPB complaint shares | "In our analysis of CFPB complaints about PayPal this year, 1 in 5 was about held or inaccessible funds." |
-| 0:40–1:00 | SpikeReady panel: spike alert and checklist | "SpikeReady watches her PayPal sales. It sees the spike, about [Nx] her normal, and tells her what PayPal usually needs before it asks." |
-| 1:00–1:30 | Tracking list: 39 uploaded, 1 refused with the ZIP explanation; the PayPal order showing the tracker | "It uploads tracking to each PayPal order, but only after checking the label really goes to the buyer's address on the order. This one has a mistyped ZIP, so it's refused. That protects the buyer and PayPal, not just Maria." |
-| 1:30–2:00 | Hold notification arrives; release calendar ("$640 should be released on Thursday") | "PayPal sends a hold notice. Here it comes from PayPal's webhook simulator, because the sandbox can't create a real hold. SpikeReady links it to the sale and shows when each dollar should be released, using PayPal's own rule: about 24 hours after delivery." |
-| 2:00–2:35 | Limitation (labelled simulated); invoices uploaded; flags appear; case file downloads | "If the account is limited, Maria uploads her supplier invoices as they are. The AI reads them; the code checks them against her PayPal sales. 'You sold 12 pairs of size 10; your invoices cover 10.' 'This invoice has no supplier contact.' She fixes it before she submits." |
-| 2:35–2:50 | Design rules on screen | "The AI reads and explains. The code decides, and it's the only thing that talks to PayPal. It never creates or edits documents, and never helps anyone dodge a review." |
-| 2:50–3:00 | Logo, repo link | "SpikeReady. Ready before the spike. Open source on GitHub." |
+| 0:00–0:12 | Title card: "Maria sold 39 pairs of sneakers in two days." Cut to the panel's top banner ("Recorded from the PayPal sandbox…") | "This is Maria. She sells sneakers with PayPal. A video of hers went viral, and she sold 39 pairs in two days. Her best week is about to become her worst." |
+| 0:12–0:25 | Stat card: "1 in 5 CFPB complaints about PayPal in 2026: funds held or inaccessible" | "After a spike, PayPal protects buyers by holding the money, up to 21 days, or limiting the account until the seller sends documents. Sellers don't know how long, or what to send." |
+| 0:25–0:45 | **Step 1.** Scroll to "Sales spike". Hover the tall bar on the chart; point at "13× your usual pace" and the checklist | "SpikeReady watches her PayPal sales. Thirteen times her usual pace: PayPal often reviews accounts after spikes like this. So it tells her what to have ready before PayPal asks." |
+| 0:45–1:10 | **Step 2.** Scroll to "Tracking on PayPal". Point at "38 on PayPal · 1 refused"; read the red row for maria-0007 | "It uploads tracking to each PayPal order, but only if the label really goes to the buyer's address on the order. This label says 60641; the buyer is at 60614. Refused. That protects the buyer and PayPal, not just Maria." |
+| 1:10–1:35 | **Step 3.** Scroll to "When your held money is released". Point at "$775.00", one row's "expected Sun, Nov 8 · at the latest Thu, Nov 26", then the "$110 could be released sooner" alert | "PayPal sends a hold notice. In the sandbox it comes from PayPal's webhook simulator, linked to a real sandbox sale. SpikeReady shows when each dollar should be released: about 24 hours after delivery, by PayPal's own rule, and the latest date, because after a spike PayPal may keep a hold up to 21 days." |
+| 1:35–2:00 | **Step 4.** Click **Use a sample notice**. Point at "Respond by Sun, Nov 15 · 10 days left", then at a quoted line under "Proof of delivery" | "Now the account is limited. Maria pastes PayPal's message; this one is a fictional sample. The AI lists what PayPal asks for, quoting the message. Code keeps only quotes that really appear, and builds her plan from her PayPal data." |
+| 2:00–2:25 | Click **Use sample invoices**. Point at "You sold 14 × Nike Air Force 1 '07 White Men's Size 10; your invoices cover 12" and the Brightline row. Click **Download evidence pack** and show the file for 2 s | "She adds her supplier invoices as they are. The AI reads them; the code checks them against her sales. Two pairs aren't covered, and one invoice has no supplier contact. She fixes that before she sends anything. The evidence pack keeps a fingerprint of every original." |
+| 2:25–2:40 | **Proof.** Open `/api/webhooks/recent` in a new tab (or the panel's proof section, if present) showing the verified `PAYMENT.CAPTURE.COMPLETED` | "Is it real? A real sale made PayPal send a signed webhook to this server, and PayPal confirmed the signature before we used it. Every sandbox order has a PayPal receipt in the repo." |
+| 2:40–2:50 | **MCP.** Claude Desktop, pre-typed prompt "When will my held money be released?"; the answer appears with the calendar | "And Maria can just ask her assistant. SpikeReady runs as an MCP server, with the same code behind every answer." |
+| 2:50–3:00 | Closing card: "The AI reads. The code decides. Never edits documents. Never dodges a review." + repo URL | "SpikeReady. Ready before the spike. Open source on GitHub." |
 
 ## Shot list
-1. B-roll: sneakers, phone with a viral video and sales notifications (stock or self-recorded).
-2. Terminal or panel: `npm run seed` output scrolling (real sandbox order ids).
-3. PayPal sandbox order detail showing the tracker added by SpikeReady.
-4. Tracking result with the refused ZIP mismatch.
-5. Hold event and release calendar.
-6. Invoice upload, flags and case file (after day 2).
-7. Closing card with design rules and the repo URL.
 
-## To fill before recording
-- The spike ratio and held amounts from the actual sandbox run (do not use placeholder numbers).
-- Quotes from 3–5 real sellers, if we get them.
+1. Title and stat cards (static slides).
+2. Live panel, steps 1 to 4, one continuous scroll with the clicks above.
+3. Downloaded evidence pack opened in a text viewer.
+4. `/api/webhooks/recent` in the browser.
+5. Claude Desktop with the SpikeReady MCP server configured (see `docs/mcp.md`).
+6. Closing card.
+
+## Before recording
+
+- Open `/api/webhooks/recent` first: the list lives in memory and resets when Render restarts. If it is empty, make a new $1 sandbox sale to trigger a fresh signed delivery.
+- Render's free plan sleeps after inactivity: load the panel a minute before recording.
+- Add quotes from real sellers if we get them (replace the stat card or add 5 s after it).

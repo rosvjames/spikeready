@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "
 import { dirname, join } from "node:path";
 import { z } from "zod";
 import { ROOT } from "./config.js";
+import { Dispute } from "./disputes/types.js";
 import { Hold, Sale, Shipment, TrackingUpload } from "./domain.js";
 
 export const STATE_DIR = join(ROOT, ".spikeready");
@@ -21,6 +22,8 @@ export const State = z.object({
   uploads: z.array(TrackingUpload).default([]),
   holds: z.array(Hold).default([]),
   processedEventIds: z.array(z.string()).default([]),
+  /** Buyer disputes from CUSTOMER.DISPUTE.* webhooks (one record per dispute id). */
+  disputes: z.array(Dispute).default([]),
 });
 export type State = z.infer<typeof State>;
 

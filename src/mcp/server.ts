@@ -2,6 +2,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
   checkInvoicesTool,
+  DisputeArgs,
+  getDisputeEvidence,
   getEvidencePack,
   getReleaseCalendar,
   getSpikeStatus,
@@ -79,6 +81,17 @@ export function createSpikeReadyServer(ctx: McpContext): McpServer {
     "get_evidence_pack",
     { title: "Evidence pack", description: "The Markdown evidence pack from the last invoice check, ready for PayPal's Resolution Center (originals are never modified).", annotations: READ_ONLY },
     safe(() => getEvidencePack()),
+  );
+  server.registerTool(
+    "get_dispute_evidence",
+    {
+      title: "Evidence for an item-not-received claim",
+      description:
+        "For a dispute (disputeId) or a sale (saleId): the proof of shipment/delivery SpikeReady can show from verified tracking already on the PayPal order, how strong it is, and next steps. Read-only; never sends evidence. Other dispute reasons are not argued.",
+      inputSchema: DisputeArgs,
+      annotations: READ_ONLY,
+    },
+    safe((args) => getDisputeEvidence(ctx, args)),
   );
   server.registerResource(
     "paypal-hold-policy",

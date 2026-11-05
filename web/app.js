@@ -308,6 +308,83 @@ $("invoice-files").addEventListener("change", async (e) => {
   e.target.value = "";
 });
 
+const proofTime = (iso) => (iso ? new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/New_York", timeZoneName: "short" }) : "-");
+const moneyStr = (m) => (m && m.value != null ? usd(Math.round(Number(m.value) * 100)) : "-");
+
+async function renderProof() {
+  const el = $("proof-body");
+  try {
+    const [pRes, wRes] = await Promise.all([fetch("/api/proof"), fetch("/api/webhooks/recent")]);
+    const p = pRes.ok ? await pRes.json() : null;
+    const w = wRes.ok ? await wRes.json() : { configured: false, verified: [] };
+    const VISIBLE = 6;
+    const rows = p
+      ? p.orders
+          .map((o, i) => `<tr${i >= VISIBLE ? " data-proof-more hidden" : ""}>
+            <td>${esc(o.saleId)}</td>
+            <td class="mono">${esc(o.orderId)}</td>
+            <td><span class="pill ${o.captureStatus === "COMPLETED" ? "pill-ok" : "pill-wait"}">${esc(o.captureStatus ?? "-")}</span></td>
+            <td class="num">${esc(o.trackersOnPayPal)}</td>
+            <td class="mono hide-sm">${esc(o.paypalDebugId ?? "-")}</td>
+          </tr>`)
+          .join("")
+      : "";
+    const receipts = p
+      ? `<p class="muted">${esc(p.note)} Read from the PayPal ${esc(p.environment)} on ${esc(proofTime(p.generatedAt))}.</p>
+        <div class="proof-totals">
+          <span class="pill pill-ok">${esc(p.totals.completedCaptures)} captures COMPLETED</span>
+          <span class="pill pill-ok">${esc(p.totals.ordersWithTracking)} orders with tracking on PayPal</span>
+          <span class="pill pill-next">${esc(p.totals.sales)} orders read</span>
+        </div>
+        <p class="fine">Balance read the same day: available ${esc(moneyStr(p.balances.available_balance))}, withheld ${esc(moneyStr(p.balances.withheld_balance))} · PayPal-Debug-Id <span class="mono">${esc(p.balances.paypalDebugId ?? "-")}</span></p>
+        <div class="table-wrap"><table id="proof-table">
+          <thead><tr><th>Sale</th><th>PayPal order</th><th>Capture</th><th class="num">Trackers</th><th class="hide-sm">PayPal-Debug-Id</th></tr></thead>
+          <tbody>${rows}</tbody></table></div>
+        ${p.orders.length > VISIBLE ? `<button type="button" class="more" id="more-proof" aria-expanded="false">Show all ${p.orders.length} orders</button>` : ""}`
+      : `<p class="muted">No recorded receipts on this server.</p>`;
+    const deliveries = w.verified.length
+      ? `<ul class="deliveries">${w.verified.map((v) => `<li><strong>${esc(v.eventType)}</strong> · <span class="mono">${esc(v.eventId)}</span> · verified ${esc(proofTime(v.verifiedAt))} · ${esc(v.result)}</li>`).join("")}</ul>`
+      : `<p class="fine">${w.configured ? "No signed deliveries since this server started." : "Webhooks are not configured on this server."}</p>`;
+    el.className = "";
+    el.innerHTML = `
+      <div class="proof-grid">
+        <div><h3 class="sub">Sandbox receipts</h3>${receipts}</div>
+        <div><h3 class="sub">Live PayPal webhooks, signature verified</h3>
+          <p class="muted">PayPal signs every webhook; this server asks PayPal to verify the signature before acting. Deliveries verified since the server started:</p>
+          ${deliveries}</div>
+        <div><h3 class="sub">What the demo simulates</h3>
+          <ul class="simulated">${(p?.simulated ?? []).map((t) => `<li>${esc(t)}</li>`).join("")}</ul></div>
+      </div>`;
+    const more = $("more-proof");
+    more?.addEventListener("click", () => {
+      const open = more.getAttribute("aria-expanded") === "true";
+      for (const tr of document.querySelectorAll("tr[data-proof-more]")) tr.hidden = open;
+      more.setAttribute("aria-expanded", String(!open));
+      more.textContent = open ? `Show all ${p.orders.length} orders` : "Show fewer";
+    });
+  } catch (err) {
+    el.textContent = `Could not load the receipts (${err.message}).`;
+  }
+}
+
+async function renderBalance() {
+  try {
+    const res = await fetch("/api/balance");
+    if (!res.ok) return;
+    const b = await res.json();
+    if (b.withheldCents == null) return;
+    const line = document.createElement("p");
+    line.className = "balance-line";
+    line.id = "live-balance";
+    line.innerHTML = `PayPal reports <strong>${usd(b.withheldCents)}</strong> withheld right now (live ${esc(b.environment)} balance${b.paypalDebugId ? `, PayPal-Debug-Id <span class="mono">${esc(b.paypalDebugId)}</span>` : ""}). The sandbox never withholds money, so the calendar below comes from PayPal's hold notices.`;
+    const hero = document.querySelector("#calendar-body .hero-sub") ?? $("calendar-body").firstElementChild;
+    if (hero) hero.after(line);
+    else $("calendar-body").prepend(line);
+  } catch {
+    /* optional line */
+  }
+}
+
 async function main() {
   try {
     const res = await fetch("/api/dashboard", { headers: { Accept: "application/json" } });
@@ -319,8 +396,10 @@ async function main() {
     renderSpike(d);
     renderCalendar(d);
     renderTracking(d);
+    if (d.live?.balance) renderBalance();
   } catch (err) {
     for (const id of ["spike-body", "calendar-body", "tracking-body"]) $(id).textContent = `Could not load the dashboard (${err.message}).`;
   }
 }
 main();
+renderProof();

@@ -72,8 +72,8 @@ describe("handleWebhookEvent", () => {
     expect(again.state.holds).toHaveLength(1);
   });
   it("ignores unrelated event types but remembers them", () => {
-    const r = handleWebhookEvent(state, { id: "WH-8", event_type: "CUSTOMER.DISPUTE.CREATED", create_time: "2026-11-05T18:00:00Z", resource: {} }, "paypal-webhook");
-    expect(r.result).toEqual({ status: "IGNORED", eventId: "WH-8", eventType: "CUSTOMER.DISPUTE.CREATED" });
+    const r = handleWebhookEvent(state, { id: "WH-8", event_type: "PAYMENT.CAPTURE.COMPLETED", create_time: "2026-11-05T18:00:00Z", resource: {} }, "paypal-webhook");
+    expect(r.result).toEqual({ status: "IGNORED", eventId: "WH-8", eventType: "PAYMENT.CAPTURE.COMPLETED" });
     expect(r.state.holds).toHaveLength(0);
     expect(r.state.processedEventIds).toContain("WH-8");
   });

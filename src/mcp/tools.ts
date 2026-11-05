@@ -20,6 +20,7 @@ import { loadState, saveState, STATE_FILE, type State } from "../store.js";
 import { uploadVerifiedTracking } from "../tracking/upload.js";
 import { verifyShipment, type Verdict } from "../tracking/verify.js";
 import { Carrier } from "../domain.js";
+import { buildInrEvidence } from "../disputes/evidence.js";
 
 export interface LoadedData {
   state: State;
@@ -297,3 +298,41 @@ export function policyText(): string {
 }
 
 export const DEFAULT_INVOICES_DIR = join(ROOT, "invoices");
+
+// ---------- disputes (read-only)
+
+export const DisputeArgs = {
+  saleId: z.string().optional().describe("A sale id like maria-0001"),
+  disputeId: z.string().optional().describe("A PayPal dispute id like PP-000-..."),
+};
+const DisputeInput = z.object(DisputeArgs).refine((a) => a.saleId || a.disputeId, { message: "Pass saleId or disputeId" });
+
+/**
+ * Evidence for an "item not received" claim from verified tracking. With a saleId and no dispute on
+ * record, it previews what the seller could show if that buyer opened one. Never sends anything.
+ */
+export function getDisputeEvidence(ctx: McpContext, raw: unknown): ToolResult {
+  const args = DisputeInput.parse(raw);
+  const d = ctx.load();
+  const dispute = args.disputeId
+    ? d.state.disputes.find((x) => x.disputeId === args.disputeId)
+    : d.state.disputes.find((x) => x.saleId === args.saleId);
+  if (args.disputeId && !dispute) return fail(`No dispute ${args.disputeId} on record.`);
+  const saleId = dispute?.saleId ?? args.saleId ?? null;
+  const sale = saleId ? d.state.sales.find((s) => s.saleId === saleId) : undefined;
+  if (!dispute && !sale) return fail(`No sale ${args.saleId} on record.`);
+  const ev = buildInrEvidence({
+    dispute: dispute ?? null,
+    sale,
+    shipment: saleId ? d.state.shipments.find((s) => s.saleId === saleId) : undefined,
+    upload: saleId ? d.state.uploads.find((u) => u.saleId === saleId) : undefined,
+    uploads: d.state.uploads,
+    now: d.now,
+    timeZone: d.state.seller.timeZone,
+  });
+  const head = dispute
+    ? `Dispute ${dispute.disputeId} (${dispute.reason}, ${dispute.status}${dispute.stage ? `, ${dispute.stage}` : ""}) on sale ${saleId ?? "unknown"}.`
+    : `No dispute on record for ${saleId}. If the buyer says the item did not arrive, this is the evidence you would have:`;
+  const text = [head, `Evidence: ${ev.verdict.toUpperCase()}. ${ev.summary}`, ...ev.nextSteps.map((s) => `- ${s}`), "", "Nothing is sent to PayPal from this tool."].join("\n");
+  return ok(text + demoNote(d), { ...ev, preview: !dispute });
+}
