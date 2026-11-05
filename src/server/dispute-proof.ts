@@ -92,8 +92,8 @@ export async function disputeView(path: string, state: State, now: Date): Promis
       story: [
         `The sandbox buyer opened an "item not received" case on ${p.sale.saleId} in PayPal's Resolution Center.`,
         tracking
-          ? `Before letting the buyer file, PayPal showed the buyer the ${tracking.carrier} tracking SpikeReady had verified and uploaded (${tracking.trackingNumber}).`
-          : "Before letting the buyer file, PayPal showed the buyer the tracking SpikeReady had verified and uploaded.",
+          ? `The buyer's case page showed the ${tracking.carrier} tracking SpikeReady had checked and uploaded for this sale (${tracking.trackingNumber}); the screenshot above shows the same pre-filing page for another sale (maria-0036).`
+          : "The buyer's case page showed the tracking SpikeReady had checked and uploaded; the screenshot above shows the same pre-filing page for another sale (maria-0036).",
         webhook ? `PayPal sent a signed ${webhook.eventType} to the public demo, which had PayPal verify the signature before recording it.` : "PayPal's dispute webhook was received and signature-verified by the public demo.",
         p.submission?.status === 200
           ? `With the seller's explicit approval, SpikeReady sent the verified tracking facts through the action PayPal offered (${p.evidenceRequest?.action ?? "provide_supporting_info"}); PayPal accepted them (HTTP 200).`

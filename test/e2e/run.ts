@@ -122,7 +122,7 @@ try {
   );
   await page.locator("#dispute-body .dispute-case").waitFor({ timeout: 10_000 });
   const dispute = await text("#step-dispute");
-  check("step 5: the real sandbox case PP-R-QLW-10196536 and 'PayPal showed the buyer'", /PP-R-QLW-10196536/.test(dispute) && /PayPal showed the buyer/.test(dispute) && /translated from the sandbox buyer page in Spanish/.test(dispute));
+  check("step 5: the real sandbox case PP-R-QLW-10196536 and 'case page showed the tracking'", /PP-R-QLW-10196536/.test(dispute) && /case page showed the/.test(dispute) && /translated from the sandbox buyer page in Spanish/.test(dispute));
   check("step 5: maria-0007's evidence is weak before the fix", /If maria-0007's buyer says it never arrived Weak/.test(dispute), dispute.slice(-400));
   check("demo banner offers Reset demo", await page.locator("#demo-reset").isVisible());
   check("proof shows the recorded signed webhook", /Recorded signed delivery/.test(await text("#proof")) && /PAYMENT\.CAPTURE\.COMPLETED/.test(await text("#proof")));

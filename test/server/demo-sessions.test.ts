@@ -218,7 +218,7 @@ describe("step 5: verified tracking defends you", () => {
     expect(v.recorded.caseId).toBe("PP-R-QLW-10196536");
     expect(v.recorded.saleId).toBe("maria-0038");
     expect(v.recorded.amountCents).toBe(22000);
-    expect(v.recorded.story.join(" ")).toContain("PayPal showed the buyer");
+    expect(v.recorded.story.join(" ")).toContain("The buyer's case page showed the");
     expect(v.recorded.submission).toMatchObject({ action: "provide_supporting_info", status: 200 });
     expect(v.recorded.buyerMessage.note).toContain("translated from the sandbox buyer page in Spanish");
     expect(v.recorded.caveats.join(" ")).toContain("No final ruling");
