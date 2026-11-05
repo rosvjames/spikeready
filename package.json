@@ -27,7 +27,8 @@
     "mcp": "tsx scripts/mcp.ts",
     "proof": "tsx scripts/proof.ts",
     "test:e2e": "tsx test/e2e/run.ts",
-    "dispute": "tsx scripts/simulate-dispute.ts"
+    "dispute": "tsx scripts/simulate-dispute.ts",
+    "ask": "tsx scripts/ask.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.5.0",

@@ -1,0 +1,396 @@
+{
+  "recordedAt": "2026-11-05T06:44:23.753Z",
+  "note": "Real 'Ask SpikeReady' runs (Claude via the Astropods AI Gateway) against the recorded PayPal sandbox run of Nov 5, 2026, replayed in demo mode. Claims were checked by code at recording time. The limitation notice is a fictional sample.",
+  "dataSource": "data/recorded/maria-sandbox-2026-11-05.json",
+  "answers": [
+    {
+      "id": "release",
+      "question": "When will my held money be released?",
+      "mode": "answer",
+      "answer_markdown": "You have **$775.00** on hold across 6 payments. Here's when PayPal expects to release each one:\n\n| Sale | Amount | Expected release | Latest possible |\n|---|---|---|---|\n| maria-0001 | $120.00 | Sun, Nov 8 | Thu, Nov 26 |\n| maria-0004 | $105.00 | Sun, Nov 8 | Thu, Nov 26 |\n| maria-0003 | $210.00 | Mon, Nov 9 | Thu, Nov 26 |\n| maria-0002 | $110.00 | Tue, Nov 10 | Thu, Nov 26 |\n| maria-0005 | $120.00 | Tue, Nov 10 | Thu, Nov 26 |\n| maria-0007 | $110.00 | Thu, Nov 26 | Thu, Nov 26 |\n\nFive of these are in transit with tracking already on PayPal, so they should release about 24 hours after the carrier marks them delivered.\n\nThe last one, **maria-0007 ($110.00)**, has **no tracking on PayPal**, so it's stuck at the full 21-day hold (Nov 26) unless you act. **Next step:** add valid tracking for maria-0007 in the SpikeReady panel — once it's uploaded and confirmed, PayPal can release it about 24 hours after delivery instead of waiting the full period.\n\nThese are PayPal's expected dates based on their published rules, not guarantees — PayPal makes the final call on releases.",
+      "claims": [
+        {
+          "text": "Total held is $775.00 across 6 payments",
+          "tool": "get_release_calendar",
+          "field_path": "totalHeldCents",
+          "value": "$775.00",
+          "verified": true
+        },
+        {
+          "text": "maria-0001 $120.00 expected Sun, Nov 8, latest Thu, Nov 26",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0001].expected",
+          "value": "2026-11-08",
+          "verified": true
+        },
+        {
+          "text": "maria-0001 amount $120.00",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0001].amountCents",
+          "value": "$120.00",
+          "verified": true
+        },
+        {
+          "text": "maria-0001 latest Thu, Nov 26",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0001].latest",
+          "value": "2026-11-26",
+          "verified": true
+        },
+        {
+          "text": "maria-0004 $105.00 expected Sun, Nov 8, latest Thu, Nov 26",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0004].expected",
+          "value": "2026-11-08",
+          "verified": true
+        },
+        {
+          "text": "maria-0004 amount $105.00",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0004].amountCents",
+          "value": "$105.00",
+          "verified": true
+        },
+        {
+          "text": "maria-0004 latest Thu, Nov 26",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0004].latest",
+          "value": "2026-11-26",
+          "verified": true
+        },
+        {
+          "text": "maria-0003 $210.00 expected Mon, Nov 9, latest Thu, Nov 26",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0003].expected",
+          "value": "2026-11-09",
+          "verified": true
+        },
+        {
+          "text": "maria-0003 amount $210.00",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0003].amountCents",
+          "value": "$210.00",
+          "verified": true
+        },
+        {
+          "text": "maria-0003 latest Thu, Nov 26",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0003].latest",
+          "value": "2026-11-26",
+          "verified": true
+        },
+        {
+          "text": "maria-0002 $110.00 expected Tue, Nov 10, latest Thu, Nov 26",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0002].expected",
+          "value": "2026-11-10",
+          "verified": true
+        },
+        {
+          "text": "maria-0002 amount $110.00",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0002].amountCents",
+          "value": "$110.00",
+          "verified": true
+        },
+        {
+          "text": "maria-0002 latest Thu, Nov 26",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0002].latest",
+          "value": "2026-11-26",
+          "verified": true
+        },
+        {
+          "text": "maria-0005 $120.00 expected Tue, Nov 10, latest Thu, Nov 26",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0005].expected",
+          "value": "2026-11-10",
+          "verified": true
+        },
+        {
+          "text": "maria-0005 amount $120.00",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0005].amountCents",
+          "value": "$120.00",
+          "verified": true
+        },
+        {
+          "text": "maria-0005 latest Thu, Nov 26",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0005].latest",
+          "value": "2026-11-26",
+          "verified": true
+        },
+        {
+          "text": "maria-0007 $110.00 expected Thu, Nov 26, latest Thu, Nov 26",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0007].expected",
+          "value": "2026-11-26",
+          "verified": true
+        },
+        {
+          "text": "maria-0007 amount $110.00",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0007].amountCents",
+          "value": "$110.00",
+          "verified": true
+        },
+        {
+          "text": "maria-0007 latest Thu, Nov 26",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0007].latest",
+          "value": "2026-11-26",
+          "verified": true
+        },
+        {
+          "text": "maria-0007 has no tracking on PayPal, so the hold can last the full 21 days",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0007].explanation",
+          "value": "No tracking on PayPal for this sale, so the hold can last the full 21 days.",
+          "verified": true
+        },
+        {
+          "text": "Action for maria-0007: upload the tracking number",
+          "tool": "get_release_calendar",
+          "field_path": "payments[saleId=maria-0007].action",
+          "value": "Upload the tracking number: PayPal releases held funds about 24 hours after the carrier confirms delivery.",
+          "verified": true
+        }
+      ],
+      "unsupported": [],
+      "verified": true,
+      "regenerated": false,
+      "toolCalls": [
+        {
+          "tool": "get_release_calendar",
+          "input": {},
+          "isError": false
+        }
+      ],
+      "attachments": [],
+      "usage": {
+        "model": "claude-sonnet-5",
+        "calls": 2,
+        "input_tokens": 1652,
+        "output_tokens": 2677,
+        "cost_usd": 0.030074,
+        "latency_ms": 19896
+      }
+    },
+    {
+      "id": "ready",
+      "question": "What do I still need before PayPal reviews my account?",
+      "mode": "answer",
+      "answer_markdown": "Here's what's still needed before PayPal reviews your account for the current sales spike (39 orders in 2 days, about 13x your usual pace):\n\n**1. One sale missing tracking — maria-0007 ($110.00, New Balance 550 White/Green size 10)**\nThe label was printed for ZIP 60641, but the buyer's PayPal address is ZIP 60614 — so it was rejected. Fix the label (reprint to 60614) or confirm the correct address with the buyer, then upload the corrected tracking in SpikeReady step 2.\n\n**2. Supplier invoices have 2 gaps**\n- The Brightline Liquidators document (brightline-forwarded-email.txt) doesn't show the supplier's address, phone, or email — PayPal wants invoices with full supplier contact info. Ask Brightline for a complete invoice.\n- You sold 14 Nike Air Force 1 '07 White Men's Size 10, but your invoices only cover 12 units. You'll need documentation for the other 2.\n\nEverything else checked out fine — no other gaps found. Once you fix the label/tracking issue and get the two invoice items sorted, pull the full evidence pack in SpikeReady to have it ready for PayPal's Resolution Center. I can't upload or send anything — these steps need to happen in your SpikeReady panel.",
+      "claims": [
+        {
+          "text": "39 orders in the last 2 days, 13x usual pace, spike detected",
+          "tool": "get_spike_status",
+          "field_path": "ratio",
+          "value": 13,
+          "verified": true
+        },
+        {
+          "text": "39 recent orders",
+          "tool": "get_spike_status",
+          "field_path": "recentOrders",
+          "value": 39,
+          "verified": true
+        },
+        {
+          "text": "1 of 39 recent sales has no tracking on PayPal yet",
+          "tool": "get_spike_status",
+          "field_path": "checklist[id=tracking].message",
+          "value": "1 of 39 recent sales has no tracking on PayPal yet.",
+          "verified": true
+        },
+        {
+          "text": "Sale maria-0007 is $110.00 for New Balance 550 White Green Size 10",
+          "tool": "list_sales_missing_tracking",
+          "field_path": "missing[0].amountCents",
+          "value": "$110.00",
+          "verified": true
+        },
+        {
+          "text": "The label goes to ZIP 60641, but the buyer's PayPal shipping address is ZIP 60614",
+          "tool": "list_sales_missing_tracking",
+          "field_path": "missing[0].reason",
+          "value": "The label goes to ZIP 60641, but the buyer's PayPal shipping address is ZIP 60614. Fix the label or confirm the address with the buyer before uploading.",
+          "verified": true
+        },
+        {
+          "text": "Buyer's PayPal shipping ZIP is 60614",
+          "tool": "list_sales_missing_tracking",
+          "field_path": "missing[0].buyerPostalCode",
+          "value": "60614",
+          "verified": true
+        },
+        {
+          "text": "brightline-forwarded-email.txt does not show the supplier's address, phone or email",
+          "tool": "check_invoices",
+          "field_path": "gaps[0].message",
+          "value": "brightline-forwarded-email.txt does not show the supplier's address, phone or email. PayPal asks for invoices with the supplier's contact details; ask Brightline Liquidators for a full invoice.",
+          "verified": true
+        },
+        {
+          "text": "Sold 14 Nike Air Force 1 '07 White Men's Size 10, invoices cover 12",
+          "tool": "check_invoices",
+          "field_path": "gaps[1].message",
+          "value": "You sold 14 × Nike Air Force 1 '07 White Men's Size 10; your invoices cover 12.",
+          "verified": true
+        }
+      ],
+      "unsupported": [],
+      "verified": true,
+      "regenerated": true,
+      "toolCalls": [
+        {
+          "tool": "get_spike_status",
+          "input": {},
+          "isError": false
+        },
+        {
+          "tool": "list_sales_missing_tracking",
+          "input": {},
+          "isError": false
+        },
+        {
+          "tool": "check_invoices",
+          "input": {},
+          "isError": false
+        }
+      ],
+      "attachments": [],
+      "usage": {
+        "model": "claude-sonnet-5",
+        "calls": 4,
+        "input_tokens": 7549,
+        "output_tokens": 2919,
+        "cost_usd": 0.044288,
+        "latency_ms": 27313
+      }
+    },
+    {
+      "question": "Draft my reply to PayPal's limitation message.",
+      "mode": "reply",
+      "answer_markdown": "**What to fix first, before you send anything:**\n1. Sale **maria-0007** ($110.00, New Balance 550) has no tracking because the label's ZIP (60641) doesn't match the buyer's PayPal address (60614) — fix the label or confirm the address with the buyer, then upload tracking.\n2. Ask **Brightline Liquidators** for a full invoice showing their address/phone/email, and get documentation for the missing 2 units of the Nike Air Force 1 '07 White (Size 10) — your invoices cover 12 of the 14 sold.\n\n---\n\n### Draft reply\n\nDear PayPal Resolution Center,\n\nThank you for reviewing my account (case LIM-2026-11-0412). I'm Maria Lopez, owner of Maria's Sneakers, and I understand you need more information after the recent increase in my sales.\n\n**Tracking:** 38 of my 39 recent sales already have tracking on PayPal. One sale, maria-0007, is held because the shipping label's ZIP (60641) doesn't match the buyer's PayPal address (60614); I'm correcting this before uploading tracking for that order.\n\n**Supplier invoices:** I have invoices from three suppliers — Atlantic Wholesale Supply LLC, Brightline Liquidators, and KicksDirect Wholesale — covering most of my recent inventory. Two things are still being resolved: Brightline's invoice doesn't show their address, phone, or email, so I've asked them for a complete one; and my invoices currently cover 12 of the 14 units of Nike Air Force 1 '07 White (Size 10) I sold, so I'm getting documentation for the remaining 2 units.\n\n**Bank account:** I will confirm my linked bank account directly in my PayPal account.\n\nI will upload the completed documents as soon as they are ready. Thank you for your patience.\n\nMaria Lopez — Maria's Sneakers",
+      "claims": [
+        {
+          "text": "39 recent sales total",
+          "tool": "list_sales_missing_tracking",
+          "field_path": "total",
+          "value": 39,
+          "verified": true
+        },
+        {
+          "text": "1 of 39 sales missing tracking (so 38 of 39 already have tracking)",
+          "tool": "list_sales_missing_tracking",
+          "field_path": "missing.length",
+          "value": 1,
+          "verified": true
+        },
+        {
+          "text": "Sale maria-0007 label ZIP 60641 does not match buyer's PayPal address ZIP 60614",
+          "tool": "list_sales_missing_tracking",
+          "field_path": "missing[0].reason",
+          "value": "The label goes to ZIP 60641, but the buyer's PayPal shipping address is ZIP 60614. Fix the label or confirm the address with the buyer before uploading.",
+          "verified": true
+        },
+        {
+          "text": "Sale maria-0007 amount $110.00",
+          "tool": "list_sales_missing_tracking",
+          "field_path": "missing[0].amountCents",
+          "value": "$110.00",
+          "verified": true
+        },
+        {
+          "text": "Brightline invoice missing supplier address, phone or email",
+          "tool": "check_invoices",
+          "field_path": "gaps[0].message",
+          "value": "brightline-forwarded-email.txt does not show the supplier's address, phone or email. PayPal asks for invoices with the supplier's contact details; ask Brightline Liquidators for a full invoice.",
+          "verified": true
+        },
+        {
+          "text": "14 units of Nike Air Force 1 '07 White Size 10 sold but only 12 covered by invoices",
+          "tool": "check_invoices",
+          "field_path": "gaps[1].message",
+          "value": "You sold 14 × Nike Air Force 1 '07 White Men's Size 10; your invoices cover 12.",
+          "verified": true
+        },
+        {
+          "text": "Supplier Atlantic Wholesale Supply LLC invoice on file",
+          "tool": "check_invoices",
+          "field_path": "documents[0].supplier",
+          "value": "Atlantic Wholesale Supply LLC",
+          "verified": true
+        },
+        {
+          "text": "Supplier Brightline Liquidators invoice on file (missing contact info)",
+          "tool": "check_invoices",
+          "field_path": "documents[1].supplier",
+          "value": "Brightline Liquidators",
+          "verified": true
+        },
+        {
+          "text": "Supplier KicksDirect Wholesale invoice on file",
+          "tool": "check_invoices",
+          "field_path": "documents[2].supplier",
+          "value": "KicksDirect Wholesale",
+          "verified": true
+        }
+      ],
+      "unsupported": [],
+      "verified": true,
+      "regenerated": true,
+      "toolCalls": [
+        {
+          "tool": "check_invoices",
+          "input": {},
+          "isError": false
+        },
+        {
+          "tool": "list_sales_missing_tracking",
+          "input": {},
+          "isError": false
+        },
+        {
+          "tool": "get_spike_status",
+          "input": {},
+          "isError": false
+        },
+        {
+          "tool": "get_evidence_pack",
+          "input": {},
+          "isError": false
+        }
+      ],
+      "attachments": [
+        {
+          "filename": "atlantic-WO-77120.txt",
+          "sha256": "41cfa4e7992522f2adcdaa9b54432a16396439c5b4b1ea9d9286d03c92501d6f",
+          "counted": true
+        },
+        {
+          "filename": "brightline-forwarded-email.txt",
+          "sha256": "d3bbcd16b98e0d9eeba4528b3437a90e750d6f4ec851dbb554f265cb1849f5f0",
+          "counted": true
+        },
+        {
+          "filename": "kicksdirect-INV-2026-48213.txt",
+          "sha256": "3255db4c11410dc071a5b11ee5b2154adc3c3227f5ef761e45172947dfe8a36f",
+          "counted": true
+        }
+      ],
+      "usage": {
+        "model": "claude-sonnet-5",
+        "calls": 4,
+        "input_tokens": 16174,
+        "output_tokens": 5887,
+        "cost_usd": 0.091218,
+        "latency_ms": 53788
+      },
+      "id": "reply",
+      "pastedText": "Sample notice written for the SpikeReady demo (fictional; not a message from PayPal).\n\nSubject: We need more information about your account (case LIM-2026-11-0412)\n\nHello Maria Lopez,\n\nWe noticed a sharp increase in your sales this week, and we need more information before we can lift the limits on your account. Until then you can't send or withdraw money.\n\nPlease send us the following by November 15, 2026:\n- Invoices from your suppliers for the items you sold between November 3 and November 5, 2026, showing the supplier's name and contact details.\n- Proof of delivery for your recent orders, such as tracking numbers from your shipping carrier.\n- Confirmation of the bank account linked to your account.\n\nLog in to your account and go to the Resolution Center to upload your documents.\n"
+    }
+  ]
+}
