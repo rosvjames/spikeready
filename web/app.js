@@ -234,6 +234,20 @@ function labelFixBlock(s, d) {
     ${liveAi ? "" : `<p class="fine">Reading your own label needs live AI, which is off on this public demo. The sample labels show the real readings Claude Sonnet 5 made on Nov 5.</p>`}
     <div class="label-result" id="label-result-${id}" aria-live="polite">${labelResults[s.saleId] ? renderLabelResult(s.saleId, labelResults[s.saleId]) : ""}</div>
     <p class="fine">Typing a corrected ZIP is not enough: this label really went to the wrong address, so its tracking number cannot prove delivery to the buyer. Upload the reprinted label.</p>
+    ${shippingCenterBlock(s)}
+  </div>`;
+}
+
+// PayPal Shipping Center has no public API, so SpikeReady can only send the seller to the payment's page.
+const SHIPPING_LABEL_HELP = "https://www.paypal.com/us/cshelp/article/how-do-i-create-a-shipping-label--help1067";
+function shippingCenterBlock(s) {
+  const open = s.paypalPaymentUrl
+    ? `<a class="btn btn-secondary" href="${esc(s.paypalPaymentUrl)}" target="_blank" rel="noopener noreferrer">Reprint it in PayPal ↗</a>`
+    : "";
+  return `<div class="ship-center">
+    <p class="label-fix-title"><strong>No label software? Buy the new label in PayPal.</strong></p>
+    <p class="fine">${open ? "Opens this payment in PayPal (after you log in); choose <strong>Buy a shipping label</strong>." : "In PayPal, open this payment and choose <strong>Buy a shipping label</strong>."} PayPal fills in the buyer's address from the order, so it cannot be retyped wrong, and adds the new tracking to the order itself. Then upload that label here so SpikeReady can check it; PayPal will already have its tracking. <a href="${SHIPPING_LABEL_HELP}" target="_blank" rel="noopener noreferrer">How it works (PayPal Help)</a>.</p>
+    ${open}
   </div>`;
 }
 

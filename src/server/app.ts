@@ -503,7 +503,7 @@ export function createApp(deps: AppDeps) {
         // `live` tells the panel which live PayPal reads this server can do, so it never calls a disabled endpoint.
         const sc = scope(req, res);
         return send(res, 200, {
-          ...buildDashboard(sc.loadState(), deps.now(), deps.demo, deps.banner ?? null),
+          ...buildDashboard(sc.loadState(), deps.now(), deps.demo, deps.banner ?? null, deps.paypal?.env ?? "sandbox"),
           live: { balance: Boolean(balance), paypal: Boolean(deps.paypal), ai: Boolean(deps.invoiceExtractor || deps.noticeExtractor), labelAi: Boolean(deps.labelExtractor), labelSamples: Boolean(labelSamples) },
           fixes: Object.fromEntries(sc.fixes),
           perVisitor: Boolean(sessions),

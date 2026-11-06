@@ -263,7 +263,7 @@ const WRITERS: Record<Intent, Writer> = {
       out.push("", `Estimated release: ${whenLine(expected, latest)}. ${why} (An estimate; PayPal decides.)`);
     }
     const t = st.structured.tracking as { code: string | null };
-    if (t.code !== null && ADDRESS_CODES.has(t.code)) out.push("", "To fix it: reprint the label to the buyer's PayPal address and upload it in step 2.");
+    if (t.code !== null && ADDRESS_CODES.has(t.code)) out.push("", "To fix it: reprint the label to the buyer's PayPal address (your label software, or \"Buy a shipping label\" on the payment's page in PayPal, which takes the address from the order) and upload it in step 2.");
     return out;
   },
 

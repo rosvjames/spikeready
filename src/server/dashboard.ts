@@ -3,6 +3,8 @@ import { mariaBaselineHistory } from "../demo/maria.js";
 import type { Hold, Sale } from "../domain.js";
 import { buildCalendar, localDate, weekdayLabel, type Forecast } from "../release/calendar.js";
 import { dailyTotals, detectSpike, readinessChecklist, SPIKE_RULE, type ChecklistItem, type DayTotals, type SpikeResult } from "../spike/detector.js";
+import { paymentPageUrl } from "../paypal/links.js";
+import type { PayPalConfig } from "../config.js";
 import type { State } from "../store.js";
 import { normalizeTracking } from "../tracking/numbers.js";
 import { compareStreet, type StreetStatus } from "../tracking/address.js";
@@ -33,6 +35,8 @@ export interface SaleRow {
   };
   /** Four independent checks (address, tracking on PayPal, carrier, money), each with source and time. */
   checks: SaleCheck[];
+  /** The payment's page on PayPal's site (where "Buy a shipping label" is), or null for synthetic ids. */
+  paypalPaymentUrl: string | null;
 }
 
 export interface Dashboard {
@@ -86,7 +90,7 @@ function rowChecks(sale: Sale, state: State): Pick<SaleRow, "tracking" | "checks
 }
 
 /** `now` is injectable: demo mode passes a frozen clock so recorded data looks as on the recording day. */
-export function buildDashboard(state: State, now: Date, demo: boolean, banner: string | null = null): Dashboard {
+export function buildDashboard(state: State, now: Date, demo: boolean, banner: string | null = null, paypalEnv: PayPalConfig["env"] = "sandbox"): Dashboard {
   const tz = state.seller.timeZone;
   const today = localDate(now.toISOString(), tz);
   const totalDays = SPIKE_RULE.baselineDays + SPIKE_RULE.recentDays;
@@ -118,6 +122,7 @@ export function buildDashboard(state: State, now: Date, demo: boolean, banner: s
       items: s.items.map((i) => `${i.quantity} x ${i.name}`).join(", "),
       shipTo: { line1: [s.shipTo.line1, s.shipTo.line2].filter(Boolean).join(", "), city: s.shipTo.city, state: s.shipTo.state, postalCode: s.shipTo.postalCode },
       ...rowChecks(s, state),
+      paypalPaymentUrl: paymentPageUrl(s.captureId, paypalEnv),
     })),
     holds: state.holds,
   };

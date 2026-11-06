@@ -291,3 +291,6 @@ details.chk-legend li { margin: 3px 0; }
   ul.chk li { white-space: normal; }
   .chk-name { display: block; min-width: 0; font-size: .7rem; text-transform: uppercase; letter-spacing: .03em; }
 }
+.ship-center { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--border); }
+.ship-center .btn { display: inline-block; margin-top: 4px; text-decoration: none; }
+.card a.btn.btn-secondary { color: var(--accent); }
