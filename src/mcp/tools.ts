@@ -157,6 +157,8 @@ export function getSaleStatus(ctx: McpContext, raw: unknown): ToolResult {
     buyer: row.shipTo,
     tracking: { status: t.status, carrier: t.carrier, trackingNumber: t.trackingNumber, labelLine1: t.labelLine1, labelPostalCode: t.labelPostalCode, code: t.code, reason: t.reason },
     address: t.address,
+    /** Four independent checks (address, tracking on PayPal, carrier, money), each with source and time. */
+    checks: row.checks,
     hold,
     dataSource: d.source,
   });

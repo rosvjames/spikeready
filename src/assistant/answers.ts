@@ -49,6 +49,9 @@ export const longDate = (isoDay: string) => `${weekdayLabel(isoDay)}, ${isoDay.s
 /** "Wednesday, Nov 11, 2026, at the latest Thursday, Nov 26, 2026", or one date when they are the same. */
 const whenLine = (expected: string, latest: string) => (expected === latest ? longDate(expected) : `${longDate(expected)}, at the latest ${longDate(latest)}`);
 
+/** Names of the four independent checks (src/server/checks.ts), as the panel shows them. */
+const CHECK_LABELS: Record<string, string> = { address: "Address", tracking: "On PayPal", carrier: "Carrier", money: "Money" };
+
 /** Tracking refusals that are about the label's address (country, ZIP, street, unit). */
 const ADDRESS_CODES: ReadonlySet<string> = new Set(["COUNTRY_MISMATCH", "POSTAL_CODE_MISMATCH", "ADDRESS_MISMATCH", "ADDRESS_UNVERIFIED"]);
 
@@ -246,29 +249,21 @@ const WRITERS: Record<Intent, Writer> = {
     const cents = src.cite<number>(st, "amountCents", `${saleId}: amount`);
     const items = src.cite<string>(st, "items", `${saleId}: items`);
     const out: string[] = [`**${saleId}** · ${formatUsd(cents)} · ${items}`, ""];
-    const t = st.structured.tracking as { status: string; carrier: string | null; trackingNumber: string | null; code: string | null };
-    const addressRefusal = t.code !== null && ADDRESS_CODES.has(t.code);
-    if (addressRefusal) out.push(`- **Address:** ${src.cite<string>(st, "tracking.reason", `${saleId}: label vs. PayPal address`)}`);
-    else if (st.structured.address) {
-      const zip = src.cite<string>(st, "tracking.labelPostalCode", `${saleId}: label ZIP`);
-      out.push(`- **Address:** the label's ZIP (${zip}) matches the buyer's PayPal address. ${src.cite<string>(st, "address.message", `${saleId}: label street vs. PayPal address`)}`);
-    } else out.push("- **Address:** no label yet, so there is nothing to check.");
-    if (t.status === "UPLOADED" || t.status === "ALREADY_ON_PAYPAL") {
-      const carrier = src.cite<string>(st, "tracking.carrier", `${saleId}: carrier`);
-      const number = src.cite<string>(st, "tracking.trackingNumber", `${saleId}: tracking number`);
-      out.push(`- **Tracking on PayPal:** ${carrier} ${number} is on the PayPal order.`);
-    } else if (t.status === "READY") out.push("- **Tracking on PayPal:** checked, not uploaded yet.");
-    else if (t.status === "REJECTED" && addressRefusal) out.push("- **Tracking on PayPal:** not uploaded, because of the address check above. Upload the reprinted label in step 2.");
-    else if (t.status === "REJECTED") out.push(`- **Tracking on PayPal:** not uploaded. ${src.cite<string>(st, "tracking.reason", `${saleId}: why it was not uploaded`)}`);
-    else out.push("- **Tracking on PayPal:** no label yet.");
-    out.push("- **Carrier:** SpikeReady does not receive carrier scans yet, so it cannot say whether the package was picked up or delivered.");
+    // The same four independent checks as the panel, each with its source.
+    const checks = (st.structured.checks as { id: string; status: string }[] | undefined) ?? [];
+    for (const c of checks) {
+      const name = CHECK_LABELS[c.id] ?? c.id;
+      const detail = src.cite<string>(st, `checks[id=${c.id}].detail`, `${saleId}: ${name.toLowerCase()} check`);
+      out.push(`- **${name}:** ${detail}`);
+    }
     if (st.structured.hold) {
-      const held = src.cite<number>(st, "hold.amountCents", `${saleId}: amount held`);
       const expected = src.cite<string>(st, "hold.expected", `${saleId}: estimated release date`);
       const latest = src.cite<string>(st, "hold.latest", `${saleId}: latest release date`);
       const why = src.cite<string>(st, "hold.explanation", `${saleId}: basis of the estimate`);
-      out.push(`- **Money:** ${formatUsd(held)} held according to PayPal's last notice. ${why} Estimated release ${whenLine(expected, latest)} (an estimate; PayPal decides).`);
-    } else out.push("- **Money:** PayPal has not sent a hold notice for this sale.");
+      out.push("", `Estimated release: ${whenLine(expected, latest)}. ${why} (An estimate; PayPal decides.)`);
+    }
+    const t = st.structured.tracking as { code: string | null };
+    if (t.code !== null && ADDRESS_CODES.has(t.code)) out.push("", "To fix it: reprint the label to the buyer's PayPal address and upload it in step 2.");
     return out;
   },
 

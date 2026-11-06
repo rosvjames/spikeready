@@ -184,7 +184,7 @@ describe("MCP protocol round trip (in-memory)", () => {
     await Promise.all([server.connect(a), client.connect(b)]);
     const tools = (await client.listTools()).tools;
     expect(tools.map((t) => t.name).sort()).toEqual(
-      ["check_invoices", "get_dispute_evidence", "get_evidence_pack", "get_release_calendar", "get_spike_status", "list_sales_missing_tracking", "upload_tracking", "verify_tracking"].sort(),
+      ["check_invoices", "get_dispute_evidence", "get_evidence_pack", "get_release_calendar", "get_sale_status", "get_spike_status", "list_sales_missing_tracking", "upload_tracking", "verify_tracking"].sort(),
     );
     expect(tools.find((t) => t.name === "get_spike_status")!.annotations?.readOnlyHint).toBe(true);
     expect(tools.find((t) => t.name === "upload_tracking")!.annotations?.readOnlyHint).toBe(false);

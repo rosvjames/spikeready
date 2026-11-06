@@ -8,6 +8,7 @@ import { normalizeTracking } from "../tracking/numbers.js";
 import { compareStreet, type StreetStatus } from "../tracking/address.js";
 import { verifyShipment } from "../tracking/verify.js";
 import { cashUnlocked, type CashUnlocked } from "./cash.js";
+import { saleChecks, type SaleCheck } from "./checks.js";
 
 export type TrackingStatus = "UPLOADED" | "ALREADY_ON_PAYPAL" | "READY" | "REJECTED" | "NO_LABEL";
 
@@ -30,6 +31,8 @@ export interface SaleRow {
     code: string | null;
     reason: string | null;
   };
+  /** Four independent checks (address, tracking on PayPal, carrier, money), each with source and time. */
+  checks: SaleCheck[];
 }
 
 export interface Dashboard {
@@ -69,6 +72,18 @@ function trackingFor(sale: Sale, state: State): SaleRow["tracking"] {
   return { ...base, status: "READY", code: null, reason: "Verified; not uploaded yet." };
 }
 
+function rowChecks(sale: Sale, state: State): Pick<SaleRow, "tracking" | "checks"> {
+  const tracking = trackingFor(sale, state);
+  const checks = saleChecks({
+    sale,
+    shipment: state.shipments.find((x) => x.saleId === sale.saleId),
+    upload: state.uploads.find((u) => u.saleId === sale.saleId),
+    hold: state.holds.find((h) => h.saleId === sale.saleId),
+    refusal: tracking.status === "REJECTED" && tracking.code ? { code: tracking.code, reason: tracking.reason ?? "" } : null,
+  });
+  return { tracking, checks };
+}
+
 /** `now` is injectable: demo mode passes a frozen clock so recorded data looks as on the recording day. */
 export function buildDashboard(state: State, now: Date, demo: boolean, banner: string | null = null): Dashboard {
   const tz = state.seller.timeZone;
@@ -101,7 +116,7 @@ export function buildDashboard(state: State, now: Date, demo: boolean, banner: s
       capturedAt: s.capturedAt,
       items: s.items.map((i) => `${i.quantity} x ${i.name}`).join(", "),
       shipTo: { line1: [s.shipTo.line1, s.shipTo.line2].filter(Boolean).join(", "), city: s.shipTo.city, state: s.shipTo.state, postalCode: s.shipTo.postalCode },
-      tracking: trackingFor(s, state),
+      ...rowChecks(s, state),
     })),
     holds: state.holds,
   };

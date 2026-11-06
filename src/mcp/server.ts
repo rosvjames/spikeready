@@ -1,11 +1,13 @@
 // MCP server: exposes SpikeReady to AI assistants (Claude Desktop, other MCP clients).
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
 import {
   checkInvoicesTool,
   DisputeArgs,
   getDisputeEvidence,
   getEvidencePack,
   getReleaseCalendar,
+  getSaleStatus,
   getSpikeStatus,
   InvoiceArgs,
   listSalesMissingTracking,
@@ -50,6 +52,17 @@ export function createSpikeReadyServer(ctx: McpContext): McpServer {
     "get_release_calendar",
     { title: "Held money release calendar", description: "When each held payment is expected to be released under PayPal's published rules, the latest possible date, and what the seller can do to release it sooner.", annotations: READ_ONLY },
     safe(() => getReleaseCalendar(ctx)),
+  );
+  server.registerTool(
+    "get_sale_status",
+    {
+      title: "One sale: four independent checks",
+      description:
+        "For one sale: the label's address vs. the PayPal order, whether the tracking is on the PayPal order, what the carrier reported (SpikeReady has no carrier scans yet), and what PayPal's hold notices say. Each check has its source and time. Never shows money as released: PayPal does not confirm releases per sale.",
+      inputSchema: { saleId: z.string().min(1).max(40).describe("Sale id, e.g. maria-0007") },
+      annotations: READ_ONLY,
+    },
+    safe((args) => getSaleStatus(ctx, args)),
   );
   server.registerTool(
     "list_sales_missing_tracking",

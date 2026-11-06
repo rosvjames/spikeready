@@ -273,3 +273,21 @@ ul.label-checks li { display: flex; gap: 6px; padding: 2px 0; }
 .buyer-evidence { margin: 12px 0 16px; }
 .buyer-evidence img { max-width: min(100%, 420px); height: auto; border: 1px solid var(--line, #ddd); border-radius: 8px; display: block; }
 .buyer-evidence figcaption { font-size: 0.9em; color: var(--muted, #666); margin-top: 6px; max-width: 60ch; }
+
+/* Four independent checks per sale (Address, On PayPal, Carrier, Money). */
+ul.chk { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; font-size: .78rem; line-height: 1.35; }
+ul.chk li { white-space: nowrap; cursor: help; }
+.chk-name { color: var(--text-secondary); display: inline-block; min-width: 5.2em; }
+.chk-val { font-weight: 600; }
+.chk-ok .chk-val { color: var(--good); }
+.chk-bad .chk-val { color: var(--serious); }
+.chk-wait .chk-val { color: var(--warn); }
+.chk-none .chk-val { color: var(--text-secondary); font-weight: 500; }
+details.chk-legend { margin: 8px 0 10px; font-size: .88rem; }
+details.chk-legend ul { margin: 6px 0; padding-left: 1.1em; }
+details.chk-legend li { margin: 3px 0; }
+@media (max-width: 760px) {
+  ul.chk { gap: 4px; }
+  ul.chk li { white-space: normal; }
+  .chk-name { display: block; min-width: 0; font-size: .7rem; text-transform: uppercase; letter-spacing: .03em; }
+}

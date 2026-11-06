@@ -139,13 +139,21 @@ function renderCalendar(d) {
     <ul class="cal">${items}</ul>`;
 }
 
-const STATUS = {
-  UPLOADED: ["pill-ok", "On PayPal"],
-  ALREADY_ON_PAYPAL: ["pill-ok", "On PayPal"],
-  READY: ["pill-wait", "Verified, not uploaded"],
-  REJECTED: ["pill-bad", "Not uploaded"],
-  NO_LABEL: ["pill-wait", "No label yet"],
-};
+// Four independent checks per sale (src/server/checks.ts), each with its source and time.
+const CHECK_NAMES = { address: "Address", tracking: "On PayPal", carrier: "Carrier", money: "Money" };
+const TONE_ICON = { ok: "✓", bad: "✗", wait: "◷", none: "–" };
+const checkTitle = (c) => `${c.detail} Source: ${c.source}.${c.asOf ? ` As of ${proofTime(c.asOf)}.` : ""}`;
+function checksList(checks) {
+  return `<ul class="chk">${(checks ?? [])
+    .map((c) => `<li class="chk-${esc(c.tone)}" title="${esc(checkTitle(c))}"><span class="chk-name">${esc(CHECK_NAMES[c.id] ?? c.id)}</span> <span class="chk-val"><span aria-hidden="true">${TONE_ICON[c.tone] ?? ""}</span> ${esc(c.label)}</span></li>`)
+    .join("")}</ul>`;
+}
+const CHECKS_LEGEND = `<details class="chk-legend"><summary>What the four checks mean, and where their data comes from</summary><ul>
+  <li><strong>Address:</strong> the label (read by AI, or exported by shipping software) against the PayPal order's shipping address: country, ZIP, house number, street and unit. "Not checked" means something could not be read; tracking waits, but it does not say the address is wrong.</li>
+  <li><strong>On PayPal:</strong> whether the tracking number is on the PayPal order (SpikeReady's upload, through the PayPal API).</li>
+  <li><strong>Carrier:</strong> SpikeReady does not receive carrier scans yet, so a label shows as "Label only": it cannot say whether the package was picked up or delivered.</li>
+  <li><strong>Money:</strong> what PayPal's hold notices say. PayPal does not confirm releases per sale, so SpikeReady never shows a sale's money as released; the calendar below shows estimates.</li>
+</ul><p class="fine">Hover a check (or long-press on a phone) to see its source and time. The checks are independent: a label can match while PayPal still holds the money.</p></details>`;
 
 function renderTracking(d) {
   const counts = {};
@@ -156,11 +164,7 @@ function renderTracking(d) {
     .sort((a, b) => (a.tracking.status === "REJECTED" ? -1 : b.tracking.status === "REJECTED" ? 1 : 0))
     .map((s, i) => {
       const fix = d.fixes?.[s.saleId];
-      const [cls, label] = fix?.simulated
-        ? ["pill-wait", "Simulated upload"]
-        : s.tracking.code === "ADDRESS_UNVERIFIED"
-          ? ["pill-wait", "Address not checked"]
-          : (STATUS[s.tracking.status] ?? ["pill-wait", s.tracking.status]);
+      const simulated = fix?.simulated ? ` <span class="pill pill-wait">Simulated upload</span>` : "";
       const rej = s.tracking.status === "REJECTED";
       const fixable = rej && ["POSTAL_CODE_MISMATCH", "ADDRESS_MISMATCH", "ADDRESS_UNVERIFIED"].includes(s.tracking.code);
       const fixForm = fixable ? labelFixBlock(s, d) : "";
@@ -171,15 +175,16 @@ function renderTracking(d) {
         <td class="num">${usd(s.amountCents)}</td>
         <td>${esc(s.shipTo.line1)}<br>${esc(s.shipTo.city)}, ${esc(s.shipTo.state)} <strong>${esc(s.shipTo.postalCode)}</strong></td>
         <td class="mono hide-sm">${esc(s.tracking.carrier ?? "")} ${esc(s.tracking.trackingNumber ?? "")}<br><span class="muted">label: ${esc(s.tracking.labelLine1 ?? "street not read")}, ZIP ${esc(s.tracking.labelPostalCode ?? "-")}</span></td>
-        <td><span class="pill ${cls}">${label}</span><span class="show-sm muted">${esc(s.tracking.carrier ?? "")} · label ZIP ${esc(s.tracking.labelPostalCode ?? "-")}</span></td>
+        <td>${checksList(s.checks)}${simulated}<span class="show-sm muted">${esc(s.tracking.carrier ?? "")} · label ZIP ${esc(s.tracking.labelPostalCode ?? "-")}</span></td>
       </tr>${rej && s.tracking.reason ? `<tr class="rejected reason-row"${more}><td colspan="6"><span class="reason">Why: ${esc(s.tracking.reason)}</span>${fixForm}</td></tr>` : ""}${fix ? `<tr class="fixed-row"${more}><td colspan="6"><span class="fine">${fixedLine(fix, d)}${fix.paypalDebugId ? ` · PayPal-Debug-Id <span class="mono">${esc(fix.paypalDebugId)}</span>` : ""}.</span>${labelResults[s.saleId] ? renderLabelResult(s.saleId, labelResults[s.saleId]) : previousTrackerLine(fix.previousTracker)}</td></tr>` : ""}`;
     })
     .join("");
   $("tracking-body").className = "";
   $("tracking-body").innerHTML = `
     <div class="summary"><span class="pill pill-ok">${onPayPal} on PayPal</span>${counts.REJECTED ? `<span class="pill pill-bad">${counts.REJECTED} refused</span>` : ""}${counts.READY ? `<span class="pill pill-wait">${counts.READY} ready</span>` : ""}${counts.NO_LABEL ? `<span class="pill pill-wait">${counts.NO_LABEL} without label</span>` : ""}</div>
+    ${CHECKS_LEGEND}
     <div class="table-wrap"><table>
-      <thead><tr><th>Sale</th><th class="hide-sm">Items</th><th class="num">Amount</th><th>Buyer address (PayPal)</th><th class="hide-sm">Label</th><th>Status</th></tr></thead>
+      <thead><tr><th>Sale</th><th class="hide-sm">Items</th><th class="num">Amount</th><th>Buyer address (PayPal)</th><th class="hide-sm">Label</th><th>Checks</th></tr></thead>
       <tbody>${rows}</tbody></table></div>
     ${d.sales.length > VISIBLE ? `<button type="button" class="more" id="more-sales" aria-expanded="false">Show all ${d.sales.length} sales</button>` : ""}`;
   for (const b of document.querySelectorAll("[data-label-sample]")) b.addEventListener("click", onLabelSample);

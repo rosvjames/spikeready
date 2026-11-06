@@ -147,6 +147,7 @@ export async function applyVerifiedShipment(
       carrier: corrected.carrier,
       uploadedAt: ctx.now.toISOString(),
       result: "UPLOADED",
+      simulated: true,
     };
     previousTracker = {
       trackerId: sale.captureId ? `${sale.captureId}-${refusedTracking}` : null,

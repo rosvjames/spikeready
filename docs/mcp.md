@@ -39,6 +39,7 @@ Credentials (`PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `ANTHROPIC_API_KEY`) ar
 |---|---|---|
 | `get_spike_status` | Is this a sales spike (recent orders vs. the previous 14 days)? What should be ready before PayPal looks? | No |
 | `get_release_calendar` | For each held payment: expected release, latest possible date (21 days), why, and what would release it sooner | No |
+| `get_sale_status` | One sale, four independent checks with source and time: label address vs. the PayPal order, tracking on the PayPal order, carrier (no scans yet: "label only"), and money (what PayPal's hold notices say; never "released") | No |
 | `list_sales_missing_tracking` | Sales without tracking on PayPal, with the reason (no label, or refused: the label is not addressed to the buyer's address) | No |
 | `verify_tracking` | Dry run: is this label addressed to the buyer's PayPal shipping address (ZIP, house number, street, unit, country)? Valid check digit? Not used on another sale? | No |
 | `upload_tracking` | Uploads a **verified** tracking number to the PayPal order | Only with the seller's confirmation **and** the operator switch (below) |

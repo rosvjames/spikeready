@@ -63,6 +63,8 @@ export const TrackingUpload = z.object({
   uploadedAt: z.string(),
   /** UPLOADED by us, or ALREADY_ON_PAYPAL when PayPal already had this tracker. */
   result: z.enum(["UPLOADED", "ALREADY_ON_PAYPAL"]),
+  /** True when the server had no PayPal credentials, so nothing was sent to PayPal (demo only). */
+  simulated: z.boolean().optional(),
 });
 export type TrackingUpload = z.infer<typeof TrackingUpload>;
 
