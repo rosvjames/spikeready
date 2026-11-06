@@ -6,9 +6,11 @@
 // - Tracking on PayPal: whether the tracking number is on the PayPal order.
 // - Carrier: what the carrier has reported. SpikeReady does not receive carrier scans yet, so a label
 //   is only "label created" unless a delivery date is on the shipment record.
-// - Money: what PayPal's hold notices say. PayPal does not confirm releases per sale, so SpikeReady
-//   never shows a sale's money as released; it shows "held (PayPal notice)" or "no hold notice".
+// - Money: what PayPal says about the sale's money. A dispute hold has a per-sale ledger record
+//   (Transaction Search T1110, and T1111 when cancelled; src/holds/ledger.ts). A hold notice has no
+//   per-sale release signal, so it stays "held (PayPal notice)", never "released".
 import { formatUsd, type Hold, type Sale, type Shipment, type TrackingUpload } from "../domain.js";
+import { ledgerStateFor, type Ledger } from "../holds/ledger.js";
 import { compareStreet } from "../tracking/address.js";
 import { normalizeTracking } from "../tracking/numbers.js";
 import { normalizePostalCode } from "../tracking/verify.js";
@@ -107,8 +109,18 @@ function carrierCheck(shipment: Shipment | undefined): SaleCheck {
   };
 }
 
-function moneyCheck(hold: Hold | undefined): SaleCheck {
+function moneyCheck(saleId: string, hold: Hold | undefined, ledger: Ledger | undefined): SaleCheck {
   const base = { id: "money" as const };
+  // PayPal's own ledger, when it has a per-sale record (dispute holds), comes first.
+  const led = ledgerStateFor(ledger, saleId);
+  if (led) {
+    const refreshed = ledger?.refreshedAt ? `, data current to ${ledger.refreshedAt}` : "";
+    const source = `PayPal Transaction Search, ${led.record.code} record ${led.record.transactionId}${refreshed}`;
+    if (led.kind === "DISPUTE_HOLD") {
+      return { ...base, status: "DISPUTE_HOLD", tone: "bad", label: "Held for a dispute", detail: `PayPal's ledger shows ${formatUsd(led.record.amountCents)} held while a buyer dispute is investigated (${led.record.code}).`, source, asOf: led.record.at };
+    }
+    return { ...base, status: "DISPUTE_HOLD_CANCELLED", tone: "ok", label: "Dispute hold cancelled", detail: `PayPal's ledger shows the ${formatUsd(led.record.amountCents)} dispute hold cancelled (${led.record.code}). Check your PayPal balance for what is available.`, source, asOf: led.record.at };
+  }
   if (hold) {
     const amount = hold.amountCents !== null ? `${formatUsd(hold.amountCents)} ` : "Money ";
     return {
@@ -139,6 +151,8 @@ export interface Refusal {
 
 export interface ChecksInput {
   sale: Sale;
+  /** Per-sale hold records from PayPal's ledger (optional). */
+  ledger?: Ledger;
   shipment: Shipment | undefined;
   upload: TrackingUpload | undefined;
   hold: Hold | undefined;
@@ -146,6 +160,6 @@ export interface ChecksInput {
   refusal: Refusal | null;
 }
 
-export function saleChecks({ sale, shipment, upload, hold, refusal }: ChecksInput): SaleCheck[] {
-  return [addressCheck(sale, shipment), trackingCheck(shipment, upload, refusal), carrierCheck(shipment), moneyCheck(hold)];
+export function saleChecks({ sale, shipment, upload, hold, refusal, ledger }: ChecksInput): SaleCheck[] {
+  return [addressCheck(sale, shipment), trackingCheck(shipment, upload, refusal), carrierCheck(shipment), moneyCheck(sale.saleId, hold, ledger)];
 }

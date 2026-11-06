@@ -7,6 +7,8 @@ import { readFile } from "node:fs/promises";
 import { z } from "zod";
 import { MISMATCH_SALE_ID } from "../demo/maria.js";
 import { buildInrEvidence, type InrEvidence } from "../disputes/evidence.js";
+import { formatUsd } from "../domain.js";
+import { Ledger, ledgerStateFor } from "../holds/ledger.js";
 import type { State } from "../store.js";
 import { verifyShipment } from "../tracking/verify.js";
 
@@ -60,6 +62,19 @@ export async function loadDisputeProof(path: string): Promise<z.infer<typeof Dis
   return DisputeProof.parse(JSON.parse(raw));
 }
 
+const RecordedLedger = z.object({ recordedAt: z.string(), source: z.string(), note: z.string(), ledger: Ledger });
+
+/** PayPal's per-sale hold records recorded from Transaction Search (null when the file is missing). */
+export async function loadRecordedLedger(path: string): Promise<z.infer<typeof RecordedLedger> | null> {
+  let raw: string;
+  try {
+    raw = await readFile(path, "utf8");
+  } catch {
+    return null;
+  }
+  return RecordedLedger.parse(JSON.parse(raw));
+}
+
 const stageText = (s: z.infer<typeof Stage> | null | undefined) => (s ? [s.stage, s.status].filter(Boolean).join(" / ") || null : null);
 
 /** The sale the panel previews: the demo's refused label (maria-0007), or the first refused label. */
@@ -72,9 +87,11 @@ export function previewSaleId(state: State): string | null {
   return null;
 }
 
-export async function disputeView(path: string, state: State, now: Date): Promise<DisputeView | null> {
+export async function disputeView(path: string, state: State, now: Date, ledgerPath: string | null = null): Promise<DisputeView | null> {
   const p = await loadDisputeProof(path);
   if (!p) return null;
+  const recordedLedger = ledgerPath ? await loadRecordedLedger(ledgerPath) : null;
+  const led = recordedLedger ? ledgerStateFor(recordedLedger.ledger, p.sale.saleId) : null;
   const webhook = p.webhookOnRender?.verified.find((v) => v.eventType.startsWith("CUSTOMER.DISPUTE")) ?? null;
   const notes = (p.evidenceRequest?.input as { notes?: unknown } | undefined)?.notes;
   const tracking = p.evidence.facts ? { carrier: p.evidence.facts.carrier, trackingNumber: p.evidence.facts.trackingNumber } : null;
@@ -98,6 +115,11 @@ export async function disputeView(path: string, state: State, now: Date): Promis
         p.submission?.status === 200
           ? `With the seller's explicit approval, SpikeReady sent the verified tracking facts through the action PayPal offered (${p.evidenceRequest?.action ?? "provide_supporting_info"}); PayPal accepted them (HTTP 200).`
           : "SpikeReady prepared the verified tracking facts; nothing is sent without the seller's approval.",
+        ...(led
+          ? [
+              `PayPal's own ledger shows the money it holds for this case: ${formatUsd(led.record.amountCents)} on ${p.sale.saleId} (Transaction Search code ${led.record.code}, ${led.kind === "DISPUTE_HOLD" ? "still pending" : "hold cancelled"}; data current to ${recordedLedger!.ledger.refreshedAt ?? "an unknown time"}). When PayPal cancels the hold it writes T1111, which SpikeReady shows as "dispute hold cancelled". It is the only per-sale release record we found: hold notices (PAYMENT-ON-HOLD) have none.`,
+            ]
+          : []),
       ],
       buyerMessage: { english: "Wait for the item to be delivered.", original: BUYER_MESSAGE_ES, note: "(translated from the sandbox buyer page in Spanish)" },
       webhook,

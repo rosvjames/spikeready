@@ -486,7 +486,7 @@ export function createApp(deps: AppDeps) {
       }
       if (url.pathname === "/api/dispute-proof") {
         const sc = scope(req, res);
-        const view = await disputeView(deps.disputeProofPath ?? join(dirname(proofPath), "dispute-proof-2026-11-05.json"), sc.loadState(), deps.now());
+        const view = await disputeView(deps.disputeProofPath ?? join(dirname(proofPath), "dispute-proof-2026-11-05.json"), sc.loadState(), deps.now(), join(dirname(proofPath), "ledger-2026-11-06.json"));
         if (!view) return send(res, 404, { error: "no recorded dispute on this server" });
         return send(res, 200, view);
       }

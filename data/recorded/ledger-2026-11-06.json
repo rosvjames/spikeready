@@ -1,0 +1,11 @@
+{
+  "recordedAt": "2026-11-06T17:35:00Z",
+  "source": "PayPal sandbox Transaction Search (GET /v1/reporting/transactions), read by scripts/check-transactions.ts logic",
+  "note": "Per-sale hold records for the seller's sales (T1110 hold for a dispute investigation; T1111 that hold cancelled). Only maria-0038, the sale with the real 'item not received' case, has one. The webhook-smoke sale's T1110 is not one of Maria's sales and is left out.",
+  "ledger": {
+    "refreshedAt": "2026-11-06T17:29:59Z",
+    "records": [
+      { "saleId": "maria-0038", "transactionId": "5KV81319NS483481S", "code": "T1110", "status": "P", "amountCents": 20782, "at": "2026-11-05T06:52:03Z" }
+    ]
+  }
+}

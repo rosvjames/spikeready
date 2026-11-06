@@ -6,6 +6,7 @@ import { z } from "zod";
 import { ROOT } from "./config.js";
 import { Dispute } from "./disputes/types.js";
 import { Hold, Sale, Shipment, TrackingUpload } from "./domain.js";
+import { Ledger } from "./holds/ledger.js";
 
 export const STATE_DIR = join(ROOT, ".spikeready");
 export const STATE_FILE = join(STATE_DIR, "state.json");
@@ -24,6 +25,8 @@ export const State = z.object({
   processedEventIds: z.array(z.string()).default([]),
   /** Buyer disputes from CUSTOMER.DISPUTE.* webhooks (one record per dispute id). */
   disputes: z.array(Dispute).default([]),
+  /** Per-sale hold records from PayPal's ledger (Transaction Search T1110/T1111), with its refresh time. */
+  ledger: Ledger.default({ refreshedAt: null, records: [] }),
 });
 export type State = z.infer<typeof State>;
 

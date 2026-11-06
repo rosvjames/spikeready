@@ -82,6 +82,8 @@ export interface BalanceReading {
   totalCents: number | null;
   paypalDebugId: string | null;
   readAt: string;
+  /** PayPal's own "current up to" time for this balance (last_refresh_time); null when absent. */
+  asOf: string | null;
 }
 
 const cents = (v?: string) => (v && /^-?\d+(\.\d{1,2})?$/.test(v) ? Math.round(Number(v) * 100) : null);
@@ -101,6 +103,7 @@ export async function readBalance(client: PayPalClient, lastReceipt: () => CallR
     totalCents: cents(b?.total_balance?.value),
     paypalDebugId: r && r.path.startsWith("/v1/reporting/balances") ? r.debugId : null,
     readAt: new Date().toISOString(),
+    asOf: res.last_refresh_time ?? null,
   };
 }
 

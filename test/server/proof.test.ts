@@ -19,7 +19,7 @@ async function start(over: Partial<AppDeps> = {}) {
   return `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 }
 
-const reading = (o: Partial<BalanceReading> = {}): BalanceReading => ({ currency: "USD", availableCents: 503_754, withheldCents: 0, totalCents: 503_754, paypalDebugId: "dbg-1", readAt: "2026-11-05T06:00:00Z", ...o });
+const reading = (o: Partial<BalanceReading> = {}): BalanceReading => ({ currency: "USD", availableCents: 503_754, withheldCents: 0, totalCents: 503_754, paypalDebugId: "dbg-1", readAt: "2026-11-05T06:00:00Z", asOf: "2026-11-05T05:59:59Z", ...o });
 
 describe("GET /api/proof", () => {
   it("serves the recorded sandbox receipts with the list of what is simulated", async () => {

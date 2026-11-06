@@ -80,6 +80,7 @@ function rowChecks(sale: Sale, state: State): Pick<SaleRow, "tracking" | "checks
     upload: state.uploads.find((u) => u.saleId === sale.saleId),
     hold: state.holds.find((h) => h.saleId === sale.saleId),
     refusal: tracking.status === "REJECTED" && tracking.code ? { code: tracking.code, reason: tracking.reason ?? "" } : null,
+    ledger: state.ledger,
   });
   return { tracking, checks };
 }

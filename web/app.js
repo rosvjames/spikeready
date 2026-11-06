@@ -152,7 +152,7 @@ const CHECKS_LEGEND = `<details class="chk-legend"><summary>What the four checks
   <li><strong>Address:</strong> the label (read by AI, or exported by shipping software) against the PayPal order's shipping address: country, ZIP, house number, street and unit. "Not checked" means something could not be read; tracking waits, but it does not say the address is wrong.</li>
   <li><strong>On PayPal:</strong> whether the tracking number is on the PayPal order (SpikeReady's upload, through the PayPal API).</li>
   <li><strong>Carrier:</strong> SpikeReady does not receive carrier scans yet, so a label shows as "Label only": it cannot say whether the package was picked up or delivered.</li>
-  <li><strong>Money:</strong> what PayPal's hold notices say. PayPal does not confirm releases per sale, so SpikeReady never shows a sale's money as released; the calendar below shows estimates.</li>
+  <li><strong>Money:</strong> what PayPal's hold notices say. PayPal sends no per-sale release signal for those, so SpikeReady never shows that money as released; the calendar below shows estimates. The one per-sale record PayPal does write is for a dispute: Transaction Search shows the hold (T1110) and its cancellation (T1111), and the Money check uses them when present.</li>
 </ul><p class="fine">Hover a check (or long-press on a phone) to see its source and time. The checks are independent: a label can match while PayPal still holds the money.</p></details>`;
 
 function renderTracking(d) {
@@ -555,7 +555,7 @@ async function renderBalance() {
     const line = document.createElement("p");
     line.className = "balance-line";
     line.id = "live-balance";
-    line.innerHTML = `PayPal reports <strong>${usd(b.withheldCents)}</strong> withheld right now (live ${esc(b.environment)} balance${b.paypalDebugId ? `, PayPal-Debug-Id <span class="mono">${esc(b.paypalDebugId)}</span>` : ""}). The sandbox never withholds money, so the calendar below comes from PayPal's hold notices.`;
+    line.innerHTML = `PayPal reports <strong>${usd(b.withheldCents)}</strong> withheld in the whole account (live ${esc(b.environment)} balance, current to ${esc(b.asOf ? proofTime(b.asOf) : "an unknown time")}${b.paypalDebugId ? `, PayPal-Debug-Id <span class="mono">${esc(b.paypalDebugId)}</span>` : ""}). This is one total: a change in it does not tell which sale was released. The sandbox never withholds money, so the calendar below comes from PayPal's hold notices.`;
     const hero = document.querySelector("#calendar-body .hero-sub") ?? $("calendar-body").firstElementChild;
     if (hero) hero.after(line);
     else $("calendar-body").prepend(line);
