@@ -129,7 +129,7 @@ try {
   // The live action, primary path: upload the reprinted label. The AI's (recorded) reading of the old
   // label is refused by code (ZIP 60641 vs 60614, and a misread digit fails the check digit); the
   // reprinted label passes every check, is uploaded (simulated here: no PayPal credentials) and the
-  // release moves 15 days sooner (a new label has no carrier estimate: 5 days of transit assumed).
+  // estimated release moves 15 days earlier (a new label has no carrier estimate: 5 days of transit assumed).
   check(
     "fix label: only the reprinted-label path exists (no typed-ZIP form)",
     (await page.locator('[data-label-sample="fixed"]').isVisible()) && (await page.locator("#fix-maria-0007").count()) === 0 && /Typing a corrected ZIP is not enough/.test(await text("#step-tracking")),
@@ -140,9 +140,9 @@ try {
   check("old label: refused by code with the ZIP reason and the misread number", /Refused, nothing sent to PayPal/.test(wrong) && /60641/.test(wrong) && /60614/.test(wrong) && /not a valid USPS, UPS or FedEx number/.test(wrong), wrong.slice(0, 300));
   check("old label: shows what the AI read and the label image", /What the AI read/.test(wrong) && (await page.locator("#label-result-maria-0007 img.label-thumb").count()) === 1);
   await page.locator('[data-label-sample="fixed"]').click();
-  await page.locator("#release-move").getByText("15 days sooner").waitFor({ timeout: 10_000 });
+  await page.locator("#release-move").getByText("15 days earlier").waitFor({ timeout: 10_000 });
   const moved = await text("#release-move");
-  check("reprinted label: 'You uploaded maria-0007's reprinted label: $110.00 moves … 15 days sooner'", /You uploaded maria-0007's reprinted label: \$110\.00 moves from Thursday, Nov 26 to Wednesday, Nov 11: 15 days sooner/.test(moved), moved);
+  check("reprinted label: 'You uploaded maria-0007's reprinted label: the estimated release of $110.00 moves … 15 days earlier'", /You uploaded maria-0007's reprinted label: the estimated release of \$110\.00 moves from Thursday, Nov 26 to Wednesday, Nov 11 \(15 days earlier; an estimate, PayPal decides\)/.test(moved), moved);
   check("fix label: says only this visitor's copy changed", /Only your copy of the demo changed/.test(moved));
   const reading = page.locator("#tracking-body .fixed-row .label-reading");
   check("reprinted label: reading stays under the row with every code check passed", (await reading.count()) === 1 && (await reading.locator(".ck.bad").count()) === 0 && (await reading.locator(".ck.ok").count()) >= 5 && /1ZA1B2C30043000072/.test(await reading.innerText()));

@@ -87,18 +87,21 @@ export function releaseMove(before: Forecast | null, after: Forecast | null, tim
     daysSooner,
     headline:
       daysSooner > 0
-        ? `${formatUsd(after.amountCents)} moves from ${b} to ${a}: ${daysSooner} day${daysSooner === 1 ? "" : "s"} sooner`
-        : `${formatUsd(after.amountCents)} is still expected on ${a}`,
+        ? `the estimated release of ${formatUsd(after.amountCents)} moves from ${b} to ${a} (${daysSooner} day${daysSooner === 1 ? "" : "s"} earlier; an estimate, PayPal decides)`
+        : `the estimated release of ${formatUsd(after.amountCents)} stays on ${a} (an estimate, PayPal decides)`,
   };
 }
 
-/** The sale's current label was refused because its ZIP does not match the buyer's PayPal address. */
-export function isZipRefused(state: State, saleId: string): boolean {
+/** Refusals a reprinted label can fix: the label is not addressed to (or could not be checked against) the buyer's PayPal address. */
+export const ADDRESS_REFUSALS: ReadonlySet<string> = new Set(["POSTAL_CODE_MISMATCH", "ADDRESS_MISMATCH", "ADDRESS_UNVERIFIED"]);
+
+/** The sale's current label was refused because it is not addressed to the buyer's PayPal address (ZIP, street or unit). */
+export function isAddressRefused(state: State, saleId: string): boolean {
   const sale = state.sales.find((s) => s.saleId === saleId);
   const shipment = state.shipments.find((s) => s.saleId === saleId);
   if (!sale || !shipment) return false;
   const v = verifyShipment(sale, shipment, { uploads: state.uploads });
-  return v.decision === "REJECT" && v.code === "POSTAL_CODE_MISMATCH";
+  return v.decision === "REJECT" && ADDRESS_REFUSALS.has(v.code);
 }
 
 /**

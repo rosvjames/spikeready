@@ -5,6 +5,7 @@ import { buildCalendar, localDate, weekdayLabel, type Forecast } from "../releas
 import { dailyTotals, detectSpike, readinessChecklist, SPIKE_RULE, type ChecklistItem, type DayTotals, type SpikeResult } from "../spike/detector.js";
 import type { State } from "../store.js";
 import { normalizeTracking } from "../tracking/numbers.js";
+import { compareStreet, type StreetStatus } from "../tracking/address.js";
 import { verifyShipment } from "../tracking/verify.js";
 import { cashUnlocked, type CashUnlocked } from "./cash.js";
 
@@ -16,8 +17,19 @@ export interface SaleRow {
   amountCents: number;
   capturedAt: string;
   items: string;
-  shipTo: { city: string; state: string; postalCode: string };
-  tracking: { status: TrackingStatus; carrier: string | null; trackingNumber: string | null; labelPostalCode: string | null; code: string | null; reason: string | null };
+  shipTo: { line1: string; city: string; state: string; postalCode: string };
+  tracking: {
+    status: TrackingStatus;
+    carrier: string | null;
+    trackingNumber: string | null;
+    labelPostalCode: string | null;
+    /** Street line printed on the label (null when unknown). */
+    labelLine1: string | null;
+    /** Street-level check of the label against the PayPal address; null when there is no label. */
+    address: { status: StreetStatus; message: string } | null;
+    code: string | null;
+    reason: string | null;
+  };
 }
 
 export interface Dashboard {
@@ -46,6 +58,8 @@ function trackingFor(sale: Sale, state: State): SaleRow["tracking"] {
     carrier: shipment?.carrier ?? upload?.carrier ?? null,
     trackingNumber: shipment ? normalizeTracking(shipment.trackingNumber) : (upload?.trackingNumber ?? null),
     labelPostalCode: shipment?.labelPostalCode ?? null,
+    labelLine1: shipment?.labelLine1 ?? null,
+    address: shipment ? compareStreet(shipment.labelLine1, sale.shipTo) : null,
   };
   if (upload) return { ...base, status: upload.result, code: null, reason: null };
   if (!shipment) return { ...base, status: "NO_LABEL", code: null, reason: "No shipping label yet." };
@@ -86,7 +100,7 @@ export function buildDashboard(state: State, now: Date, demo: boolean, banner: s
       amountCents: s.amountCents,
       capturedAt: s.capturedAt,
       items: s.items.map((i) => `${i.quantity} x ${i.name}`).join(", "),
-      shipTo: { city: s.shipTo.city, state: s.shipTo.state, postalCode: s.shipTo.postalCode },
+      shipTo: { line1: [s.shipTo.line1, s.shipTo.line2].filter(Boolean).join(", "), city: s.shipTo.city, state: s.shipTo.state, postalCode: s.shipTo.postalCode },
       tracking: trackingFor(s, state),
     })),
     holds: state.holds,

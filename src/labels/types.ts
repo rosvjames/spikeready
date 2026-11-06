@@ -11,6 +11,8 @@ export const LabelReading = z.object({
   ship_to: z.object({
     name: z.string().nullable(),
     line1: z.string().nullable(),
+    /** Apartment, suite or unit when printed on its own line. Older recordings do not have it. */
+    line2: z.string().nullable().optional(),
     city: z.string().nullable(),
     state: z.string().nullable(),
     postal_code: z.string().nullable(),

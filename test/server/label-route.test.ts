@@ -62,7 +62,7 @@ function fakeSandbox() {
 }
 
 describe("POST /api/tracking/label", () => {
-  it("reprinted sample label: every check passes, the NEW tracking is uploaded with a deterministic request id, and the release moves 15 days sooner (no carrier estimate on a new label: 5 days of transit assumed)", async () => {
+  it("reprinted sample label: every check passes, the NEW tracking is uploaded with a deterministic request id, and the estimated release moves 15 days earlier (no carrier estimate on a new label: 5 days of transit assumed)", async () => {
     const pp = fakeSandbox();
     const t = await start({ paypal: pp.client });
     const res = await post(`${t.base}/api/tracking/label`, { saleId: "maria-0007", useSample: "fixed" });
@@ -78,7 +78,7 @@ describe("POST /api/tracking/label", () => {
     const methods = pp.apiCalls().map((c) => c.method);
     expect(methods.lastIndexOf("PATCH")).toBeGreaterThan(methods.indexOf("POST"));
     expect(r.upload.release).toMatchObject({ daysSooner: 15 });
-    expect(r.upload.release.headline).toBe("$110.00 moves from Thursday, Nov 26 to Wednesday, Nov 11: 15 days sooner");
+    expect(r.upload.release.headline).toBe("the estimated release of $110.00 moves from Thursday, Nov 26 to Wednesday, Nov 11 (15 days earlier; an estimate, PayPal decides)");
     const postCall = pp.apiCalls().find((c) => c.method === "POST")!;
     expect(postCall.headers["PayPal-Request-Id"]).toBe(`spikeready-track-2PF47471EF114104V-${NEW_TRACKING}`);
     // State: the new label replaced the refused one and the sale is on PayPal.

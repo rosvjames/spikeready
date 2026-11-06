@@ -1,12 +1,18 @@
-// The rule that keeps SpikeReady on PayPal's side: tracking is uploaded only when the label really
-// goes to the buyer's shipping address on the PayPal order. Pure function, no I/O.
+// The rule that keeps SpikeReady on PayPal's side: tracking is uploaded only when the label is
+// addressed to the buyer's shipping address on the PayPal order (country, ZIP, house number, street
+// and unit). Pure function, no I/O.
 import type { Sale, Shipment, TrackingUpload } from "../domain.js";
+import { compareStreet } from "./address.js";
 import { checkTrackingFormat, normalizeTracking } from "./numbers.js";
 
 export type RejectCode =
   | "NOT_CAPTURED"
   | "BAD_TRACKING_NUMBER"
   | "POSTAL_CODE_MISMATCH"
+  /** The label's house number, street or unit differs from the buyer's PayPal address. */
+  | "ADDRESS_MISMATCH"
+  /** The street could not be checked (not read, or a unit missing from the reading). Not a claim that it is wrong. */
+  | "ADDRESS_UNVERIFIED"
   | "COUNTRY_MISMATCH"
   | "TRACKING_USED_ON_OTHER_SALE";
 
@@ -66,5 +72,8 @@ export function verifyShipment(sale: Sale, shipment: Shipment, ctx: VerifyContex
       message: `The label goes to ZIP ${labelZip}, but the buyer's PayPal shipping address is ZIP ${buyerZip}. Fix the label or confirm the address with the buyer before uploading.`,
     };
   }
+  const street = compareStreet(shipment.labelLine1, sale.shipTo);
+  if (street.status === "MISMATCH") return { decision: "REJECT", code: "ADDRESS_MISMATCH", message: street.message };
+  if (street.status === "UNVERIFIED") return { decision: "REJECT", code: "ADDRESS_UNVERIFIED", message: `${street.message} Tracking waits until the street can be checked.` };
   return { decision: "UPLOAD" };
 }

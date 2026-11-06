@@ -38,7 +38,7 @@ export const ASSISTANT_TOOLS: Anthropic.Tool[] = [
   },
   {
     name: "verify_tracking",
-    description: "Dry-run check of a shipping label against the sale's PayPal shipping address, the carrier check digit and reuse on other sales. Never sends anything to PayPal.",
+    description: "Dry-run check of a shipping label against the sale's PayPal shipping address (ZIP, house number, street, unit), the carrier check digit and reuse on other sales. Never sends anything to PayPal.",
     input_schema: {
       type: "object",
       properties: {
@@ -46,9 +46,10 @@ export const ASSISTANT_TOOLS: Anthropic.Tool[] = [
         carrier: { type: "string", enum: ["USPS", "UPS", "FEDEX"] },
         trackingNumber: { type: "string" },
         labelPostalCode: { type: "string", description: "Destination ZIP printed on the label" },
+        labelStreet: { type: "string", description: "Street line printed on the label, with the unit if any" },
         labelCountryCode: { type: "string", description: "Two-letter country code, default US" },
       },
-      required: ["saleId", "carrier", "trackingNumber", "labelPostalCode"],
+      required: ["saleId", "carrier", "trackingNumber", "labelPostalCode", "labelStreet"],
       additionalProperties: false,
     },
   },

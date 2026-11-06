@@ -28,7 +28,7 @@ Reply with only one JSON object, no prose:
 {"carrier": "USPS"|"UPS"|"FEDEX"|"OTHER"|null,
  "tracking_number": "as printed, without spaces" | null,
  "service": "e.g. Ground Advantage, UPS Ground" | null,
- "ship_to": {"name": string|null, "line1": string|null, "city": string|null, "state": "2-letter code"|null, "postal_code": "as printed"|null, "country": "2-letter code"|null},
+ "ship_to": {"name": string|null, "line1": "street line with house number, and the unit if it is on the same line" | null, "line2": "apartment, suite or unit if printed on its own line" | null, "city": string|null, "state": "2-letter code"|null, "postal_code": "as printed"|null, "country": "2-letter code"|null},
  "ship_date": "YYYY-MM-DD"|null}
 
 ship_to is the RECIPIENT (the "SHIP TO" block), never the sender or return address.`;

@@ -111,7 +111,7 @@ function renderCalendar(d) {
     .join("");
   const u = c.unlocked;
   const unlocked = u && u.amountCents
-    ? `<div class="alert calm unlock" role="status"><span class="ico" aria-hidden="true">✓</span><div><strong>With verified tracking on PayPal, ${plural(u.payments, "payment")} (${usd(u.amountCents)}) can be released about 24 hours after delivery instead of waiting up to 21 days.</strong>That is up to ${plural(u.maxDaysSooner, "day")} sooner (about ${u.avgDaysSooner} on average). Based on PayPal's published rules; PayPal decides.</div></div>`
+    ? `<div class="alert calm unlock" role="status"><span class="ico" aria-hidden="true">✓</span><div><strong>With verified tracking on PayPal, ${plural(u.payments, "payment")} (${usd(u.amountCents)}) should be released about 24 hours after delivery instead of waiting up to 21 days.</strong>That is an estimated ${plural(u.maxDaysSooner, "day")} earlier at most (about ${u.avgDaysSooner} on average). Based on PayPal's published rules; PayPal decides.</div></div>`
     : "";
   // What the seller did in this session: each fixed label and how far its held payment moved.
   const moves = Object.entries(d.fixes ?? {})
@@ -125,7 +125,7 @@ function renderCalendar(d) {
             ? "New label uploaded to PayPal (the earlier tracking stays on the order)."
             : "Tracking uploaded to the PayPal sandbox order.";
       const what = f.via === "label" ? `You uploaded ${esc(saleId)}'s reprinted label` : `You fixed ${esc(saleId)}'s label`;
-      const est = f.via === "label" ? " A new label has no carrier delivery estimate yet, so SpikeReady assumes 5 days in transit." : "";
+      const est = f.via === "label" ? " Estimate only: a new label has no carrier delivery estimate yet, so SpikeReady assumes 5 days in transit." : "";
       return `<div class="alert calm move" role="status"><span class="ico" aria-hidden="true">✓</span><div><strong>${what}: ${esc(f.headline)}.</strong>${esc(how)}${est}${f.paypalDebugId ? ` PayPal-Debug-Id <span class="mono">${esc(f.paypalDebugId)}</span>.` : ""}${d.perVisitor ? " Only your copy of the demo changed; Reset demo starts over." : ""}</div></div>`;
     })
     .join("");
@@ -156,17 +156,21 @@ function renderTracking(d) {
     .sort((a, b) => (a.tracking.status === "REJECTED" ? -1 : b.tracking.status === "REJECTED" ? 1 : 0))
     .map((s, i) => {
       const fix = d.fixes?.[s.saleId];
-      const [cls, label] = fix?.simulated ? ["pill-wait", "Simulated upload"] : (STATUS[s.tracking.status] ?? ["pill-wait", s.tracking.status]);
+      const [cls, label] = fix?.simulated
+        ? ["pill-wait", "Simulated upload"]
+        : s.tracking.code === "ADDRESS_UNVERIFIED"
+          ? ["pill-wait", "Address not checked"]
+          : (STATUS[s.tracking.status] ?? ["pill-wait", s.tracking.status]);
       const rej = s.tracking.status === "REJECTED";
-      const fixable = rej && s.tracking.code === "POSTAL_CODE_MISMATCH";
+      const fixable = rej && ["POSTAL_CODE_MISMATCH", "ADDRESS_MISMATCH", "ADDRESS_UNVERIFIED"].includes(s.tracking.code);
       const fixForm = fixable ? labelFixBlock(s, d) : "";
       const more = i >= VISIBLE ? " data-more hidden" : "";
       return `<tr class="${rej ? "rejected" : ""}"${more}>
         <td>${esc(s.saleId)}</td>
         <td class="hide-sm">${esc(s.items)}</td>
         <td class="num">${usd(s.amountCents)}</td>
-        <td>${esc(s.shipTo.city)}, ${esc(s.shipTo.state)} <strong>${esc(s.shipTo.postalCode)}</strong></td>
-        <td class="mono hide-sm">${esc(s.tracking.carrier ?? "")} ${esc(s.tracking.trackingNumber ?? "")}<br><span class="muted">label ZIP ${esc(s.tracking.labelPostalCode ?? "-")}</span></td>
+        <td>${esc(s.shipTo.line1)}<br>${esc(s.shipTo.city)}, ${esc(s.shipTo.state)} <strong>${esc(s.shipTo.postalCode)}</strong></td>
+        <td class="mono hide-sm">${esc(s.tracking.carrier ?? "")} ${esc(s.tracking.trackingNumber ?? "")}<br><span class="muted">label: ${esc(s.tracking.labelLine1 ?? "street not read")}, ZIP ${esc(s.tracking.labelPostalCode ?? "-")}</span></td>
         <td><span class="pill ${cls}">${label}</span><span class="show-sm muted">${esc(s.tracking.carrier ?? "")} · label ZIP ${esc(s.tracking.labelPostalCode ?? "-")}</span></td>
       </tr>${rej && s.tracking.reason ? `<tr class="rejected reason-row"${more}><td colspan="6"><span class="reason">Why: ${esc(s.tracking.reason)}</span>${fixForm}</td></tr>` : ""}${fix ? `<tr class="fixed-row"${more}><td colspan="6"><span class="fine">${fixedLine(fix, d)}${fix.paypalDebugId ? ` · PayPal-Debug-Id <span class="mono">${esc(fix.paypalDebugId)}</span>` : ""}.</span>${labelResults[s.saleId] ? renderLabelResult(s.saleId, labelResults[s.saleId]) : previousTrackerLine(fix.previousTracker)}</td></tr>` : ""}`;
     })

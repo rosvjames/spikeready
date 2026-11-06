@@ -72,7 +72,7 @@ export function buildOrderBody(input: SaleOrderInput, source: PaymentSource, int
             number: source.number,
             expiry: source.expiry,
             security_code: source.securityCode,
-            billing_address: { address_line_1: a.line1, admin_area_2: a.city, admin_area_1: a.state, postal_code: a.postalCode, country_code: a.countryCode },
+            billing_address: { address_line_1: a.line1, ...(a.line2 ? { address_line_2: a.line2 } : {}), admin_area_2: a.city, admin_area_1: a.state, postal_code: a.postalCode, country_code: a.countryCode },
           },
         }
       : {
@@ -103,7 +103,7 @@ export function buildOrderBody(input: SaleOrderInput, source: PaymentSource, int
         shipping: {
           type: "SHIPPING",
           name: { full_name: a.name },
-          address: { address_line_1: a.line1, admin_area_2: a.city, admin_area_1: a.state, postal_code: a.postalCode, country_code: a.countryCode },
+          address: { address_line_1: a.line1, ...(a.line2 ? { address_line_2: a.line2 } : {}), admin_area_2: a.city, admin_area_1: a.state, postal_code: a.postalCode, country_code: a.countryCode },
         },
       },
     ],

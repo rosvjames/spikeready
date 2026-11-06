@@ -44,7 +44,7 @@ const text = (r: { content: { text: string }[] }) => r.content.map((c) => c.text
 /** A fresh, valid USPS number nobody used, sent to the buyer's ZIP of a sale that has no upload yet. */
 function freshLabelFor(state: State, saleId: string) {
   const sale = state.sales.find((s) => s.saleId === saleId)!;
-  return { saleId, carrier: "USPS" as const, trackingNumber: demoUspsNumber(9_999_001), labelPostalCode: sale.shipTo.postalCode };
+  return { saleId, carrier: "USPS" as const, trackingNumber: demoUspsNumber(9_999_001), labelPostalCode: sale.shipTo.postalCode, labelStreet: sale.shipTo.line1 };
 }
 
 describe("read tools on the recorded sandbox run", () => {
@@ -78,7 +78,7 @@ describe("read tools on the recorded sandbox run", () => {
 describe("verify_tracking (dry run)", () => {
   it("refuses the label going to the wrong ZIP", () => {
     const shipment = recorded.state.shipments.find((s) => s.saleId === "maria-0007")!;
-    const r = verifyTracking(ctx(), { saleId: "maria-0007", carrier: shipment.carrier, trackingNumber: shipment.trackingNumber, labelPostalCode: shipment.labelPostalCode });
+    const r = verifyTracking(ctx(), { saleId: "maria-0007", carrier: shipment.carrier, trackingNumber: shipment.trackingNumber, labelPostalCode: shipment.labelPostalCode, labelStreet: shipment.labelLine1 });
     expect(r.structuredContent).toMatchObject({ verdict: { decision: "REJECT", code: "POSTAL_CODE_MISMATCH" }, uploaded: false });
     expect(text(r)).toContain("Dry run");
   });
@@ -113,7 +113,7 @@ describe("upload_tracking (the only write)", () => {
     const fake = fakePayPal(() => ({ body: {} }));
     const shipment = recorded.state.shipments.find((s) => s.saleId === "maria-0007")!;
     const r = await uploadTracking(ctx({ paypal: () => fake.client, env: { SPIKEREADY_MCP_ALLOW_WRITES: "1" } }, local()), {
-      saleId: "maria-0007", carrier: shipment.carrier, trackingNumber: shipment.trackingNumber, labelPostalCode: shipment.labelPostalCode, confirm: true,
+      saleId: "maria-0007", carrier: shipment.carrier, trackingNumber: shipment.trackingNumber, labelPostalCode: shipment.labelPostalCode, labelStreet: shipment.labelLine1, confirm: true,
     });
     expect(r.structuredContent).toMatchObject({ uploaded: false, verdict: { code: "POSTAL_CODE_MISMATCH" } });
     expect(fake.calls).toHaveLength(0);
@@ -210,7 +210,7 @@ describe("upload_tracking refuses a typed ZIP on an existing label", () => {
       shipments: [{ saleId: "maria-0007", carrier: "UPS" as const, trackingNumber: "1Z999AA10123456784", labelPostalCode: "11251", labelCountryCode: "US", shippedAt: "2026-11-05T20:00:00Z", estimatedDeliveryAt: null, deliveredAt: null }],
     };
     const ctx = { load: () => ({ state, now: new Date("2026-11-05T21:00:00Z"), source: "local" as const }), env: { SPIKEREADY_MCP_ALLOW_WRITES: "1" }, paypal: () => null } as any;
-    const r = await uploadTracking(ctx, { saleId: "maria-0007", carrier: "UPS", trackingNumber: "1Z999AA10123456784", labelPostalCode: "11215", confirm: true });
+    const r = await uploadTracking(ctx, { saleId: "maria-0007", carrier: "UPS", trackingNumber: "1Z999AA10123456784", labelPostalCode: "11215", labelStreet: "120 Maple Ave", confirm: true });
     expect(JSON.stringify(r)).toContain("SAME_TRACKING_DIFFERENT_ZIP");
   });
 });

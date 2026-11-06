@@ -4,6 +4,8 @@ import { z } from "zod";
 export const Address = z.object({
   name: z.string(),
   line1: z.string(),
+  /** Apartment, suite or unit when PayPal has it on its own line (address_line_2). */
+  line2: z.string().optional(),
   city: z.string(),
   state: z.string(),
   postalCode: z.string(),
@@ -44,6 +46,8 @@ export const Shipment = z.object({
   trackingNumber: z.string(),
   /** Destination printed on the label. */
   labelPostalCode: z.string(),
+  /** Street line printed on the label, with the unit if any ("120 Maple Ave Apt 4B"). Null when unknown. */
+  labelLine1: z.string().nullable().optional(),
   labelCountryCode: z.string().length(2),
   shippedAt: z.string(),
   estimatedDeliveryAt: z.string().nullable().default(null),

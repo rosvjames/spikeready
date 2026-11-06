@@ -6,7 +6,7 @@ import { fakePayPal, sale } from "./helpers.js";
 
 const tn = demoUspsNumber(1);
 const label = (o: Partial<Shipment> = {}): Shipment => ({
-  saleId: "maria-0001", carrier: "USPS", trackingNumber: tn, labelPostalCode: "11215", labelCountryCode: "US",
+  saleId: "maria-0001", carrier: "USPS", trackingNumber: tn, labelPostalCode: "11215", labelLine1: "120 Maple Ave", labelCountryCode: "US",
   shippedAt: "2026-11-05T20:00:00Z", estimatedDeliveryAt: null, deliveredAt: null, ...o,
 });
 const now = () => new Date("2026-11-05T21:00:00Z");

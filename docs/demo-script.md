@@ -17,7 +17,7 @@ Lines in *italics* are on-screen captions; the rest is voice-over.
 | **3. The fix** | | |
 | 0:40–0:55 | Scroll to **Tracking on PayPal**. Point at "38 on PayPal · 1 refused", then the red row maria-0007: *label ZIP 60641 · buyer 60614* | "Tracking goes to each PayPal order, but only if the label is addressed to the buyer's shipping address on the PayPal order. This one says 60641; the buyer lives at 60614. Refused. That protects the buyer and PayPal." |
 | 0:55–1:15 | In the red row, click **Use the old label** (refused: ZIP 60641, misread digit), then **Use the reprinted sample label**. Show the label image, "What the AI read" (UPS, 1ZA1B2C30043000072, ZIP 60614) and "What code checked" (all ✓), then the row turning **On PayPal** with its PayPal-Debug-Id | "Maria reprints the label and uploads it. Claude, by Anthropic, reads the carrier, the tracking number and the ZIP. Code checks that reading against the label and the PayPal order, and only then uploads the tracking to PayPal, once, even if she clicks twice. And on the old label: Claude misread one digit; the check digit caught it. That's why code decides." |
-| 1:15–1:30 | Step 3 headline: *$110.00 moves from Thursday, Nov 26 to Wednesday, Nov 11: 15 days sooner*. Then the calendar rows with "expected · at the latest" | "Her held money: PayPal releases it about a day after delivery when there's tracking, and can take up to twenty-one days after a spike. Fixing that one label moves a hundred and ten dollars fifteen days sooner. The hold notices come from PayPal's webhook simulator, linked to her real sandbox sales." |
+| 1:15–1:30 | Step 3 headline: *the estimated release of $110.00 moves from Thursday, Nov 26 to Wednesday, Nov 11 (15 days earlier; an estimate, PayPal decides)*. Then the calendar rows with "expected · at the latest" | "Her held money: PayPal releases it about a day after delivery when there's tracking, and can take up to twenty-one days after a spike. Fixing that one label moves the estimated date for a hundred and ten dollars fifteen days earlier. It's an estimate; PayPal decides. The hold notices come from PayPal's webhook simulator, linked to her real sandbox sales." |
 | **4. Ask, limitation, invoices** | | |
 | 1:30–1:45 | **Ask SpikeReady**: click *When will my held money be released?*. Point at the answer table, then *Checked by code: 21/21 facts verified* | "She can just ask. The assistant reads her PayPal data through SpikeReady's tools, and code checks every amount and date in the answer before she sees it. It can't upload or send anything." |
 | 1:45–2:00 | Step 4: click **Use a sample notice**. Point at *Respond by Sun, Nov 15 · 10 days left* and a quoted line | "If PayPal limits the account, she pastes the message. This one is a fictional sample: the sandbox can't limit accounts. The AI lists what PayPal asks for, quoting it; code keeps only quotes that are really there." |
@@ -30,7 +30,7 @@ Lines in *italics* are on-screen captions; the rest is voice-over.
 ## Shot list
 
 1. Quote slide and Funds Now slide (static).
-2. Live panel: banner, step 1 (spike), step 2 (refused row, reprinted-label upload, row on PayPal), step 3 (15-days-sooner headline, calendar).
+2. Live panel: banner, step 1 (spike), step 2 (refused row, reprinted-label upload, row on PayPal), step 3 (estimated-release headline, calendar).
 3. Ask SpikeReady answer with the code-check badge.
 4. Step 4: sample notice plan, invoice check, evidence pack opened in a viewer.
 5. Step 5 dispute card; "What is real here" section.

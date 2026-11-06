@@ -90,7 +90,7 @@ describe("per-visitor demo state", () => {
     expect(r.perVisitor).toBe(true);
     const da = await a.dashboard();
     expect(statusOf(da, "maria-0007")).toBe("UPLOADED");
-    expect(da.fixes["maria-0007"].headline).toContain("15 days sooner");
+    expect(da.fixes["maria-0007"].headline).toContain("15 days earlier");
     const db = await b.dashboard();
     expect(statusOf(db, "maria-0007")).toBe("REJECTED");
     expect(db.fixes).toEqual({});

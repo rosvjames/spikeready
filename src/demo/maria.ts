@@ -111,6 +111,7 @@ export function mariaShipments(sales: Sale[], printedAt: string): Shipment[] {
       carrier,
       trackingNumber,
       labelPostalCode,
+      labelLine1: s.shipTo.line1,
       labelCountryCode: "US",
       shippedAt: printedAt,
       estimatedDeliveryAt: addDaysIso(printedAt, 2 + Math.floor(r() * 3)),

@@ -16,7 +16,7 @@ import { cachedBalance, defaultProofPath, loadProof, loadWebhookProof, readBalan
 import { dirname } from "node:path";
 import type { CallReceipt } from "../paypal/client.js";
 import { DailyAiBudget, summarizeUsage, type AiUsage } from "./ai-rails.js";
-import { applyVerifiedShipment, FixRequestError, isZipRefused, TYPED_ZIP_GONE, type FixResponse } from "./fix-label.js";
+import { applyVerifiedShipment, FixRequestError, isAddressRefused, TYPED_ZIP_GONE, type FixResponse } from "./fix-label.js";
 import { handleLabelUpload, LabelUploadError, MAX_LABEL_BYTES } from "./label-upload.js";
 import { loadSampleLabels, SAMPLE_FILES, type SampleLabels } from "../labels/samples.js";
 import type { LabelExtractor } from "../labels/extract.js";
@@ -359,8 +359,8 @@ export function createApp(deps: AppDeps) {
     const ownFile = Boolean((body as { file?: unknown } | null)?.file);
     const live = ownFile && Boolean(deps.labelExtractor);
     const sc = scope(req, res);
-    if (typeof saleId === "string" && !isZipRefused(sc.loadState(), saleId)) {
-      return send(res, 409, { error: "Only a sale whose label was refused (ZIP does not match the buyer's address) takes a reprinted label here." });
+    if (typeof saleId === "string" && !isAddressRefused(sc.loadState(), saleId)) {
+      return send(res, 409, { error: "Only a sale whose label was refused (not addressed to the buyer's PayPal address) takes a reprinted label here." });
     }
     if (live) {
       const blocked = aiGate(req);

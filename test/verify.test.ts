@@ -10,6 +10,7 @@ const label = (o: Partial<Shipment> = {}): Shipment => ({
   carrier: "USPS",
   trackingNumber: demoUspsNumber(1),
   labelPostalCode: "11215",
+  labelLine1: "120 Maple Ave",
   labelCountryCode: "US",
   shippedAt: "2026-11-05T20:00:00Z",
   estimatedDeliveryAt: null,

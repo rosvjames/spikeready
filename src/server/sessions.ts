@@ -14,7 +14,7 @@ export interface FixRecord {
   simulated: boolean;
   paypalDebugId: string | null;
   status: string;
-  /** "$110.00 moves from Thursday, Nov 26 to Monday, Nov 9: 17 days sooner" (null if no held payment moved). */
+  /** "the estimated release of $110.00 moves from Thursday, Nov 26 to Wednesday, Nov 11 (15 days earlier; an estimate, PayPal decides)" (null if no held payment moved). */
   headline: string | null;
   amountCents: number | null;
   daysSooner: number | null;

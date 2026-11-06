@@ -147,6 +147,7 @@ export const TrackingArgs = {
   carrier: Carrier.describe("USPS, UPS or FEDEX"),
   trackingNumber: z.string().min(8).max(40),
   labelPostalCode: z.string().min(3).max(12).describe("Destination postal code printed on the label"),
+  labelStreet: z.string().min(3).max(120).describe("Street line printed on the label, with the unit if any (e.g. 120 Maple Ave Apt 4B)"),
   labelCountryCode: z.string().length(2).default("US"),
 };
 const TrackingInput = z.object(TrackingArgs);
@@ -158,6 +159,7 @@ function shipmentFrom(args: TrackingInput, now: Date, existing: Shipment | undef
     carrier: args.carrier,
     trackingNumber: args.trackingNumber,
     labelPostalCode: args.labelPostalCode,
+    labelLine1: args.labelStreet,
     labelCountryCode: args.labelCountryCode.toUpperCase(),
     shippedAt: existing?.shippedAt ?? now.toISOString(),
     estimatedDeliveryAt: existing?.estimatedDeliveryAt ?? null,
@@ -165,7 +167,7 @@ function shipmentFrom(args: TrackingInput, now: Date, existing: Shipment | undef
   };
 }
 
-const describeVerdict = (v: Verdict) => (v.decision === "UPLOAD" ? "Verified: the label goes to the buyer's PayPal shipping address." : `${v.decision} (${v.code}): ${v.message}`);
+const describeVerdict = (v: Verdict) => (v.decision === "UPLOAD" ? "Checked: the label is addressed to the buyer's PayPal shipping address (ZIP, house number, street and unit)." : `${v.decision} (${v.code}): ${v.message}`);
 
 export function verifyTracking(ctx: McpContext, raw: unknown): ToolResult {
   const args = TrackingInput.parse(raw);
@@ -186,11 +188,12 @@ export async function uploadTracking(ctx: McpContext, raw: unknown): Promise<Too
   if (!sale) return fail(`Unknown sale ${args.saleId}.`);
   const existing = d.state.shipments.find((s) => s.saleId === sale.saleId);
   const shipment = shipmentFrom(args, d.now, existing);
-  // Same tracking number with a different ZIP is the seller's word, not a new label (same rule as the panel).
+  // Same tracking number with a different ZIP or street is the seller's word, not a new label (same rule as the panel).
   const sameNumber = existing && normalizeTracking(existing.trackingNumber) === normalizeTracking(shipment.trackingNumber);
-  if (sameNumber && existing.labelPostalCode.trim() !== shipment.labelPostalCode.trim()) {
+  const streetRetyped = existing?.labelLine1 && existing.labelLine1.trim().toLowerCase() !== (shipment.labelLine1 ?? "").trim().toLowerCase();
+  if (sameNumber && (existing.labelPostalCode.trim() !== shipment.labelPostalCode.trim() || streetRetyped)) {
     return ok(
-      `Not uploaded. ${shipment.trackingNumber} is the label already on file for ${sale.saleId} (ZIP ${existing.labelPostalCode}). Typing a different ZIP does not change where that package goes: reprint the label (it gets a new tracking number) and upload the new label instead.`,
+      `Not uploaded. ${shipment.trackingNumber} is the label already on file for ${sale.saleId} (ZIP ${existing.labelPostalCode}). Typing a different address does not change where that package goes: reprint the label (it gets a new tracking number) and upload the new label instead.`,
       { saleId: sale.saleId, uploaded: false, reason: "SAME_TRACKING_DIFFERENT_ZIP" },
     );
   }

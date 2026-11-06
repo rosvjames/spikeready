@@ -2,10 +2,12 @@
 // 1. Is the reading trustworthy? For text documents every value must be written in the document
 //    (grounding). For photos and PDFs, the reading must be internally consistent: a valid check digit,
 //    a tracking number whose format belongs to the stated carrier, a ZIP that belongs to the state.
-// 2. Does the label go to this buyer? The ship-to name and ZIP must match the PayPal order, and the
-//    tracking number must not be used for another sale (the existing verifyShipment rule).
+// 2. Is the label addressed to this buyer? The ship-to name, ZIP, house number, street and unit must
+//    match the PayPal order, and the tracking number must not be used for another sale (verifyShipment).
+//    A street or unit that could not be read blocks the upload without claiming the address is wrong.
 import type { Carrier, Sale, Shipment, TrackingUpload } from "../domain.js";
 import { checkTrackingFormat, normalizeTracking } from "../tracking/numbers.js";
+import { compareStreet } from "../tracking/address.js";
 import { normalizePostalCode, verifyShipment } from "../tracking/verify.js";
 import type { LabelReading, LabelFile } from "./types.js";
 import { zipMatchesState } from "./zip.js";
@@ -48,7 +50,7 @@ export function ungroundedFields(reading: LabelReading, text: string): string[] 
   if (tn && !text.toUpperCase().replace(/[\s-]/g, "").includes(tn)) missing.push("tracking number");
   const zip5 = reading.ship_to.postal_code ? digits(reading.ship_to.postal_code).slice(0, 5) : null;
   if (zip5 && !tDigits.includes(zip5)) missing.push("ZIP code");
-  for (const [field, value] of [["recipient name", reading.ship_to.name], ["city", reading.ship_to.city]] as const) {
+  for (const [field, value] of [["recipient name", reading.ship_to.name], ["street", reading.ship_to.line1], ["unit", reading.ship_to.line2], ["city", reading.ship_to.city]] as const) {
     if (value && !t.includes(flat(value))) missing.push(field);
   }
   if (reading.ship_to.state && !new RegExp(`\\b${reading.ship_to.state.trim()}\\b`, "i").test(text)) missing.push("state");
@@ -63,6 +65,12 @@ export function namesMatch(labelName: string, buyerName: string): boolean {
   const label = new Set(nameWords(labelName));
   const buyer = nameWords(buyerName);
   return buyer.length > 0 && buyer.every((w) => label.has(w));
+}
+
+/** The street line as printed: line1, plus line2 when the unit is on its own line. */
+export function labelStreetLine(reading: LabelReading): string | null {
+  const parts = [reading.ship_to.line1, reading.ship_to.line2].filter((p): p is string => Boolean(p && p.trim())).map((p) => p.trim());
+  return reading.ship_to.line1 && reading.ship_to.line1.trim() ? parts.join(" ") : null;
 }
 
 export interface VerifyLabelInput {
@@ -118,14 +126,19 @@ export function verifyLabel({ sale, reading, file, uploads, now }: VerifyLabelIn
         : `The label goes to ZIP ${labelZip}, but the buyer's PayPal shipping address is ZIP ${buyerZip}. Reprint the label to the buyer's address.`,
     );
   }
+  const labelLine = labelStreetLine(reading);
+  const street = compareStreet(labelLine, sale.shipTo);
+  add("buyer_street", street.status === "MATCH" ? true : street.status === "MISMATCH" ? false : null, street.message);
   if (to.name) {
     const ok = namesMatch(to.name, sale.shipTo.name);
     add("recipient", ok, ok ? `The label is addressed to ${sale.shipTo.name}, the buyer on the PayPal order.` : `The label is addressed to "${to.name}", but the PayPal order ships to ${sale.shipTo.name}.`);
   }
 
   const failedReading = checks.filter((c) => c.ok === false);
-  if (failedReading.length > 0 || !carrier || carrier === "OTHER" || !tn || !to.postal_code) {
-    return { verdict: "REJECT", reasons: failedReading.map((c) => c.message), checks, shipment: null };
+  // "Could not check the street" also blocks the upload, with its own reason (it is not a mismatch).
+  const blocking = street.status === "UNVERIFIED" ? [...failedReading, { message: street.message }] : failedReading;
+  if (blocking.length > 0 || !carrier || carrier === "OTHER" || !tn || !to.postal_code) {
+    return { verdict: "REJECT", reasons: blocking.map((c) => c.message), checks, shipment: null };
   }
 
   const shipment: Shipment = {
@@ -133,6 +146,7 @@ export function verifyLabel({ sale, reading, file, uploads, now }: VerifyLabelIn
     carrier,
     trackingNumber: tn,
     labelPostalCode: to.postal_code.trim(),
+    labelLine1: labelLine,
     labelCountryCode: (to.country ?? "US").trim().toUpperCase().slice(0, 2) || "US",
     shippedAt: reading.ship_date && /^\d{4}-\d{2}-\d{2}$/.test(reading.ship_date) ? `${reading.ship_date}T12:00:00.000Z` : now.toISOString(),
     estimatedDeliveryAt: null,
