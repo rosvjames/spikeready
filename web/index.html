@@ -29,11 +29,11 @@
     <section class="card wide" id="ask" aria-labelledby="h-ask">
       <p class="step">Ask</p>
       <h2 id="h-ask">Ask SpikeReady</h2>
-      <p class="muted">Answers come only from the PayPal data in this panel. Code checks every amount, date and fact before you see it, and the assistant cannot upload, send or change anything.</p>
+      <p class="muted">Every answer is written by code from the PayPal data in this panel, with the source of each amount, date and status. AI only reads your question to pick the answer; it never writes what you are told about your money, and the assistant cannot upload, send or change anything.</p>
       <div class="chips" id="ask-chips" role="group" aria-label="Suggested questions"></div>
       <form id="ask-form" class="ask-form">
         <label for="ask-q" class="sr-only">Your question</label>
-        <input id="ask-q" type="text" maxlength="500" autocomplete="off" placeholder="Ask about your held money, tracking or invoices">
+        <input id="ask-q" type="text" maxlength="500" autocomplete="off" placeholder="Ask about your held money, a sale (e.g. maria-0007) or what PayPal will want">
         <button type="submit" class="btn" id="ask-send">Ask</button>
       </form>
       <p class="fine" id="ask-status"></p>

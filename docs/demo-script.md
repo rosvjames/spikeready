@@ -19,7 +19,7 @@ Lines in *italics* are on-screen captions; the rest is voice-over.
 | 0:55–1:15 | In the red row, click **Use the old label** (refused: ZIP 60641, misread digit), then **Use the reprinted sample label**. Show the label image, "What the AI read" (UPS, 1ZA1B2C30043000072, ZIP 60614) and "What code checked" (all ✓), then the row turning **On PayPal** with its PayPal-Debug-Id | "Maria reprints the label and uploads it. Claude, by Anthropic, reads the carrier, the tracking number and the ZIP. Code checks that reading against the label and the PayPal order, and only then uploads the tracking to PayPal, once, even if she clicks twice. And on the old label: Claude misread one digit; the check digit caught it. That's why code decides." |
 | 1:15–1:30 | Step 3 headline: *the estimated release of $110.00 moves from Thursday, Nov 26 to Wednesday, Nov 11 (15 days earlier; an estimate, PayPal decides)*. Then the calendar rows with "expected · at the latest" | "Her held money: PayPal releases it about a day after delivery when there's tracking, and can take up to twenty-one days after a spike. Fixing that one label moves the estimated date for a hundred and ten dollars fifteen days earlier. It's an estimate; PayPal decides. The hold notices come from PayPal's webhook simulator, linked to her real sandbox sales." |
 | **4. Ask, limitation, invoices** | | |
-| 1:30–1:45 | **Ask SpikeReady**: click *When will my held money be released?*. Point at the answer table, then *Checked by code: 21/21 facts verified* | "She can just ask. The assistant reads her PayPal data through SpikeReady's tools, and code checks every amount and date in the answer before she sees it. It can't upload or send anything." |
+| 1:30–1:45 | **Ask SpikeReady**: click *When will my held money be released?*. Point at the dates (each with its year, labeled as estimates), then *Written by code from your data* | "She can just ask. The AI only understands the question; SpikeReady's code writes the answer from her PayPal data, so every amount and date comes with its source. It can't upload or send anything." |
 | 1:45–2:00 | Step 4: click **Use a sample notice**. Point at *Respond by Sun, Nov 15 · 10 days left* and a quoted line | "If PayPal limits the account, she pastes the message. This one is a fictional sample: the sandbox can't limit accounts. The AI lists what PayPal asks for, quoting it; code keeps only quotes that are really there." |
 | 2:00–2:15 | Click **Use sample invoices**. Point at *You sold 14 × Nike Air Force 1 '07 White Men's Size 10; your invoices cover 12* and the Brightline row. Click **Download evidence pack**; show it 2 s | "Her supplier invoices: the AI reads them, code reconciles them with her PayPal sales. Two pairs aren't covered and one invoice has no supplier contact. She fixes that before sending. Every original keeps its fingerprint." |
 | **5. The dispute** | | |
@@ -31,7 +31,7 @@ Lines in *italics* are on-screen captions; the rest is voice-over.
 
 1. Quote slide and Funds Now slide (static).
 2. Live panel: banner, step 1 (spike), step 2 (refused row, reprinted-label upload, row on PayPal), step 3 (estimated-release headline, calendar).
-3. Ask SpikeReady answer with the code-check badge.
+3. Ask SpikeReady answer with the "written by code" badge.
 4. Step 4: sample notice plan, invoice check, evidence pack opened in a viewer.
 5. Step 5 dispute card; "What is real here" section.
 6. Closing card.

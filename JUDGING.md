@@ -12,7 +12,7 @@ It replays our real PayPal sandbox run of Nov 5, 2026: 39 captured sales, 38 ver
 4. **Account limitation:** click **Use a sample notice** (the AI lists what PayPal asks for, with quotes that code checks), then **Use sample invoices** (the AI reads, code reconciles: "You sold 14 … your invoices cover 12"), then **Download evidence pack**.
 5. **Verified tracking defends you:** the real "item not received" case from our sandbox run: PayPal showed the buyer the tracking SpikeReady had verified, and SpikeReady sent it to PayPal with the seller's approval.
 
-**Ask SpikeReady** (after step 1): click a suggested question. The answers were produced by Claude over SpikeReady's read-only tools on Nov 5 and are replayed here; under each answer, "Checked by code: N/N facts verified" lists every amount and date and the tool result it came from. Every AI result you see on the public demo (label readings, invoice readings, notice reading, answers) is a recorded real run of Claude Sonnet 5 from Nov 5, re-checked by code against your copy of the data; live AI is off there to protect the budget. To run it live: set `ANTHROPIC_API_KEY` (or the Astropods gateway variables) and run `npm run serve` or `npm run ask -- "your question"` locally.
+**Ask SpikeReady** (after step 1): click a suggested question, or type one (try "How is maria-0007 doing?"). Code writes every answer from your copy of the data with fixed sentences; under each answer, the list of facts shows the tool field each amount, date and status came from. Financial statements are built from code-controlled templates tied to identified PayPal data; estimates are labeled as estimates. Claude's only job here is to read a typed question and pick the answer type; on the public demo live AI is off, so keywords do that, and the answer says which question it answered. The other AI results on the public demo (label, invoice and notice readings) are recorded real runs of Claude Sonnet 5 from Nov 5, re-checked by code against your copy of the data. To run it live: set `ANTHROPIC_API_KEY` (or the Astropods gateway variables) and run `npm run serve` or `npm run ask -- "your question"` locally.
 
 Video: *link coming*.
 
@@ -25,7 +25,7 @@ Video: *link coming*.
 | PayPal webhooks are signature-verified before anything happens | `data/recorded/webhook-proof-2026-11-05.json`: a real signed `PAYMENT.CAPTURE.COMPLETED`, delivered 42 s after a $1 sandbox sale and verified with `verify-webhook-signature` → `SUCCESS` (also shown in the panel's "What is real here"). The live list at [`/api/webhooks/recent`](https://spikeready.onrender.com/api/webhooks/recent) resets when the free server restarts. Code: `src/server/verify-webhook.ts` |
 | A real "item not received" dispute, answered with verified tracking | `data/recorded/dispute-proof-2026-11-05.json`: sandbox case `PP-R-QLW-10196536` on maria-0038, opened by the sandbox buyer in PayPal's Resolution Center; signed `CUSTOMER.DISPUTE.UPDATED` verified on Render; verified UPS tracking sent with `provide-supporting-info` (HTTP 200, PayPal-Debug-Id `f414879393c3c`) after the seller's confirmation. PayPal refused `provide-evidence` and the sandbox `adjudicate` in that state, so there is no ruling yet |
 | The AI is needed, and measured | `eval/results/2026-11-05/report.md` (all arms), `eval/results/2026-11-05-date-grounding/report.md` (rerun after the fix), `eval/results/2026-11-05-injection/report.md` (injection-only); rerun with `npm run eval` (offline arms need no key) |
-| Assistant answers are checked by code | `data/recorded/assistant-2026-11-05.json` (model, tokens, cost, tool calls, every claim and its check); code in `src/assistant/claims.ts` |
+| Assistant answers are written by code | Templates in `src/assistant/answers.ts`, the AI's only choice in `src/assistant/intent.ts`, the second check in `src/assistant/claims.ts`; tests in `test/assistant/` |
 | What is simulated | README, "What is real and what is simulated" |
 
 ## 3. Where to look in the code (60 s)
@@ -39,7 +39,7 @@ Video: *link coming*.
 | Release calendar with PayPal's policy and sources in one file | `src/release/calendar.ts`, `src/release/policy.ts` |
 | Invoice engine: AI reads (`extract.ts`), code reconciles (`reconcile.ts`), grounding against injected text (`grounding.ts`), evidence pack (`dossier.ts`) | `src/invoices/` |
 | Limitation notice reader: AI quotes, code checks the quotes and builds the plan | `src/limitation/` |
-| Ask SpikeReady: tool-using assistant, read-only tools, claim checking | `src/assistant/` |
+| Ask SpikeReady: Claude picks the answer type, code writes the answer from read-only tools | `src/assistant/` |
 | Dispute evidence and the Disputes API calls (sent only with confirmation) | `src/disputes/`, `scripts/dispute-real.ts` |
 | MCP server for AI assistants (writes only with the seller's confirmation) | `src/mcp/`, `docs/mcp.md` |
 | AI audit log (model, tokens, cost, input hash; never content) and public-demo AI limits | `src/ai/log.ts`, `src/server/ai-rails.ts` |

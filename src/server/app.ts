@@ -21,10 +21,11 @@ import { handleLabelUpload, LabelUploadError, MAX_LABEL_BYTES } from "./label-up
 import { loadSampleLabels, SAMPLE_FILES, type SampleLabels } from "../labels/samples.js";
 import type { LabelExtractor } from "../labels/extract.js";
 import { clientKey, createRateLimiter } from "./rate-limit.js";
-import { RecordedAssistant } from "../assistant/recorded.js";
+import { CodeAssistant } from "../assistant/agent.js";
+import { KeywordIntentReader } from "../assistant/intent.js";
 import type { Assistant } from "../assistant/agent.js";
 import { DEFAULT_INVOICES_DIR, type McpContext } from "../mcp/tools.js";
-import { AskRequestError, askUsageSummary, MAX_ASK_BODY_BYTES, planAsk, runAsk, serverMcpContext, suggestionsOf } from "./ask.js";
+import { AskRequestError, askUsageSummary, MAX_ASK_BODY_BYTES, planAsk, runAsk, serverMcpContext, suggestions } from "./ask.js";
 import { DemoSessions, sessionFor, type FixRecord, type SessionOptions } from "./sessions.js";
 import { disputeView } from "./dispute-proof.js";
 
@@ -57,9 +58,7 @@ export interface AppDeps {
   lastPayPalReceipt?: () => CallReceipt | null;
   /** Daily dollar cap for live AI on this server (SPIKEREADY_AI_DAILY_USD, default 1.00). */
   aiDailyUsd?: number;
-  /** "Ask SpikeReady" recorded answers (the suggested questions); defaults to data/recorded/assistant-*.json. */
-  askRecorded?: RecordedAssistant | null;
-  /** Builds the live assistant over the server's data; null/absent when paid AI is not allowed on this server. */
+  /** Assistant whose typed questions Claude reads (answers are still written by code); null/absent when paid AI is not allowed. */
   askLive?: ((ctx: McpContext) => Assistant) | null;
   /**
    * Demo mode: a fresh copy of the recorded state for each visitor (keyed by a cookie), so one
@@ -286,8 +285,7 @@ export function createApp(deps: AppDeps) {
     }
   }
 
-  // "Ask SpikeReady": suggested questions replay recorded answers; free text needs the live assistant.
-  const askRecorded = deps.askRecorded !== undefined ? deps.askRecorded : RecordedAssistant.fromFile();
+  // "Ask SpikeReady": code writes every answer; Claude only reads typed questions when paid AI is allowed.
   /** Read-only assistant context over the requesting visitor's data. */
   const askDepsFor = (sc: Scope) => {
     const ctx = serverMcpContext({
@@ -298,7 +296,7 @@ export function createApp(deps: AppDeps) {
       invoicesDir: DEFAULT_INVOICES_DIR,
       ...(deps.samplesDir ? { samplesDir: deps.samplesDir } : {}),
     });
-    return { recorded: askRecorded, live: deps.askLive ? () => deps.askLive!(ctx) : null, ctx };
+    return { live: deps.askLive ? () => deps.askLive!(ctx) : null, local: () => new CodeAssistant(ctx, new KeywordIntentReader()) };
   };
 
   async function ask(req: IncomingMessage, res: ServerResponse): Promise<void> {
@@ -314,17 +312,17 @@ export function createApp(deps: AppDeps) {
       const plan = planAsk(body, askDeps);
       if (plan.live) {
         const blocked = aiGate(req);
-        if (blocked) return send(res, blocked.status, { error: blocked.error, suggestions: suggestionsOf(askRecorded) });
+        if (blocked) return send(res, blocked.status, { error: blocked.error, suggestions: suggestions() });
       }
       const out = await runAsk(plan, askDeps);
       const ai = askUsageSummary(out.result);
       if (out.live) aiBudget.add(ai);
-      return send(res, 200, { ...out.result, ai, recheck: out.recheck });
+      return send(res, 200, { ...out.result, ai });
     } catch (err) {
       if (err instanceof AskRequestError) return send(res, err.status, { error: err.message, ...err.extra });
       if (err instanceof HttpError) throw err;
       console.error(err instanceof Error ? err.message : err);
-      return send(res, 502, { error: "Could not answer right now. Try again, or try a suggested question.", suggestions: suggestionsOf(askRecorded) });
+      return send(res, 502, { error: "Could not answer right now. Try again, or try a suggested question.", suggestions: suggestions() });
     }
   }
 
@@ -509,7 +507,7 @@ export function createApp(deps: AppDeps) {
           live: { balance: Boolean(balance), paypal: Boolean(deps.paypal), ai: Boolean(deps.invoiceExtractor || deps.noticeExtractor), labelAi: Boolean(deps.labelExtractor), labelSamples: Boolean(labelSamples) },
           fixes: Object.fromEntries(sc.fixes),
           perVisitor: Boolean(sessions),
-          ask: { live: Boolean(deps.askLive), suggestions: suggestionsOf(askRecorded) },
+          ask: { live: Boolean(deps.askLive), suggestions: suggestions() },
         });
       }
       if (url.pathname.startsWith("/api/")) return send(res, 404, { error: "not found" });

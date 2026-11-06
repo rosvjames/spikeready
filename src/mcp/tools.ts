@@ -100,6 +100,8 @@ export function getReleaseCalendar(ctx: McpContext): ToolResult {
       expected: localDate(f.releaseAt, tz),
       latest: localDate(f.latestAt, tz),
       basis: f.basis,
+      /** PayPal's reason code from the hold notice (null when the notice gives none). */
+      paypalReason: d.state.holds.find((h) => h.eventId === f.eventId)?.reason ?? null,
       due: f.due,
       explanation: f.explanation,
       action: f.action,
@@ -118,6 +120,46 @@ export function getReleaseCalendar(ctx: McpContext): ToolResult {
   ];
   if (cal.actionableCents) lines.splice(1 + cal.days.length, 0, `${formatUsd(cal.actionableCents)} could be released sooner if you upload tracking.`);
   return ok(lines.join("\n") + demoNote(d), { totalHeldCents: cal.totalHeldCents, actionableCents: cal.actionableCents, payments, sources: [...POLICY.sources], dataSource: d.source });
+}
+
+/**
+ * One sale as the panel sees it: the buyer's PayPal address, the label and its address check, the
+ * tracking on PayPal, and the hold forecast if PayPal sent a hold notice. Read-only.
+ */
+export function getSaleStatus(ctx: McpContext, raw: unknown): ToolResult {
+  const { saleId } = z.object({ saleId: z.string().min(1).max(40) }).parse(raw);
+  const d = ctx.load();
+  const dash = buildDashboard(d.state, d.now, d.source === "recorded", d.banner);
+  const row = dash.sales.find((s) => s.saleId === saleId);
+  if (!row) return fail(`Unknown sale ${saleId}.`);
+  const tz = d.state.seller.timeZone;
+  const f = dash.calendar.days.flatMap((day) => day.forecasts).find((x) => x.saleId === saleId);
+  const hold = f
+    ? {
+        amountCents: f.amountCents,
+        expected: localDate(f.releaseAt, tz),
+        latest: localDate(f.latestAt, tz),
+        basis: f.basis,
+        explanation: f.explanation,
+        paypalReason: d.state.holds.find((h) => h.eventId === f.eventId)?.reason ?? null,
+      }
+    : null;
+  const t = row.tracking;
+  const text = [
+    `${row.saleId} (${formatUsd(row.amountCents)}): ships to ${row.shipTo.line1}, ${row.shipTo.city}, ${row.shipTo.state} ${row.shipTo.postalCode}.`,
+    `Tracking: ${t.status}${t.reason ? ` (${t.reason})` : ""}.`,
+    hold ? `Hold: ${formatUsd(hold.amountCents)}, expected ${weekdayLabel(hold.expected)}, at the latest ${weekdayLabel(hold.latest)}.` : "No hold notice for this sale.",
+  ].join("\n");
+  return ok(text + demoNote(d), {
+    saleId: row.saleId,
+    amountCents: row.amountCents,
+    items: row.items,
+    buyer: row.shipTo,
+    tracking: { status: t.status, carrier: t.carrier, trackingNumber: t.trackingNumber, labelLine1: t.labelLine1, labelPostalCode: t.labelPostalCode, code: t.code, reason: t.reason },
+    address: t.address,
+    hold,
+    dataSource: d.source,
+  });
 }
 
 export function listSalesMissingTracking(ctx: McpContext): ToolResult {

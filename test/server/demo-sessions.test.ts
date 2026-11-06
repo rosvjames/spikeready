@@ -1,14 +1,11 @@
-// Public demo: each visitor gets their own copy of the recording (cookie), a reset, recorded Ask answers
-// that are never shown as verified when the visitor's data changed, and step 5 (the real dispute).
+// Public demo: each visitor gets their own copy of the recording (cookie), a reset, Ask answers written
+// by code from that visitor's current data, and step 5 (the real dispute).
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { RecordedAssistant, stateFingerprint } from "../../src/assistant/recorded.js";
 import { ROOT } from "../../src/config.js";
-import { DEFAULT_INVOICES_DIR, type McpContext } from "../../src/mcp/tools.js";
 import { createApp } from "../../src/server/app.js";
-import { applyVerifiedShipment } from "../../src/server/fix-label.js";
 import { loadRecordedDemo } from "../../src/server/recorded.js";
 import { DEMO_COOKIE, DemoSessions, readCookie } from "../../src/server/sessions.js";
 import type { State } from "../../src/store.js";
@@ -135,22 +132,18 @@ describe("DemoSessions store", () => {
   });
 });
 
-describe("Ask SpikeReady never shows a stale answer as verified", () => {
-  it("before any change: the original recording, every fact re-checked against the visitor's data", async () => {
-    const base = await start();
-    const r = await visitor(base).ask("release");
-    expect(r.verified).toBe(true);
-    expect(r.recheck).toMatchObject({ changedFacts: 0, unsupported: [] });
-    expect(r.answer_markdown).toContain("Nov 26");
-  });
+describe("Ask SpikeReady answers from each visitor's current data", () => {
+  const SUGGESTED = ["release_dates", "held_total", "hold_reason", "whats_missing", "draft_reply"];
 
-  it("every suggested answer is verified for an untouched visitor (re-checked now)", async () => {
+  it("before any change: every suggested answer is written by code and every fact re-checked", async () => {
     const base = await start();
     const v = visitor(base);
-    for (const id of ["release", "ready", "reply"]) {
+    for (const id of SUGGESTED) {
       const r = await v.ask(id);
-      expect({ id, verified: r.verified, changed: r.recheck.changedFacts, unsupported: r.recheck.unsupported }).toEqual({ id, verified: true, changed: 0, unsupported: [] });
+      expect({ id, verified: r.verified, unsupported: r.unsupported, ai: r.usage }).toEqual({ id, verified: true, unsupported: [], ai: null });
+      expect(r.claims.length).toBeGreaterThan(0);
     }
+    expect((await v.ask("release_dates")).answer_markdown).toContain("Thursday, Nov 26, 2026");
   });
 
   it("typing a ZIP is refused (410) and leaves the visitor's data and answers untouched", async () => {
@@ -159,55 +152,21 @@ describe("Ask SpikeReady never shows a stale answer as verified", () => {
     const res = await v.fix("60614");
     expect(res.use).toBe("/api/tracking/label");
     expect(statusOf(await v.dashboard(), "maria-0007")).toBe("REJECTED");
-    expect((await v.ask("release")).verified).toBe(true);
+    expect((await v.ask("release_dates")).answer_markdown).toContain("Thursday, Nov 26, 2026");
   });
 
-  it("after uploading the reprinted label (the primary path): every suggested answer is the one recorded for that data, fully verified", async () => {
+  it("after the reprinted label, the answers follow the new data (no stale recording), only for that visitor", async () => {
     const base = await start();
     const v = visitor(base);
+    const other = visitor(base);
     const up = await v.reprint();
     expect(up.label.verdict).toBe("UPLOAD");
-    for (const id of ["release", "ready", "reply"]) {
-      const r = await v.ask(id);
-      expect({ id, forThisData: r.recheck.recordedForThisData, verified: r.verified, changed: r.recheck.changedFacts, unsupported: r.recheck.unsupported }).toEqual({
-        id,
-        forThisData: true,
-        verified: true,
-        changed: 0,
-        unsupported: [],
-      });
-      expect(r.recheck.stateLabel).toContain("reprinted label");
-    }
-    expect((await v.ask("release")).answer_markdown).toContain("Nov 11");
-  });
-
-  it("with data no recording matches: the facts that changed are flagged and the answer is not verified", async () => {
-    const rec = RecordedAssistant.fromFile()!;
-    // The label is fixed but the release answers are taken from the original recording (no match).
-    const base0 = fresh();
-    const refused = base0.shipments.find((x) => x.saleId === "maria-0007")!;
-    const fixed = await applyVerifiedShipment(base0, base0.sales.find((x) => x.saleId === "maria-0007")!, refused, { ...refused, trackingNumber: "1ZA1B2C30043000072", labelPostalCode: "60614" }, { paypal: null, now: NOW });
-    const state = { ...fixed.state, holds: fixed.state.holds.filter((h) => h.saleId !== "maria-0001") };
-    const ctx: McpContext = {
-      load: () => ({ state, now: NOW, source: "recorded", banner: null }),
-      save: () => {
-        throw new Error("read-only");
-      },
-      paypal: () => null,
-      env: {},
-      invoicesDir: DEFAULT_INVOICES_DIR,
-      extractor: null,
-    };
-    const { result, recheck } = await rec.askFor({ question: "", id: "release" }, ctx, stateFingerprint(state));
-    expect(recheck.recordedForThisData).toBe(false);
-    expect(recheck.changedFacts + recheck.unsupported.length).toBeGreaterThan(0);
-    expect(result.verified).toBe(false);
-  });
-
-  it("one suggestion per question even with several recordings", () => {
-    const ids = RecordedAssistant.fromFile()!.questions().map((q) => q.id);
-    expect(ids).toEqual([...new Set(ids)]);
-    expect(ids).toEqual(expect.arrayContaining(["release", "ready", "reply"]));
+    for (const id of SUGGESTED) expect((await v.ask(id)).verified).toBe(true);
+    const release = (await v.ask("release_dates")).answer_markdown;
+    expect(release).toContain("Wednesday, Nov 11, 2026");
+    expect(release).not.toContain("No tracking on PayPal for this sale");
+    expect((await v.ask("whats_missing")).answer_markdown).toContain("all 39 sales have tracking");
+    expect((await other.ask("release_dates")).answer_markdown).toContain("No tracking on PayPal for this sale");
   });
 });
 

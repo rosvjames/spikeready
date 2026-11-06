@@ -1,5 +1,6 @@
-// Claim checking: the model writes the answer, code checks it. Every claim cites a tool and a field;
-// code re-reads that field from the actual tool result and compares. Independently, every dollar
+// Claim checking: every fact in an answer cites a tool and a field; code re-reads that field from the
+// actual tool result and compares. Answers are written by code templates (answers.ts), so this is a
+// second safeguard: a broken template or stale data shows up as an unverified fact. Independently, every dollar
 // amount and calendar date in the answer must appear somewhere in the tool results (or in the text
 // the seller pasted), so an unsupported number cannot slip in without a claim.
 import type { ToolCallRecord } from "./tools.js";
@@ -67,6 +68,15 @@ export function moneyToCents(s: string): number | null {
   return Number(m[1]!.replace(/,/g, "")) * 100 + Number((m[2] ?? "0").padEnd(2, "0"));
 }
 
+/** Full date ("2026-11-08") of an ISO date or a written date with its year ("Nov 8, 2026"); null without a year. */
+export function fullDateKey(s: string): string | null {
+  const iso = /(\d{4})-(\d{2})-(\d{2})/.exec(s);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  const w = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})\b/i.exec(s);
+  if (w) return `${w[3]}-${String(MONTHS.indexOf(w[1]!.toLowerCase().slice(0, 3)) + 1).padStart(2, "0")}-${w[2]!.padStart(2, "0")}`;
+  return null;
+}
+
 /** Month-day key ("11-08") of an ISO date or a written date like "Sun, Nov 8" / "November 8, 2026". */
 export function monthDayKey(s: string): string | null {
   const iso = /(\d{4})-(\d{2})-(\d{2})/.exec(s);
@@ -100,6 +110,9 @@ export function valueMatches(actual: unknown, claimed: string | number | boolean
     const c = norm(String(claimed));
     if (a === c) return true;
     if (/^\d{4}-\d{2}-\d{2}/.test(actual)) {
+      // A claimed date with a year must be the same full date; without a year, the same month and day.
+      const full = fullDateKey(String(claimed));
+      if (full) return full === actual.slice(0, 10);
       const ka = monthDayKey(actual);
       return ka !== null && ka === monthDayKey(String(claimed));
     }
@@ -119,17 +132,21 @@ function leaves(v: unknown, key = "", out: { key: string; value: string | number
 }
 
 const MONEY_RE = /\$\s?(\d{1,3}(?:,\d{3})+|\d+)(?:\.\d{1,2})?/g;
-const DATE_RE = /\b\d{4}-\d{2}-\d{2}\b|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+\d{1,2}\b/gi;
+const DATE_RE = /\b\d{4}-\d{2}-\d{2}\b|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+\d{1,2}\b(?:,?\s+\d{4}\b)?/gi;
 
 export interface KnownFacts {
   cents: Set<number>;
+  /** Month-day keys ("11-08"). */
   dates: Set<string>;
+  /** Full dates ("2026-11-08"), for dates written with a year. */
+  fullDates: Set<string>;
 }
 
 /** Amounts (in cents) and month-day dates found in tool results and the seller's pasted text. */
 export function knownFacts(calls: ToolCallRecord[], pastedText = ""): KnownFacts {
   const cents = new Set<number>();
   const dates = new Set<string>();
+  const fullDates = new Set<string>();
   const scanText = (t: string) => {
     for (const m of t.matchAll(MONEY_RE)) {
       const c = moneyToCents(m[0]);
@@ -138,6 +155,8 @@ export function knownFacts(calls: ToolCallRecord[], pastedText = ""): KnownFacts
     for (const m of t.matchAll(DATE_RE)) {
       const k = monthDayKey(m[0]);
       if (k) dates.add(k);
+      const f = fullDateKey(m[0]);
+      if (f) fullDates.add(f);
     }
   };
   for (const call of calls) {
@@ -149,7 +168,7 @@ export function knownFacts(calls: ToolCallRecord[], pastedText = ""): KnownFacts
     }
   }
   scanText(pastedText);
-  return { cents, dates };
+  return { cents, dates, fullDates };
 }
 
 /** Amounts and dates written in the answer that are not in the known facts. */
@@ -160,6 +179,11 @@ export function unsupportedFacts(answer: string, known: KnownFacts): string[] {
     if (c !== null && !known.cents.has(c)) out.push(m[0].trim());
   }
   for (const m of answer.matchAll(DATE_RE)) {
+    const f = fullDateKey(m[0]);
+    if (f) {
+      if (!known.fullDates.has(f)) out.push(m[0].trim());
+      continue;
+    }
     const k = monthDayKey(m[0]);
     if (k && !known.dates.has(k)) out.push(m[0].trim());
   }

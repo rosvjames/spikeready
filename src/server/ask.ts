@@ -1,16 +1,15 @@
-// "Ask SpikeReady" over HTTP. Suggested questions replay recorded answers (real runs against the
-// recorded sandbox data, instant and free); free text needs the live assistant, which only exists
-// when the server allows paid AI (aiUploadsEnabled). The assistant itself is read-only: it has no
-// tool that writes to PayPal, and code checks every fact it cites (src/assistant/claims.ts).
+// "Ask SpikeReady" over HTTP. Every answer is written by code from the visitor's data
+// (src/assistant/answers.ts). Suggested questions need no AI. Typed questions are understood by Claude
+// when this server allows paid AI (aiUploadsEnabled), with the same rails as the other AI routes;
+// otherwise by a keyword matcher, and the answer says which question it answered.
 import { z } from "zod";
 import type { AskResult, Assistant } from "../assistant/agent.js";
-import { stateFingerprint, type RecordedAssistant, type Recheck } from "../assistant/recorded.js";
+import { SUGGESTIONS } from "../assistant/answers.js";
 import type { McpContext } from "../mcp/tools.js";
 import type { State } from "../store.js";
 import type { AiCallSummary } from "./ai-rails.js";
 
 export const MAX_ASK_BODY_BYTES = 32 * 1024;
-export const MAX_ASK_PASTED_CHARS = 20_000;
 export const MAX_QUESTION_CHARS = 500;
 
 export class AskRequestError extends Error {
@@ -27,8 +26,6 @@ export class AskRequestError extends Error {
 const AskBody = z.object({
   question: z.string().trim().max(MAX_QUESTION_CHARS).optional(),
   id: z.string().max(40).optional(),
-  mode: z.enum(["answer", "reply"]).optional(),
-  pastedText: z.string().optional(),
 });
 
 export interface Suggestion {
@@ -37,71 +34,51 @@ export interface Suggestion {
   mode: AskResult["mode"];
 }
 
-export const suggestionsOf = (recorded: RecordedAssistant | null): Suggestion[] => recorded?.questions() ?? [];
-
-export const LIVE_OFF_MESSAGE = "Live AI is off on this public demo; try the suggested questions.";
+export const suggestions = (): Suggestion[] => SUGGESTIONS.map((s) => ({ ...s }));
 
 /** What /api/ask needs from the server. */
 export interface AskDeps {
-  recorded: RecordedAssistant | null;
-  /** Builds the live assistant over the server's current data; null when paid AI is not allowed here. */
+  /** Assistant that understands typed questions with Claude; null when paid AI is not allowed here. */
   live: (() => Assistant) | null;
-  /** Read-only context over the requesting visitor's data (used to re-check recorded answers). */
-  ctx?: McpContext;
+  /** Assistant that understands typed questions by keywords (no AI, no cost). */
+  local: () => Assistant;
 }
 
 export interface AskOutcome {
   result: AskResult;
-  /** True when the live (paid) assistant answered; used for the rails and the daily budget. */
+  /** True when Claude read the question; used for the rails and the daily budget. */
   live: boolean;
-  /** For recorded answers: whether every fact still holds for the visitor's current data. */
-  recheck: Recheck | null;
 }
 
-/** Parses the request and tells the route whether it would use the live (paid) assistant. */
-export function planAsk(raw: unknown, deps: AskDeps): { body: z.infer<typeof AskBody>; live: boolean } {
+/** Parses the request and tells the route whether it would use paid AI. */
+export function planAsk(raw: unknown, deps: Pick<AskDeps, "live">): { body: z.infer<typeof AskBody>; live: boolean } {
   const parsed = AskBody.safeParse(raw);
   if (!parsed.success) throw new AskRequestError(400, "Send {question} or the {id} of a suggested question.");
   const body = parsed.data;
-  if (body.pastedText && body.pastedText.length > MAX_ASK_PASTED_CHARS) {
-    throw new AskRequestError(413, `Pasted text is too long (max ${MAX_ASK_PASTED_CHARS.toLocaleString("en-US")} characters).`);
+  if (body.id) {
+    if (!SUGGESTIONS.some((s) => s.id === body.id)) throw new AskRequestError(404, "Unknown suggested question.", { suggestions: suggestions() });
+    return { body, live: false };
   }
-  // A suggested question is answered from the recording (instant, free), even when live AI is on.
-  const recordedHit = body.id ? deps.recorded?.questions().some((q) => q.id === body.id) : false;
-  if (recordedHit) return { body, live: false };
-  if (body.id && !body.question) throw new AskRequestError(404, "Unknown suggested question.", { suggestions: suggestionsOf(deps.recorded) });
-  if (!body.question) throw new AskRequestError(400, "Type a question.", { suggestions: suggestionsOf(deps.recorded) });
-  if (!deps.live) {
-    // Matching a suggestion by its text still works without live AI.
-    const sameText = deps.recorded?.questions().find((q) => norm(q.question) === norm(body.question!));
-    if (sameText) return { body: { ...body, id: sameText.id }, live: false };
-    throw new AskRequestError(503, LIVE_OFF_MESSAGE, { suggestions: suggestionsOf(deps.recorded) });
-  }
-  return { body, live: true };
+  if (!body.question) throw new AskRequestError(400, "Type a question.", { suggestions: suggestions() });
+  // Typing a suggestion's exact text is the same as clicking it.
+  const same = SUGGESTIONS.find((s) => norm(s.question) === norm(body.question!));
+  if (same) return { body: { id: same.id }, live: false };
+  return { body, live: Boolean(deps.live) };
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
 export async function runAsk(plan: ReturnType<typeof planAsk>, deps: AskDeps): Promise<AskOutcome> {
   const { body, live } = plan;
-  const req = { question: body.question ?? "", mode: body.mode, pastedText: body.pastedText?.trim() || undefined, id: body.id };
-  if (!live) {
-    if (!deps.recorded) throw new AskRequestError(503, LIVE_OFF_MESSAGE, { suggestions: [] });
-    if (deps.ctx) {
-      // Pick the recording made for this visitor's data and re-check every fact against it now.
-      const fingerprint = stateFingerprint(deps.ctx.load().state);
-      const { result, recheck } = await deps.recorded.askFor(req, deps.ctx, fingerprint);
-      return { result, live: false, recheck };
-    }
-    return { result: await deps.recorded.ask(req), live: false, recheck: null };
-  }
-  const assistant = deps.live!();
-  return { result: await assistant.ask(req), live: true, recheck: null };
+  const assistant = live ? deps.live!() : deps.local();
+  const req = { question: body.question ?? "", ...(body.id ? { id: body.id } : {}) };
+  return { result: await assistant.ask(req), live };
 }
 
-/** The usage line the panel shows, and what the daily budget counts. */
-export function askUsageSummary(result: AskResult): AiCallSummary {
+/** The usage line the panel shows, and what the daily budget counts (null: no AI was used). */
+export function askUsageSummary(result: AskResult): AiCallSummary | null {
   const u = result.usage;
+  if (!u) return null;
   return {
     model: u.model,
     calls: u.calls,

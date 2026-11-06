@@ -627,23 +627,18 @@ function splitDraft(md) {
 }
 
 let askBusy = false;
+const UNDERSTOOD = {
+  suggestion: ["pill-next", "Suggested question"],
+  ai: ["pill-ok", "Question read by Claude"],
+  keywords: ["pill-next", "Question matched by keywords (live AI is off)"],
+};
 function renderAsk(r) {
   const claims = r.claims ?? [];
   const ok = claims.filter((c) => c.verified).length;
-  const bad = claims.filter((c) => !c.verified);
-  const rc = r.recheck ?? null;
-  // A recorded answer is re-checked against the visitor's data now; if facts changed, it says so.
-  const stale = Boolean(rc && (rc.changedFacts > 0 || (rc.unsupported ?? []).length > 0));
-  const source =
-    r.source !== "recorded"
-      ? `<span class="pill pill-ok">Live answer</span>`
-      : rc?.recordedForThisData && rc.stateLabel
-        ? `<span class="pill pill-next">Recorded answer · real run for this data (${esc(rc.stateLabel)})</span>`
-        : `<span class="pill pill-next">Recorded answer · real run on Nov 5</span>`;
+  const [ucls, ulabel] = UNDERSTOOD[r.understoodBy] ?? UNDERSTOOD.suggestion;
+  const answering = r.answering && r.understoodBy !== "suggestion" ? `<p class="fine answering">Answering: <strong>${esc(r.answering)}</strong>. If you meant something else, ask it another way or pick a suggested question.</p>` : "";
   const { advice, draft } = r.mode === "reply" ? splitDraft(r.answer_markdown) : { advice: r.answer_markdown, draft: null };
-  const note = stale
-    ? `<p class="unverified-note"><strong>Your data changed since this answer was recorded.</strong> Code re-checked it against your data now; the facts marked ✗ no longer hold.</p>`
-    : `<p class="unverified-note"><strong>Not fully verified.</strong> Some facts below could not be checked against your data; don't rely on them.</p>`;
+  const note = `<p class="unverified-note"><strong>Not fully verified.</strong> Some facts below could not be re-checked against your data; don't rely on them.</p>`;
   const answerHtml = `<div class="md${r.verified ? "" : " md-unverified"}">${r.verified ? "" : note}${renderMarkdown(advice)}</div>`;
   const draftHtml = draft
     ? `<div class="draft"><div class="draft-head"><strong>Draft reply for PayPal's Resolution Center</strong><button type="button" class="btn btn-quiet" id="copy-draft">Copy</button></div>
@@ -655,22 +650,23 @@ function renderAsk(r) {
         .map((a) => `<li><span class="mono-sm">${esc(a.sha256.slice(0, 12))}…</span> ${esc(a.filename)}${a.counted ? "" : ` <span class="pill pill-wait">not counted</span>`}</li>`)
         .join("")}</ul></div>`
     : "";
-  const headline = stale
-    ? `${plural(rc.changedFacts + (rc.unsupported ?? []).length, "fact")} changed since this answer was recorded`
-    : `Checked by code: ${ok}/${plural(claims.length, "fact")} verified${rc ? " against your data now" : ""}`;
-  const check = `<div class="alert ${r.verified ? "calm" : "spike"} ask-check" role="status"><span class="ico" aria-hidden="true">${r.verified ? "✓" : "!"}</span><div><strong>${headline}</strong>${
-    (r.unsupported ?? []).length ? ` · amounts or dates not found in your data: ${r.unsupported.map((u) => esc(u)).join(", ")}` : ""
-  }${r.regenerated ? " · the assistant had to fix its first answer" : ""}</div></div>`;
-  const claimList = `<details class="claims"><summary>See every checked fact (${claims.length})</summary><ul>${claims
-    .map(
-      (c) =>
-        `<li class="${c.verified ? "" : "claim-bad"}"><span class="ico ${c.verified ? "ok" : "no"}" aria-label="${c.verified ? "verified" : "not verified"}">${c.verified ? "✓" : "✗"}</span><span>${esc(c.text)} <span class="muted">· ${esc(c.tool)} · <span class="mono-sm">${esc(c.field_path)}</span> = ${esc(String(c.value))}${c.verified || !c.reason ? "" : ` · ${esc(c.reason)}`}</span></span></li>`,
-    )
-    .join("")}</ul></details>`;
-  const tools = [...new Set((r.toolCalls ?? []).map((t) => t.tool))];
-  const u = r.usage ?? {};
-  const usage = `<p class="fine ai-line">${r.source === "recorded" ? "Recorded from" : "Answered by"} ${esc(u.model ?? "the assistant")} in ${((u.latency_ms ?? 0) / 1000).toFixed(1)} s (${plural(u.calls ?? 0, "call")}, ${esc(fmtCost(u.cost_usd))}). Tools used: ${tools.map((t) => `<span class="mono-sm">${esc(t)}</span>`).join(", ") || "none"}. The assistant only reads; it has no tool that writes to PayPal.</p>`;
-  return `<div class="ask-answer"><p class="ask-q"><strong>${esc(r.question)}</strong> ${source}</p>${answerHtml}${draftHtml}${attachments}${check}${claimList}${usage}</div>`;
+  const facts = claims.length
+    ? `<div class="alert ${r.verified ? "calm" : "spike"} ask-check" role="status"><span class="ico" aria-hidden="true">${r.verified ? "✓" : "!"}</span><div><strong>Written by code from your data: ${ok}/${plural(claims.length, "fact")} re-checked against its source.</strong>${
+        (r.unsupported ?? []).length ? ` · amounts or dates not found in your data: ${r.unsupported.map((u) => esc(u)).join(", ")}` : ""
+      }</div></div>
+      <details class="claims"><summary>See every fact and where it comes from (${claims.length})</summary><ul>${claims
+        .map(
+          (c) =>
+            `<li class="${c.verified ? "" : "claim-bad"}"><span class="ico ${c.verified ? "ok" : "no"}" aria-label="${c.verified ? "verified" : "not verified"}">${c.verified ? "✓" : "✗"}</span><span>${esc(c.text)} <span class="muted">· ${esc(c.tool)} · <span class="mono-sm">${esc(c.field_path)}</span> = ${esc(String(c.value))}${c.verified || !c.reason ? "" : ` · ${esc(c.reason)}`}</span></span></li>`,
+        )
+        .join("")}</ul></details>`
+    : "";
+  const u = r.usage;
+  const how = u
+    ? `Claude (${esc(u.model)}) only read the question and picked the answer type, in ${((u.latency_ms ?? 0) / 1000).toFixed(1)} s (${esc(fmtCost(u.cost_usd))}). Code wrote the answer from your data.`
+    : "No AI was used for this answer: code wrote it from your data.";
+  const usage = `<p class="fine ai-line">${how} The assistant only reads; it has no tool that writes to PayPal.</p>`;
+  return `<div class="ask-answer"><p class="ask-q"><strong>${esc(r.question)}</strong> <span class="pill ${ucls}">${ulabel}</span></p>${answering}${answerHtml}${draftHtml}${attachments}${facts}${usage}</div>`;
 }
 
 async function askQuestion(payload) {
@@ -679,7 +675,7 @@ async function askQuestion(payload) {
   const body = $("ask-body");
   const status = $("ask-status");
   for (const b of document.querySelectorAll("#ask-chips button, #ask-send")) b.disabled = true;
-  body.innerHTML = `<p class="loading-line" role="status"><span class="spinner" aria-hidden="true"></span>Reading your PayPal data…${payload.id ? "" : " Live answers take 20–60 seconds."}</p>`;
+  body.innerHTML = `<p class="loading-line" role="status"><span class="spinner" aria-hidden="true"></span>Reading your PayPal data…</p>`;
   try {
     const res = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     const r = await res.json().catch(() => ({}));
@@ -700,7 +696,7 @@ async function askQuestion(payload) {
   } finally {
     askBusy = false;
     for (const b of document.querySelectorAll("#ask-chips button")) b.disabled = false;
-    $("ask-send").disabled = !askLive;
+    $("ask-send").disabled = false;
   }
 }
 
@@ -711,13 +707,11 @@ function initAsk(d) {
   $("ask-chips").innerHTML = a.suggestions
     .map((q) => `<button type="button" class="chip" data-ask-id="${esc(q.id)}" data-mode="${esc(q.mode)}">${esc(q.question)}</button>`)
     .join("");
-  const input = $("ask-q");
-  input.disabled = !askLive;
-  $("ask-send").disabled = !askLive;
+  $("ask-q").disabled = false;
+  $("ask-send").disabled = false;
   $("ask-status").textContent = askLive
-    ? "Live AI is on: type any question about this seller's PayPal data."
-    : "Live AI is off on this public demo, so typing is disabled. The suggested questions are real answers recorded on Nov 5 and checked by code.";
-  if (!askLive) input.placeholder = "Live AI is off on this public demo: try a suggested question";
+    ? "Claude reads your question and picks one of the answers above; code writes the answer from this seller's PayPal data."
+    : "Live AI is off on this public demo: typed questions are matched by keywords. Either way, code writes every answer from this seller's PayPal data.";
 }
 document.addEventListener("click", (e) => {
   const chip = e.target.closest?.("[data-ask-id]");
@@ -726,7 +720,7 @@ document.addEventListener("click", (e) => {
 $("ask-form").addEventListener("submit", (e) => {
   e.preventDefault();
   const q = $("ask-q").value.trim();
-  if (q && askLive) askQuestion({ question: q });
+  if (q) askQuestion({ question: q });
 });
 
 // ---------- Step 5: the real sandbox dispute, and the same evidence check on this visitor's data.

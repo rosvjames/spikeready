@@ -11,7 +11,8 @@ import { AnthropicNoticeExtractor } from "../src/limitation/extract.js";
 import { AnthropicLabelExtractor } from "../src/labels/extract.js";
 import { PayPalClient, type CallReceipt } from "../src/paypal/client.js";
 import { readBalance } from "../src/server/proof.js";
-import { LiveAssistant } from "../src/assistant/agent.js";
+import { CodeAssistant } from "../src/assistant/agent.js";
+import { AnthropicIntentReader } from "../src/assistant/intent.js";
 import { dailyCapFromEnv } from "../src/server/ai-rails.js";
 import { createApp, defaultWebDir } from "../src/server/app.js";
 import { buildDemoState } from "../src/server/demo-state.js";
@@ -75,9 +76,9 @@ const app = createApp({
   labelExtractor: aiUploadsEnabled(process.env) ? () => new AnthropicLabelExtractor() : null,
   // The "fix label" action shows the PayPal-Debug-Id of the call it made.
   lastPayPalReceipt: () => lastReceipt,
-  // "Ask SpikeReady" with free-text questions: same rule as the other paid AI features. Suggested questions
-  // replay recorded answers either way. One answer may spend at most $0.25.
-  askLive: aiUploadsEnabled(process.env) ? (ctx) => new LiveAssistant(ctx, { maxUsd: 0.25 }) : null,
+  // "Ask SpikeReady": code writes every answer. With paid AI allowed (same rule as above), Claude reads
+  // typed questions (one short call); otherwise keywords do. Suggested questions never use AI.
+  askLive: aiUploadsEnabled(process.env) ? (ctx) => new CodeAssistant(ctx, new AnthropicIntentReader()) : null,
   // Live AI on a public server: per-visitor rate limit plus a daily dollar cap (default $1.00).
   aiDailyUsd: dailyCapFromEnv(process.env),
 });

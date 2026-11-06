@@ -71,17 +71,18 @@ try {
   check("tracking: refused maria-0007 row with ZIP 60641 vs 60614", /maria-0007/.test(tracking) && /60641/.test(tracking) && /60614/.test(tracking) && /refused/i.test(tracking));
   check("calendar total $775.00", /\$775\.00/.test(await text("#step-calendar")));
 
-  // Ask SpikeReady: on the public demo, suggested questions replay recorded answers; typing is disabled.
-  check("ask: typing disabled when live AI is off", await page.locator("#ask-q").isDisabled());
-  await page.locator('#ask-chips [data-ask-id="release"]').click();
+  // Ask SpikeReady: code writes every answer; on the public demo typed questions are matched by keywords.
+  check("ask: typing enabled even with live AI off", !(await page.locator("#ask-q").isDisabled()));
+  await page.locator('#ask-chips [data-ask-id="release_dates"]').click();
   await page.locator("#ask-body .ask-check").waitFor({ timeout: 10_000 });
   const askText = await text("#ask-body");
   check("ask: release answer shows $775.00", /\$775\.00/.test(askText));
-  check("ask: every fact verified by code", /Checked by code: (\d+)\/\1 facts verified/.test(askText), askText.slice(0, 160));
+  check("ask: every fact re-checked, written by code", /Written by code from your data: (\d+)\/\1 facts re-checked/.test(askText), askText.slice(0, 160));
+  check("ask: dates carry the year", /Thursday, Nov 26, 2026/.test(askText));
   if (shots) await page.locator("#ask").screenshot({ path: join(imgDir, "ask.png") });
-  await page.locator('#ask-chips [data-ask-id="reply"]').click();
+  await page.locator('#ask-chips [data-ask-id="draft_reply"]').click();
   await page.locator("#draft-text").waitFor({ timeout: 10_000 });
-  check("ask: reply draft mentions case LIM-2026-11-0412", /LIM-2026-11-0412/.test(await page.locator("#draft-text").inputValue()));
+  check("ask: reply draft leaves the case number to the seller", /\[Case number from PayPal's message\]/.test(await page.locator("#draft-text").inputValue()));
   check("ask: reply lists the original attachments", (await page.locator("#ask-body .attach li").count()) > 0);
 
   await page.locator("#notice-sample").click();
@@ -163,11 +164,11 @@ try {
   if (shots) await page.locator("#step-calendar").screenshot({ path: join(imgDir, "step3-release-move.png") });
   await page.locator("#dispute-body").getByText("Partial").waitFor({ timeout: 10_000 });
   check("step 5: maria-0007's evidence is partial after the fix", /If maria-0007's buyer says it never arrived Partial/.test(await text("#step-dispute")));
-  // Ask after the fix: the answer recorded for this data, still fully verified (never a stale answer).
-  await page.locator('[data-ask-id="ready"]').click();
+  // Ask after the fix: the answer follows the visitor's new data.
+  await page.locator('[data-ask-id="whats_missing"]').click();
   await page.locator("#ask-body .ask-check").waitFor({ timeout: 15_000 });
   const askAfter = await text("#ask-body");
-  check("ask after the fix: answer recorded for this data, every fact verified", /real run for this data/.test(askAfter) && /Checked by code: (\d+)\/\1 facts verified/.test(askAfter), askAfter.slice(0, 300));
+  check("ask after the fix: all sales have tracking, every fact re-checked", /all 39 sales have tracking/.test(askAfter) && /Written by code from your data: (\d+)\/\1 facts re-checked/.test(askAfter), askAfter.slice(0, 300));
 
   // Another visitor (new cookies) still sees the recording: one judge's fix never leaks to the next.
   const other = await browser.newContext({ viewport: { width: 1200, height: 900 } });
