@@ -118,7 +118,7 @@ try {
   const cal = await text("#step-calendar");
   check(
     "calendar: plain-words cash line (no 'dollar-days')",
-    /With verified tracking on PayPal, 5 payments \(\$665\.00\) can be released about 24 hours after delivery instead of waiting up to 21 days/.test(cal) && !/dollar-days/.test(cal),
+    /With verified tracking on PayPal, 5 payments \(\$665\.00\) should be released about 24 hours after delivery instead of waiting up to 21 days/.test(cal) && !/dollar-days/.test(cal),
     cal.slice(0, 300),
   );
   await page.locator("#dispute-body .dispute-case").waitFor({ timeout: 10_000 });
